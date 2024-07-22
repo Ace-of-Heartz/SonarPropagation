@@ -1,11 +1,17 @@
 #pragma once
 
 #include <memory.h>
+#include <pch.h>
+#include <dxcapi.h>
 
 #include "..\Common\DeviceResources.h"
 #include "..\Content\ShaderStructures.h"
 #include "..\Common\StepTimer.h"
-#include <pch.h>
+#include "..\DXR\Nvidia\nvidia_include.h"
+
+using namespace Microsoft::WRL;
+using namespace DirectX;
+//using namespace nv_helpers_dx12;
 
 namespace SonarPropagation {
 
@@ -27,9 +33,9 @@ namespace SonarPropagation {
 		// Raytracing Initialization
 		void CreateAccelerationStructures();
 		void CreateRaytracingPipeline();
-		void CreateRaytracingOutputBuffer();
-		void CreateShaderResourceHeap();
-		void CreateShaderBindingTable();
+		//void CreateRaytracingOutputBuffer();
+		//void CreateShaderResourceHeap();
+		//void CreateShaderBindingTable();
 
 		void CheckRayTracingSupport();
 
@@ -40,10 +46,10 @@ namespace SonarPropagation {
 		bool Render();
 		void SaveState();
 
-		void StartTracking();
-		void TrackingUpdate(float positionX);
-		void StopTracking();
-		bool IsTracking() { return m_tracking; }
+		//void StartTracking();
+		//void TrackingUpdate(float positionX);
+		//void StopTracking();
+		//bool IsTracking() { return m_tracking; }
 
 	private:
 		void LoadState();
@@ -97,13 +103,14 @@ namespace SonarPropagation {
 
 		ComPtr<ID3D12Resource>								m_bottomLevelAS;
 		AccelerationStructureBuffers						m_topLevelASBuffers;
-		TopLevelASGenerator									m_topLevelASGenerator;
+		nv_helpers_dx12::TopLevelASGenerator				m_topLevelASGenerator;
 		std::vector<std::pair<ComPtr<ID3D12Resource>, XMMATRIX>>	m_instances;
+		
 		// Variables used with the rendering loop.
 		bool	m_loadingComplete;
-		float	m_radiansPerSecond;
-		float	m_angle;
-		bool	m_tracking;
+		//float	m_radiansPerSecond;
+		//float	m_angle;
+		//bool	m_tracking;
 	};
 
 }

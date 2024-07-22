@@ -245,6 +245,7 @@
     <ClInclude Include="App.h" />
     <ClInclude Include="Common\d3dx12.h" />
     <ClInclude Include="Common\DeviceResources.h" />
+    <ClInclude Include="DXR\Nvidia\d3dx12.h" />
     <ClInclude Include="DXR\Nvidia\DXRHelper.h" />
     <ClInclude Include="DXR\Nvidia\DXSample.h" />
     <ClInclude Include="DXR\Nvidia\DXSampleHelper.h" />
@@ -256,9 +257,7 @@
     <ClInclude Include="DXR\Nvidia\nv_helpers_dx12\TopLevelASGenerator.h" />
     <ClInclude Include="DXR\RayTracingRenderer.h" />
     <ClInclude Include="SonarPropagationMain.h" />
-    <ClInclude Include="Common\DirectXHelper.h" />
     <ClInclude Include="Common\StepTimer.h" />
-    <ClInclude Include="Content\Sample3DSceneRenderer.h" />
     <ClInclude Include="Content\ShaderStructures.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
@@ -273,7 +272,6 @@
     <ClCompile Include="DXR\Nvidia\nv_helpers_dx12\TopLevelASGenerator.cpp" />
     <ClCompile Include="DXR\RayTracingRenderer.cpp" />
     <ClCompile Include="SonarPropagationMain.cpp" />
-    <ClCompile Include="Content\Sample3DSceneRenderer.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>

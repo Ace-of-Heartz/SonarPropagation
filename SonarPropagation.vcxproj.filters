@@ -14,9 +14,6 @@
     <ClInclude Include="Common\d3dx12.h">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="Common\DirectXHelper.h">
-      <Filter>Common</Filter>
-    </ClInclude>
     <ClInclude Include="Common\StepTimer.h">
       <Filter>Common</Filter>
     </ClInclude>
@@ -26,15 +23,9 @@
     <ClCompile Include="Common\DeviceResources.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClInclude Include="Content\Sample3DSceneRenderer.h">
-      <Filter>Content</Filter>
-    </ClInclude>
     <ClInclude Include="Content\ShaderStructures.h">
       <Filter>Content</Filter>
     </ClInclude>
-    <ClCompile Include="Content\Sample3DSceneRenderer.cpp">
-      <Filter>Content</Filter>
-    </ClCompile>
     <FxCompile Include="Content\SamplePixelShader.hlsl">
       <Filter>Content</Filter>
     </FxCompile>
@@ -104,7 +95,7 @@
       <Filter>DXR\NvidiaDev\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DXR\Nvidia\DXSample.cpp">
-      <Filter>DXR\NvidiaDev\Source Files</Filter>
+      <Filter>DXR\NvidiaDev</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -115,9 +106,6 @@
       <Filter>DXR\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DXR\Nvidia\nv_helpers_dx12\BottomLevelASGenerator.h">
-      <Filter>DXR\NvidiaDev\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DXR\Nvidia\DXRHelper.h">
       <Filter>DXR\NvidiaDev\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DXR\Nvidia\nv_helpers_dx12\RaytracingPipelineGenerator.h">
@@ -135,11 +123,17 @@
     <ClInclude Include="DXR\Nvidia\nvidia_include.h">
       <Filter>DXR\NvidiaDev</Filter>
     </ClInclude>
+    <ClInclude Include="DXR\Nvidia\d3dx12.h">
+      <Filter>DXR\NvidiaDev</Filter>
+    </ClInclude>
     <ClInclude Include="DXR\Nvidia\DXSample.h">
-      <Filter>DXR\NvidiaDev\Header Files</Filter>
+      <Filter>DXR\NvidiaDev</Filter>
     </ClInclude>
     <ClInclude Include="DXR\Nvidia\DXSampleHelper.h">
-      <Filter>DXR\NvidiaDev\Header Files</Filter>
+      <Filter>DXR\NvidiaDev</Filter>
+    </ClInclude>
+    <ClInclude Include="DXR\Nvidia\DXRHelper.h">
+      <Filter>DXR\NvidiaDev</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

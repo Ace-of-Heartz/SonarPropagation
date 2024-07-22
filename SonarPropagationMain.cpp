@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "SonarPropagationMain.h"
-#include "Common\DirectXHelper.h"
+//#include "Common\DirectXHelper.h"
 
 using namespace SonarPropagation;
 using namespace Windows::Foundation;
@@ -26,9 +26,7 @@ void SonarPropagationMain::CreateRenderers(const std::shared_ptr<DX::DeviceResou
 	// TODO: Replace this with your app's content initialization.
 	m_sceneRenderer = std::unique_ptr<RayTracingRenderer>(new RayTracingRenderer(deviceResources));
 	
-	m_sceneRenderer->CheckRayTracingSupport();
-
-	m_sceneRenderer->CreateAccelerationStructures();
+	m_sceneRenderer->Init();
 
 
 	

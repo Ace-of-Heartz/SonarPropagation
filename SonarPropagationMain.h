@@ -2,7 +2,6 @@
 
 #include "Common\StepTimer.h"
 #include "Common\DeviceResources.h"
-#include "Content\Sample3DSceneRenderer.h"
 
 #include "DXR\RayTracingRenderer.h"
 

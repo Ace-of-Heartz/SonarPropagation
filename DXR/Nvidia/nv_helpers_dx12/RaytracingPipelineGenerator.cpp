@@ -42,7 +42,7 @@ compiling in debug mode.
 #include "pch.h"
 #include "RaytracingPipelineGenerator.h"
 
-#include "dxcapi.h"
+//#include "dxcapi.h"
 #include <unordered_set>
 
 namespace nv_helpers_dx12

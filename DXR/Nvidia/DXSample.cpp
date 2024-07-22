@@ -8,10 +8,10 @@
 // PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
 //
 //*********************************************************
-
+#include "pch.h"
 #include "stdafx.h"
 #include "DXSample.h"
-
+#include "Win32Application.h"
 using namespace Microsoft::WRL;
 
 DXSample::DXSample(UINT width, UINT height, std::wstring name) :
@@ -69,11 +69,11 @@ void DXSample::GetHardwareAdapter(IDXGIFactory2* pFactory, IDXGIAdapter1** ppAda
 }
 
 // Helper function for setting the window's title text.
-void DXSample::SetCustomWindowText(LPCWSTR text)
-{
-	std::wstring windowText = m_title + L": " + text;
-	SetWindowText(Win32Application::GetHwnd(), windowText.c_str());
-}
+//void DXSample::SetCustomWindowText(LPCWSTR text)
+//{
+//	std::wstring windowText = m_title + L": " + text;
+//	SetWindowText(Win32Application::GetHwnd(), windowText.c_str());
+//}
 
 // Helper function for parsing any supplied command line args.
 _Use_decl_annotations_
