@@ -26,10 +26,6 @@ void SonarPropagationMain::CreateRenderers(const std::shared_ptr<DX::DeviceResou
 	// TODO: Replace this with your app's content initialization.
 	m_sceneRenderer = std::unique_ptr<RayTracingRenderer>(new RayTracingRenderer(deviceResources));
 	
-	m_sceneRenderer->Init();
-
-
-	
 
 	OnWindowSizeChanged();
 }
