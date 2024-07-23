@@ -33,14 +33,11 @@ namespace SonarPropagation {
 		// Raytracing Initialization
 		void CreateAccelerationStructures();
 		void CreateRaytracingPipeline();
-		//void CreateRaytracingOutputBuffer();
-		//void CreateShaderResourceHeap();
-		//void CreateShaderBindingTable();
+		void CreateRaytracingOutputBuffer(); //TODO: Implement
+		void CreateShaderResourceHeap(); //TODO: Implement
+		void CreateShaderBindingTable(); //TODO: Implement
 
 		void CheckRayTracingSupport();
-
-		//TODO: Init function might not be needed
-		void Init();
 
 		void Update(DX::StepTimer const& timer);
 		bool Render();
@@ -54,7 +51,9 @@ namespace SonarPropagation {
 	private:
 		void LoadState();
 		void CreateTopLevelAS(const std::vector < std::pair < ComPtr<ID3D12Resource>, DirectX::XMMATRIX>>& instances);
-		SonarPropagation::AccelerationStructureBuffers CreateBottomLevelAS(std::vector<std::pair<ComPtr<ID3D12Resource>, uint32_t>> vVertexBuffers);
+		SonarPropagation::AccelerationStructureBuffers CreateBottomLevelAS(std::vector<std::pair<ComPtr<ID3D12Resource>, uint32_t>> vVertexBuffers,
+			std::vector<std::pair<ComPtr<ID3D12Resource>, uint32_t>> vIndexBuffers
+		);
 
 		ComPtr<ID3D12RootSignature> CreateRayGenSignature();
 		ComPtr<ID3D12RootSignature> CreateHitSignature();
@@ -94,10 +93,15 @@ namespace SonarPropagation {
 		UINT8*												m_mappedConstantBuffer;
 		UINT												m_cbvDescriptorSize;
 		D3D12_RECT											m_scissorRect;
+
+		std::vector<byte>									m_vertexShader;
+		std::vector<byte>									m_pixelShader;
 		std::vector<byte>									m_rayGenShader;
 		std::vector<byte>									m_closestHitShader;
 		std::vector<byte>									m_missShader;
 		std::vector<byte>									m_anyHitShader;
+
+
 		D3D12_VERTEX_BUFFER_VIEW							m_vertexBufferView;
 		D3D12_INDEX_BUFFER_VIEW								m_indexBufferView;
 
