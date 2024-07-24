@@ -33,9 +33,9 @@ namespace SonarPropagation {
 		// Raytracing Initialization
 		void CreateAccelerationStructures();
 		void CreateRaytracingPipeline();
-		void CreateRaytracingOutputBuffer(); //TODO: Implement
-		void CreateShaderResourceHeap(); //TODO: Implement
-		void CreateShaderBindingTable(); //TODO: Implement
+		void CreateRaytracingOutputBuffer(); 
+		void CreateShaderResourceHeap(); 
+		void CreateShaderBindingTable(); 
 
 		void CheckRayTracingSupport();
 
@@ -58,6 +58,8 @@ namespace SonarPropagation {
 		ComPtr<ID3D12RootSignature> CreateRayGenSignature();
 		ComPtr<ID3D12RootSignature> CreateHitSignature();
 		ComPtr<ID3D12RootSignature> CreateMissSignature();
+
+		void PopulateCommandList();
 		
 
 	private: 
@@ -93,6 +95,12 @@ namespace SonarPropagation {
 		UINT8*												m_mappedConstantBuffer;
 		UINT												m_cbvDescriptorSize;
 		D3D12_RECT											m_scissorRect;
+
+		ComPtr<ID3D12Resource> m_outputResource;
+		ComPtr<ID3D12DescriptorHeap> m_srvUavHeap;
+		nv_helpers_dx12::ShaderBindingTableGenerator m_sbtHelper;
+		ComPtr<ID3D12Resource> m_sbtStorage;
+
 
 		std::vector<byte>									m_vertexShader;
 		std::vector<byte>									m_pixelShader;
