@@ -105,9 +105,8 @@ namespace SonarPropagation {
 		std::vector<byte>									m_vertexShader;
 		std::vector<byte>									m_pixelShader;
 		std::vector<byte>									m_rayGenShader;
-		std::vector<byte>									m_closestHitShader;
 		std::vector<byte>									m_missShader;
-		std::vector<byte>									m_anyHitShader;
+		std::vector<byte>									m_hitShader;
 
 
 		D3D12_VERTEX_BUFFER_VIEW							m_vertexBufferView;

@@ -1,0 +1,8 @@
+{
+  "dependencies": [
+    "directx-dxc",
+    "directxmath",
+    "directxtk12",
+    "directx-headers"
+  ]
+}

@@ -646,7 +646,17 @@ void SonarPropagation::RayTracingRenderer::CreateRaytracingPipeline()
 	m_missLibrary = nv_helpers_dx12::CompileShaderLibrary(L"Miss.hlsl");
 	m_hitLibrary = nv_helpers_dx12::CompileShaderLibrary(L"Hit.hlsl");
 
+	//auto createRGTask = DX::ReadDataAsync(L"RayGen.cso").then([this](std::vector<byte>& fileData) {
+	//	m_rayGenShader = fileData;
+	//	});
 
+	//auto createMissTask = DX::ReadDataAsync(L"Miss.cso").then([this](std::vector<byte>& fileData) {
+	//	m_missShader = fileData;
+	//	});
+
+	//auto createHitTask = DX::ReadDataAsync(L"Hit.cso").then([this](std::vector<byte>& fileData) {
+	//	m_hitShader = fileData;
+	//	});
 
 	// In a way similar to DLLs, each library is associated with a number of
 	// exported symbols. This
