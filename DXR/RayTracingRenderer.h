@@ -31,6 +31,8 @@ namespace SonarPropagation {
 		void CreateWindowSizeDependentResources();
 
 		// Raytracing Initialization
+		void CreateRaytracingInterfaces();
+
 		void CreateAccelerationStructures();
 		void CreateRaytracingPipeline();
 		void CreateRaytracingOutputBuffer(); 
@@ -43,10 +45,6 @@ namespace SonarPropagation {
 		bool Render();
 		void SaveState();
 
-		//void StartTracking();
-		//void TrackingUpdate(float positionX);
-		//void StopTracking();
-		//bool IsTracking() { return m_tracking; }
 
 	private:
 		void LoadState();
@@ -95,6 +93,9 @@ namespace SonarPropagation {
 		UINT8*												m_mappedConstantBuffer;
 		UINT												m_cbvDescriptorSize;
 		D3D12_RECT											m_scissorRect;
+
+		// DXR attributes
+		ComPtr<ID3D12Device5> m_dxrDevice;
 
 		ComPtr<ID3D12Resource> m_outputResource;
 		ComPtr<ID3D12DescriptorHeap> m_srvUavHeap;

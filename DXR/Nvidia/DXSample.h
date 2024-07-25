@@ -36,6 +36,13 @@ public:
 
 	void ParseCommandLineArgs(_In_reads_(argc) WCHAR* argv[], int argc);
 
+	// Convert a string to a wide-string
+	static std::wstring string_2_wstring(const std::string& s);
+
+	// Convert a wide-string to a string
+	static std::string wstring_2_string(const std::wstring& ws);
+
+
 protected:
 	std::wstring GetAssetFullPath(LPCWSTR assetName);
 	void GetHardwareAdapter(_In_ IDXGIFactory2* pFactory, _Outptr_result_maybenull_ IDXGIAdapter1** ppAdapter);

@@ -12,6 +12,7 @@
 #include "stdafx.h"
 #include "DXSample.h"
 #include "Win32Application.h"
+#include <codecvt>
 using namespace Microsoft::WRL;
 
 DXSample::DXSample(UINT width, UINT height, std::wstring name) :
@@ -35,6 +36,20 @@ DXSample::~DXSample()
 std::wstring DXSample::GetAssetFullPath(LPCWSTR assetName)
 {
 	return m_assetsPath + assetName;
+}
+
+std::wstring DXSample::string_2_wstring(const std::string& s)
+{
+	std::wstring_convert<std::codecvt_utf8<WCHAR>> cvt;
+	std::wstring ws = cvt.from_bytes(s);
+	return ws;
+}
+
+std::string DXSample::wstring_2_string(const std::wstring& ws)
+{
+	std::wstring_convert<std::codecvt_utf8<wchar_t>> cvt;
+	std::string s = cvt.to_bytes(ws);
+	return s;
 }
 
 // Helper function for acquiring the first available hardware adapter that supports Direct3D 12.

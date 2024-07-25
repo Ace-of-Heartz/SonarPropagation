@@ -11,7 +11,7 @@
 #include "DXSampleHelper.h"
 #include <dxcapi.h>
 #include <vector>
-
+#include <dxcapi.h>
 
 
 
@@ -78,9 +78,11 @@ namespace nv_helpers_dx12
 		}
 		// Open and read the file
 		std::ifstream shaderFile(fileName);
+		
+
 		if (shaderFile.good() == false)
 		{
-			throw std::logic_error("Cannot find shader file");
+			ThrowError("Can't open file " + DXSample::wstring_2_string(std::wstring(fileName)));
 		}
 		std::stringstream strStream;
 		strStream << shaderFile.rdbuf();

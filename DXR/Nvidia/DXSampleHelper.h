@@ -13,13 +13,57 @@
 #include "Win32Application.h"
 #include <d3d12.h>
 #include <wrl/client.h>
+#include <stdexcept>
+class HrException : public std::runtime_error
+{
+	inline std::string HrToString(HRESULT hr)
+	{
+		char s_str[64] = {};
+		sprintf_s(s_str, "HRESULT of 0x%08X", static_cast<UINT>(hr));
+		return std::string(s_str);
+	}
+public:
+	HrException(HRESULT hr) : std::runtime_error(HrToString(hr)), m_hr(hr) {}
+	HRESULT Error() const { return m_hr; }
+private:
+	const HRESULT m_hr;
+};
+
+#define SAFE_RELEASE(p) if (p) (p)->Release()
+
+
 inline void ThrowIfFailed(HRESULT hr)
 {
 	if (FAILED(hr))
 	{
-		throw std::exception();
+		throw HrException(hr);
 	}
 }
+
+inline void ThrowIfFailed(HRESULT hr, const wchar_t* msg)
+{
+	if (FAILED(hr))
+	{
+		OutputDebugString(msg);
+		throw HrException(hr);
+	}
+}
+
+inline void ThrowIfFalse(bool value)
+{
+	ThrowIfFailed(value ? S_OK : E_FAIL);
+}
+
+inline void ThrowIfFalse(bool value, const wchar_t* msg)
+{
+	ThrowIfFailed(value ? S_OK : E_FAIL, msg);
+}
+
+inline void ThrowError(const std::string& error)
+{
+	throw std::runtime_error(error);
+}
+
 
 inline void GetAssetsPath(_Out_writes_(pathSize) WCHAR* path, UINT pathSize)
 {

@@ -40,11 +40,18 @@ SonarPropagation::RayTracingRenderer::~RayTracingRenderer() {
 }
 
 
+void SonarPropagation::RayTracingRenderer::CreateRaytracingInterfaces() {
+	auto device = m_deviceResources->GetD3DDevice();
+	ThrowIfFailed(device->QueryInterface(IID_PPV_ARGS(&m_dxrDevice)), L"Couldn't get DirectX Raytracing interface for the device.\n");
+}
+
 void SonarPropagation::RayTracingRenderer::CreateDeviceDependentResources() {
+
+	CreateRaytracingInterfaces();
 
 	CheckRayTracingSupport();
 
-	auto d3dDevice = m_deviceResources->GetD3DDevice();
+	auto d3dDevice = m_dxrDevice;
 
 	// Create a root signature with a single constant buffer slot.
 	{
@@ -104,7 +111,7 @@ void SonarPropagation::RayTracingRenderer::CreateDeviceDependentResources() {
 		state.DSVFormat = m_deviceResources->GetDepthBufferFormat();
 		state.SampleDesc.Count = 1;
 
-		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateGraphicsPipelineState(&state, IID_PPV_ARGS(&m_pipelineState)));
+		DX::ThrowIfFailed(m_dxrDevice.Get()->CreateGraphicsPipelineState(&state, IID_PPV_ARGS(&m_pipelineState)));
 
 		// Shader data can be deleted once the pipeline state is created.
 		m_vertexShader.clear();
@@ -113,7 +120,7 @@ void SonarPropagation::RayTracingRenderer::CreateDeviceDependentResources() {
 
 	// Create and upload cube geometry resources to the GPU.
 	auto createAssetsTask = createPipelineStateTask.then([this]() {
-		auto d3dDevice = m_deviceResources->GetD3DDevice();
+		auto d3dDevice = m_dxrDevice.Get();
 
 		// Create a command list.
 		ThrowIfFailed(d3dDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_deviceResources->GetCommandAllocator(), m_pipelineState.Get(), IID_PPV_ARGS(&m_commandList)));
@@ -302,17 +309,17 @@ void SonarPropagation::RayTracingRenderer::CreateDeviceDependentResources() {
 		// Wait for the command list to finish executing; the vertex/index buffers need to be uploaded to the GPU before the upload resources go out of scope.
 		m_deviceResources->WaitForGpu();
 
-
-		CreateRaytracingPipeline();
-
-		CreateShaderBindingTable();
-
 		});
 
 	
 	createAssetsTask.then([this]() {
+
+		CreateRaytracingPipeline();
+
 		m_loadingComplete = true;
 		});
+
+
 }
 
 using Size = Windows::Foundation::Size;
@@ -437,17 +444,13 @@ void SonarPropagation::RayTracingRenderer::LoadState() {
 	return;
 }
 
-
-
-
 void SonarPropagation::RayTracingRenderer::CheckRayTracingSupport() {
 	D3D12_FEATURE_DATA_D3D12_OPTIONS5 options5 = {};
-	ThrowIfFailed(m_deviceResources->GetD3DDevice()->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS5,
+	ThrowIfFailed(m_dxrDevice.Get()->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS5,
 		&options5, sizeof(options5)));
 	if (options5.RaytracingTier < D3D12_RAYTRACING_TIER_1_0)
 		throw std::runtime_error("Raytracing not supported on device");
 }
-
 
 SonarPropagation::AccelerationStructureBuffers
 SonarPropagation::RayTracingRenderer::CreateBottomLevelAS(
@@ -478,7 +481,7 @@ SonarPropagation::RayTracingRenderer::CreateBottomLevelAS(
 	// buffers. It size is also dependent on the scene complexity.
 	UINT64 resultSizeInBytes = 0;
 
-	bottomLevelAS.ComputeASBufferSizes(m_deviceResources->GetD3DDevice(), false, &scratchSizeInBytes,
+	bottomLevelAS.ComputeASBufferSizes(m_dxrDevice.Get(), false, &scratchSizeInBytes,
 		&resultSizeInBytes);
 
 	// Once the sizes are obtained, the application is responsible for allocating
@@ -486,11 +489,11 @@ SonarPropagation::RayTracingRenderer::CreateBottomLevelAS(
 	// we can directly allocate those on the default heap
 	AccelerationStructureBuffers buffers;
 	buffers.pScratch = nv_helpers_dx12::CreateBuffer(
-		m_deviceResources->GetD3DDevice(), scratchSizeInBytes,
+		m_dxrDevice.Get(), scratchSizeInBytes,
 		D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON,
 		nv_helpers_dx12::kDefaultHeapProps);
 	buffers.pResult = nv_helpers_dx12::CreateBuffer(
-		m_deviceResources->GetD3DDevice(), resultSizeInBytes,
+		m_dxrDevice.Get(), resultSizeInBytes,
 		D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
 		D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE,
 		nv_helpers_dx12::kDefaultHeapProps);
@@ -528,17 +531,17 @@ void SonarPropagation::RayTracingRenderer::CreateTopLevelAS(const std::vector<st
 	// corresponding memory
 	UINT64 scratchSize, resultSize, instanceDescsSize;
 
-	m_topLevelASGenerator.ComputeASBufferSizes(reinterpret_cast<ID3D12Device5*>(m_deviceResources->GetD3DDevice()), true, &scratchSize,
+	m_topLevelASGenerator.ComputeASBufferSizes(reinterpret_cast<ID3D12Device5*>(m_dxrDevice.Get()), true, &scratchSize,
 		&resultSize, &instanceDescsSize);
 
 	// Create the scratch and result buffers. Since the build is all done on GPU,
 	// those can be allocated on the default heap
 	m_topLevelASBuffers.pScratch = nv_helpers_dx12::CreateBuffer(
-		m_deviceResources->GetD3DDevice(), scratchSize, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
+		m_dxrDevice.Get(), scratchSize, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
 		D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
 		nv_helpers_dx12::kDefaultHeapProps);
 	m_topLevelASBuffers.pResult = nv_helpers_dx12::CreateBuffer(
-		m_deviceResources->GetD3DDevice(), resultSize, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
+		m_dxrDevice.Get(), resultSize, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
 		D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE,
 		nv_helpers_dx12::kDefaultHeapProps);
 
@@ -546,7 +549,7 @@ void SonarPropagation::RayTracingRenderer::CreateTopLevelAS(const std::vector<st
 	// matrices ... Those will be copied into the buffer by the helper through
 	// mapping, so the buffer has to be allocated on the upload heap.
 	m_topLevelASBuffers.pInstanceDesc = nv_helpers_dx12::CreateBuffer(
-		m_deviceResources->GetD3DDevice(), instanceDescsSize, D3D12_RESOURCE_FLAG_NONE,
+		m_dxrDevice.Get(), instanceDescsSize, D3D12_RESOURCE_FLAG_NONE,
 		D3D12_RESOURCE_STATE_GENERIC_READ, nv_helpers_dx12::kUploadHeapProps);
 
 	// After all the buffers are allocated, or if only an update is required, we
@@ -605,7 +608,7 @@ ComPtr<ID3D12RootSignature> SonarPropagation::RayTracingRenderer::CreateRayGenSi
 		  D3D12_DESCRIPTOR_RANGE_TYPE_SRV /*Top-level acceleration structure*/,
 		  1} });
 
-	return rsc.Generate(m_deviceResources->GetD3DDevice(), true);
+	return rsc.Generate(m_dxrDevice.Get(), true);
 }
 
 //-----------------------------------------------------------------------------
@@ -614,7 +617,7 @@ ComPtr<ID3D12RootSignature> SonarPropagation::RayTracingRenderer::CreateRayGenSi
 //
 ComPtr<ID3D12RootSignature> SonarPropagation::RayTracingRenderer::CreateHitSignature() {
 	nv_helpers_dx12::RootSignatureGenerator rsc;
-	return rsc.Generate(m_deviceResources->GetD3DDevice(), true);
+	return rsc.Generate(m_dxrDevice.Get(), true);
 }
 
 //-----------------------------------------------------------------------------
@@ -623,8 +626,9 @@ ComPtr<ID3D12RootSignature> SonarPropagation::RayTracingRenderer::CreateHitSigna
 //
 ComPtr<ID3D12RootSignature> SonarPropagation::RayTracingRenderer::CreateMissSignature() {
 	nv_helpers_dx12::RootSignatureGenerator rsc;
-	return rsc.Generate(m_deviceResources->GetD3DDevice(), true);
+	return rsc.Generate(m_dxrDevice.Get(), true);
 }
+
 
 //-----------------------------------------------------------------------------
 //
@@ -635,7 +639,7 @@ ComPtr<ID3D12RootSignature> SonarPropagation::RayTracingRenderer::CreateMissSign
 //
 void SonarPropagation::RayTracingRenderer::CreateRaytracingPipeline()
 {
-	nv_helpers_dx12::RayTracingPipelineGenerator pipeline(m_deviceResources->GetD3DDevice());
+	nv_helpers_dx12::RayTracingPipelineGenerator pipeline(m_dxrDevice.Get());
 
 	// The pipeline contains the DXIL code of all the shaders potentially executed
 	// during the raytracing process. This section compiles the HLSL code into a
@@ -645,18 +649,6 @@ void SonarPropagation::RayTracingRenderer::CreateRaytracingPipeline()
 	m_rayGenLibrary = nv_helpers_dx12::CompileShaderLibrary(L"RayGen.hlsl");
 	m_missLibrary = nv_helpers_dx12::CompileShaderLibrary(L"Miss.hlsl");
 	m_hitLibrary = nv_helpers_dx12::CompileShaderLibrary(L"Hit.hlsl");
-
-	//auto createRGTask = DX::ReadDataAsync(L"RayGen.cso").then([this](std::vector<byte>& fileData) {
-	//	m_rayGenShader = fileData;
-	//	});
-
-	//auto createMissTask = DX::ReadDataAsync(L"Miss.cso").then([this](std::vector<byte>& fileData) {
-	//	m_missShader = fileData;
-	//	});
-
-	//auto createHitTask = DX::ReadDataAsync(L"Hit.cso").then([this](std::vector<byte>& fileData) {
-	//	m_hitShader = fileData;
-	//	});
 
 	// In a way similar to DLLs, each library is associated with a number of
 	// exported symbols. This
@@ -745,7 +737,7 @@ void SonarPropagation::RayTracingRenderer::CreateRaytracingOutputBuffer() {
 	resDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 	resDesc.MipLevels = 1;
 	resDesc.SampleDesc.Count = 1;
-	ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateCommittedResource(
+	ThrowIfFailed(m_dxrDevice.Get()->CreateCommittedResource(
 		&nv_helpers_dx12::kDefaultHeapProps, D3D12_HEAP_FLAG_NONE, &resDesc,
 		D3D12_RESOURCE_STATE_COPY_SOURCE, nullptr,
 		IID_PPV_ARGS(&m_outputResource)));
@@ -755,7 +747,7 @@ void SonarPropagation::RayTracingRenderer::CreateShaderResourceHeap() {
 	// Create a SRV/UAV/CBV descriptor heap. We need 2 entries - 1 UAV for the
 // raytracing output and 1 SRV for the TLAS
 	m_srvUavHeap = nv_helpers_dx12::CreateDescriptorHeap(
-		m_deviceResources->GetD3DDevice(), 2, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, true);
+		m_dxrDevice.Get(), 2, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, true);
 
 	// Get a handle to the heap memory on the CPU side, to be able to write the
 	// descriptors directly
@@ -767,11 +759,11 @@ void SonarPropagation::RayTracingRenderer::CreateShaderResourceHeap() {
 	// srvHandle
 	D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
 	uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
-	m_deviceResources->GetD3DDevice()->CreateUnorderedAccessView(m_outputResource.Get(), nullptr, &uavDesc,
+	m_dxrDevice.Get()->CreateUnorderedAccessView(m_outputResource.Get(), nullptr, &uavDesc,
 		srvHandle);
 
 	// Add the Top Level AS SRV right after the raytracing output buffer
-	srvHandle.ptr += m_deviceResources->GetD3DDevice()->GetDescriptorHandleIncrementSize(
+	srvHandle.ptr += m_dxrDevice.Get()->GetDescriptorHandleIncrementSize(
 		D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc;
@@ -781,7 +773,7 @@ void SonarPropagation::RayTracingRenderer::CreateShaderResourceHeap() {
 	srvDesc.RaytracingAccelerationStructure.Location =
 		m_topLevelASBuffers.pResult->GetGPUVirtualAddress();
 	// Write the acceleration structure view in the heap
-	m_deviceResources->GetD3DDevice()->CreateShaderResourceView(nullptr, &srvDesc, srvHandle);
+	m_dxrDevice.Get()->CreateShaderResourceView(nullptr, &srvDesc, srvHandle);
 }
 
 void SonarPropagation::RayTracingRenderer::CreateShaderBindingTable() {
@@ -816,7 +808,7 @@ void SonarPropagation::RayTracingRenderer::CreateShaderBindingTable() {
 	// mapping to write the SBT contents. After the SBT compilation it could be
 	// copied to the default heap for performance.
 	m_sbtStorage = nv_helpers_dx12::CreateBuffer(
-		m_deviceResources->GetD3DDevice(), sbtSize, D3D12_RESOURCE_FLAG_NONE,
+		m_dxrDevice.Get(), sbtSize, D3D12_RESOURCE_FLAG_NONE,
 		D3D12_RESOURCE_STATE_GENERIC_READ, nv_helpers_dx12::kUploadHeapProps);
 	if (!m_sbtStorage) {
 		throw std::logic_error("Could not allocate the shader binding table");
