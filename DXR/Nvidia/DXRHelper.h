@@ -12,6 +12,7 @@
 #include <dxcapi.h>
 #include <vector>
 #include <dxcapi.h>
+#include <DirectXMath.h>
 
 
 
