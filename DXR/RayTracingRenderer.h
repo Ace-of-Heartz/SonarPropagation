@@ -8,6 +8,7 @@
 #include "..\Content\ShaderStructures.h"
 #include "..\Common\StepTimer.h"
 #include "..\DXR\Nvidia\nvidia_include.h"
+#include "..\DXR\DXRHelpers\ShaderUtils.h"
 
 using namespace Microsoft::WRL;
 using namespace DirectX;
@@ -48,7 +49,7 @@ namespace SonarPropagation {
 
 	private:
 		void LoadState();
-		void CreateTopLevelAS(const std::vector < std::pair < ComPtr<ID3D12Resource>, DirectX::XMMATRIX>>& instances);
+		void CreateTopLevelAS(const std::vector < std::pair < ComPtr<ID3D12Resource>, DirectX::XMMATRIX>>& instances, bool updateOnly);
 		SonarPropagation::AccelerationStructureBuffers CreateBottomLevelAS(std::vector<std::pair<ComPtr<ID3D12Resource>, uint32_t>> vVertexBuffers,
 			std::vector<std::pair<ComPtr<ID3D12Resource>, uint32_t>> vIndexBuffers
 		);

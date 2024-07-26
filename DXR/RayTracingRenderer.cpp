@@ -8,7 +8,6 @@
 #include ".\DXR\Nvidia\DXSampleHelper.h"
 #include <Common/DirectXHelper.h>
 
-
 //-----------------------------------------------------------------------------
 //
 // Create a bottom-level acceleration structure based on a list of vertex
@@ -17,9 +16,17 @@
 // buffers, and building the actual AS
 //
 
+//-----------------------------------------------------------------------------
+// Namespace for helper functions
 using namespace nv_helpers_dx12;
 using namespace DirectX;
 using namespace Microsoft::WRL;
+
+
+// ---------------------------------------------------------------------------
+// Aliases
+using Size = Windows::Foundation::Size;
+
 
 SonarPropagation::RayTracingRenderer::RayTracingRenderer(
 	const std::shared_ptr<DX::DeviceResources>& deviceResources) :
@@ -151,7 +158,7 @@ void SonarPropagation::RayTracingRenderer::CreateDeviceDependentResources() {
 			&defaultHeapProperties,
 			D3D12_HEAP_FLAG_NONE,
 			&vertexBufferDesc,
-			D3D12_RESOURCE_STATE_COPY_DEST | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
+			D3D12_RESOURCE_STATE_COPY_DEST,
 			nullptr,
 			IID_PPV_ARGS(&m_vertexBuffer)));
 
@@ -312,17 +319,24 @@ void SonarPropagation::RayTracingRenderer::CreateDeviceDependentResources() {
 		});
 
 	
-	createAssetsTask.then([this]() {
-
+	auto createDXRResources = createAssetsTask.then([this]() {
+		
 		CreateRaytracingPipeline();
 
-		m_loadingComplete = true;
+		CreateRaytracingOutputBuffer();
+
+		CreateShaderResourceHeap();
+
+		CreateShaderBindingTable();
+
 		});
 
+	createDXRResources.then([this]() {
+		m_loadingComplete = true; 
+		});
 
 }
 
-using Size = Windows::Foundation::Size;
 
 void SonarPropagation::RayTracingRenderer::CreateWindowSizeDependentResources() {
 	Size outputSize = m_deviceResources->GetOutputSize();
@@ -380,58 +394,15 @@ bool SonarPropagation::RayTracingRenderer::Render() {
 	{
 		return false;
 	}
+	PopulateCommandList();
 
-	ThrowIfFailed(m_deviceResources->GetCommandAllocator()->Reset());
-
-	// The command list can be reset anytime after ExecuteCommandList() is called.
-	ThrowIfFailed(m_commandList->Reset(m_deviceResources->GetCommandAllocator(), m_pipelineState.Get()));
-
-	PIXBeginEvent(m_commandList.Get(), 0, L"Draw the cube");
-	{
-		// Set the graphics root signature and descriptor heaps to be used by this frame.
-		m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
-		ID3D12DescriptorHeap* ppHeaps[] = { m_cbvHeap.Get() };
-		m_commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
-
-		// Bind the current frame's constant buffer to the pipeline.
-		CD3DX12_GPU_DESCRIPTOR_HANDLE gpuHandle(m_cbvHeap->GetGPUDescriptorHandleForHeapStart(), m_deviceResources->GetCurrentFrameIndex(), m_cbvDescriptorSize);
-		m_commandList->SetGraphicsRootDescriptorTable(0, gpuHandle);
-
-		// Set the viewport and scissor rectangle.
-		D3D12_VIEWPORT viewport = m_deviceResources->GetScreenViewport();
-		m_commandList->RSSetViewports(1, &viewport);
-		m_commandList->RSSetScissorRects(1, &m_scissorRect);
-
-		// Indicate this resource will be in use as a render target.
-		CD3DX12_RESOURCE_BARRIER renderTargetResourceBarrier =
-			CD3DX12_RESOURCE_BARRIER::Transition(m_deviceResources->GetRenderTarget(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
-		m_commandList->ResourceBarrier(1, &renderTargetResourceBarrier);
-
-		// Record drawing commands.
-		D3D12_CPU_DESCRIPTOR_HANDLE renderTargetView = m_deviceResources->GetRenderTargetView();
-		D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView = m_deviceResources->GetDepthStencilView();
-		m_commandList->ClearRenderTargetView(renderTargetView, DirectX::Colors::CornflowerBlue, 0, nullptr);
-		m_commandList->ClearDepthStencilView(depthStencilView, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
-
-		m_commandList->OMSetRenderTargets(1, &renderTargetView, false, &depthStencilView);
-
-		m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
-		m_commandList->IASetIndexBuffer(&m_indexBufferView);
-		m_commandList->DrawIndexedInstanced(36, 1, 0, 0, 0);
-
-		// Indicate that the render target will now be used to present when the command list is done executing.
-		CD3DX12_RESOURCE_BARRIER presentResourceBarrier =
-			CD3DX12_RESOURCE_BARRIER::Transition(m_deviceResources->GetRenderTarget(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
-		m_commandList->ResourceBarrier(1, &presentResourceBarrier);
-	}
-	PIXEndEvent(m_commandList.Get());
-
-	DX::ThrowIfFailed(m_commandList->Close());
-
-	// Execute the command list.
 	ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
 	m_deviceResources->GetCommandQueue()->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+	
+	m_deviceResources->Present();
+
+	m_deviceResources->WaitForGpu();
+	
 
 	return true;
 }
@@ -513,45 +484,47 @@ SonarPropagation::RayTracingRenderer::CreateBottomLevelAS(
 // the instances, computing the memory requirements for the AS, and building the
 // AS itself
 //
-void SonarPropagation::RayTracingRenderer::CreateTopLevelAS(const std::vector<std::pair<ComPtr<ID3D12Resource>, DirectX::XMMATRIX>>& instances
+void SonarPropagation::RayTracingRenderer::CreateTopLevelAS(const std::vector<std::pair<ComPtr<ID3D12Resource>, DirectX::XMMATRIX>>& instances, bool updateOnly = false
 	// pair of bottom level AS and matrix of the instance
 ) {
-	// Gather all the instances into the builder helper
-	for (size_t i = 0; i < instances.size(); i++) {
-		m_topLevelASGenerator.AddInstance(instances[i].first.Get(),
-			instances[i].second, static_cast<uint32_t>(i),
-			static_cast<uint32_t>(0));
+	// #DXR Extra - Refitting
+	if (!updateOnly) {
+		// Gather all the instances into the builder helper
+		for (size_t i = 0; i < instances.size(); i++) {
+			m_topLevelASGenerator.AddInstance(
+				instances[i].first.Get(), instances[i].second, static_cast<UINT>(i),
+				static_cast<UINT>(2 * i));
+		}
+
+		// As for the bottom-level AS, the building the AS requires some scratch
+		// space to store temporary data in addition to the actual AS. In the case
+		// of the top-level AS, the instance descriptors also need to be stored in
+		// GPU memory. This call outputs the memory requirements for each (scratch,
+		// results, instance descriptors) so that the application can allocate the
+		// corresponding memory
+		UINT64 scratchSize, resultSize, instanceDescsSize;
+
+		m_topLevelASGenerator.ComputeASBufferSizes(
+			m_dxrDevice.Get(), true, &scratchSize, &resultSize, &instanceDescsSize);
+
+		// Create the scratch and result buffers. Since the build is all done on
+		// GPU, those can be allocated on the default heap
+		m_topLevelASBuffers.pScratch = nv_helpers_dx12::CreateBuffer(
+			m_dxrDevice.Get(), scratchSize, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
+			D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+			nv_helpers_dx12::kDefaultHeapProps);
+		m_topLevelASBuffers.pResult = nv_helpers_dx12::CreateBuffer(
+			m_dxrDevice.Get(), resultSize, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
+			D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE,
+			nv_helpers_dx12::kDefaultHeapProps);
+
+		// The buffer describing the instances: ID, shader binding information,
+		// matrices ... Those will be copied into the buffer by the helper through
+		// mapping, so the buffer has to be allocated on the upload heap.
+		m_topLevelASBuffers.pInstanceDesc = nv_helpers_dx12::CreateBuffer(
+			m_dxrDevice.Get(), instanceDescsSize, D3D12_RESOURCE_FLAG_NONE,
+			D3D12_RESOURCE_STATE_GENERIC_READ, nv_helpers_dx12::kUploadHeapProps);
 	}
-
-	// As for the bottom-level AS, the building the AS requires some scratch space
-	// to store temporary data in addition to the actual AS. In the case of the
-	// top-level AS, the instance descriptors also need to be stored in GPU
-	// memory. This call outputs the memory requirements for each (scratch,
-	// results, instance descriptors) so that the application can allocate the
-	// corresponding memory
-	UINT64 scratchSize, resultSize, instanceDescsSize;
-
-	m_topLevelASGenerator.ComputeASBufferSizes(reinterpret_cast<ID3D12Device5*>(m_dxrDevice.Get()), true, &scratchSize,
-		&resultSize, &instanceDescsSize);
-
-	// Create the scratch and result buffers. Since the build is all done on GPU,
-	// those can be allocated on the default heap
-	m_topLevelASBuffers.pScratch = nv_helpers_dx12::CreateBuffer(
-		m_dxrDevice.Get(), scratchSize, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
-		D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-		nv_helpers_dx12::kDefaultHeapProps);
-	m_topLevelASBuffers.pResult = nv_helpers_dx12::CreateBuffer(
-		m_dxrDevice.Get(), resultSize, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
-		D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE,
-		nv_helpers_dx12::kDefaultHeapProps);
-
-	// The buffer describing the instances: ID, shader binding information,
-	// matrices ... Those will be copied into the buffer by the helper through
-	// mapping, so the buffer has to be allocated on the upload heap.
-	m_topLevelASBuffers.pInstanceDesc = nv_helpers_dx12::CreateBuffer(
-		m_dxrDevice.Get(), instanceDescsSize, D3D12_RESOURCE_FLAG_NONE,
-		D3D12_RESOURCE_STATE_GENERIC_READ, nv_helpers_dx12::kUploadHeapProps);
-
 	// After all the buffers are allocated, or if only an update is required, we
 	// can build the acceleration structure. Note that in the case of the update
 	// we also pass the existing AS as the 'previous' AS, so that it can be
@@ -559,7 +532,8 @@ void SonarPropagation::RayTracingRenderer::CreateTopLevelAS(const std::vector<st
 	m_topLevelASGenerator.Generate(m_commandList.Get(),
 		m_topLevelASBuffers.pScratch.Get(),
 		m_topLevelASBuffers.pResult.Get(),
-		m_topLevelASBuffers.pInstanceDesc.Get());
+		m_topLevelASBuffers.pInstanceDesc.Get(),
+		updateOnly, m_topLevelASBuffers.pResult.Get());
 }
 
 //-----------------------------------------------------------------------------
@@ -575,7 +549,7 @@ void SonarPropagation::RayTracingRenderer::CreateAccelerationStructures() {
 
 	// Just one instance for now
 	m_instances = { {bottomLevelBuffers.pResult, XMMatrixIdentity()} };
-	CreateTopLevelAS(m_instances);
+	CreateTopLevelAS(m_instances,false);
 
 	// Flush the command list and wait for it to finish
 	m_commandList->Close();
@@ -617,6 +591,9 @@ ComPtr<ID3D12RootSignature> SonarPropagation::RayTracingRenderer::CreateRayGenSi
 //
 ComPtr<ID3D12RootSignature> SonarPropagation::RayTracingRenderer::CreateHitSignature() {
 	nv_helpers_dx12::RootSignatureGenerator rsc;
+
+	rsc.AddRootParameter(D3D12_ROOT_PARAMETER_TYPE_SRV);
+
 	return rsc.Generate(m_dxrDevice.Get(), true);
 }
 
@@ -629,6 +606,8 @@ ComPtr<ID3D12RootSignature> SonarPropagation::RayTracingRenderer::CreateMissSign
 	return rsc.Generate(m_dxrDevice.Get(), true);
 }
 
+
+using namespace AceShaderUtils;
 
 //-----------------------------------------------------------------------------
 //
@@ -646,9 +625,9 @@ void SonarPropagation::RayTracingRenderer::CreateRaytracingPipeline()
 	// set of DXIL libraries. We chose to separate the code in several libraries
 	// by semantic (ray generation, hit, miss) for clarity. Any code layout can be
 	// used.
-	m_rayGenLibrary = nv_helpers_dx12::CompileShaderLibrary(L"RayGen.hlsl");
-	m_missLibrary = nv_helpers_dx12::CompileShaderLibrary(L"Miss.hlsl");
-	m_hitLibrary = nv_helpers_dx12::CompileShaderLibrary(L"Hit.hlsl");
+	m_rayGenLibrary = CompileShader(L"RayGen.hlsl");
+	m_missLibrary = CompileShader(L"Miss.hlsl");
+	m_hitLibrary = CompileShader(L"Hit.hlsl");
 
 	// In a way similar to DLLs, each library is associated with a number of
 	// exported symbols. This
@@ -798,7 +777,7 @@ void SonarPropagation::RayTracingRenderer::CreateShaderBindingTable() {
 	m_sbtHelper.AddMissProgram(L"Miss", {});
 
 	// Adding the triangle hit shader
-	m_sbtHelper.AddHitGroup(L"HitGroup", {});
+	m_sbtHelper.AddHitGroup(L"HitGroup", { (void*)(m_vertexBuffer->GetGPUVirtualAddress()) });
 
 	// Compute the size of the SBT given the number of shaders and their
 	// parameters
@@ -813,131 +792,144 @@ void SonarPropagation::RayTracingRenderer::CreateShaderBindingTable() {
 	if (!m_sbtStorage) {
 		throw std::logic_error("Could not allocate the shader binding table");
 	}
+
+	// Compile the SBT from the shader and parameters info
+	m_sbtHelper.Generate(m_sbtStorage.Get(), m_rtStateObjectProps.Get());
 }
 
+
 void SonarPropagation::RayTracingRenderer::PopulateCommandList() {
-	// Command list allocators can only be reset when the associated
-  // command lists have finished execution on the GPU; apps should use
-  // fences to determine GPU execution progress.
 	ThrowIfFailed(m_deviceResources->GetCommandAllocator()->Reset());
 
-	// However, when ExecuteCommandList() is called on a particular command
-	// list, that command list can then be reset at any time and must be before
-	// re-recording.
-	ThrowIfFailed(
-		m_commandList->Reset(m_deviceResources->GetCommandAllocator(), m_pipelineState.Get()));
+	// The command list can be reset anytime after ExecuteCommandList() is called.
+	ThrowIfFailed(m_commandList->Reset(m_deviceResources->GetCommandAllocator(), m_pipelineState.Get()));
 
-	// Set necessary state.
-	m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
-	m_commandList->RSSetViewports(1, &m_deviceResources->GetScreenViewport());
-	m_commandList->RSSetScissorRects(1, &m_scissorRect);
+	PIXBeginEvent(m_commandList.Get(), 0, L"Draw the cube");
+	{
+		// Set the graphics root signature and descriptor heaps to be used by this frame.
+		m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
+		ID3D12DescriptorHeap* ppHeaps[] = { m_cbvHeap.Get() };
+		m_commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 
-	// Indicate that the back buffer will be used as a render target.
-	m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
-		m_deviceResources->GetRenderTarget(),
-		D3D12_RESOURCE_STATE_PRESENT,
-		D3D12_RESOURCE_STATE_RENDER_TARGET));
+		// Bind the current frame's constant buffer to the pipeline.
+		CD3DX12_GPU_DESCRIPTOR_HANDLE gpuHandle(m_cbvHeap->GetGPUDescriptorHandleForHeapStart(), m_deviceResources->GetCurrentFrameIndex(), m_cbvDescriptorSize);
+		m_commandList->SetGraphicsRootDescriptorTable(0, gpuHandle);
 
-	
-	// #DXR Extra: Depth Buffering
-	// Bind the depth buffer as a render target
-	m_commandList->OMSetRenderTargets(1, &(m_deviceResources->GetRenderTargetView()), FALSE, &(m_deviceResources->GetDepthStencilView()));
+		// Set the viewport and scissor rectangle.
+		D3D12_VIEWPORT viewport = m_deviceResources->GetScreenViewport();
+		m_commandList->RSSetViewports(1, &viewport);
+		m_commandList->RSSetScissorRects(1, &m_scissorRect);
 
-	// #DXR Extra - Refitting
+		// Indicate this resource will be in use as a render target.
+		CD3DX12_RESOURCE_BARRIER renderTargetResourceBarrier =
+			CD3DX12_RESOURCE_BARRIER::Transition(m_deviceResources->GetRenderTarget(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+		m_commandList->ResourceBarrier(1, &renderTargetResourceBarrier);
+
+		// Record drawing commands.
+		D3D12_CPU_DESCRIPTOR_HANDLE renderTargetView = m_deviceResources->GetRenderTargetView();
+		D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView = m_deviceResources->GetDepthStencilView();
+		m_commandList->ClearRenderTargetView(renderTargetView, DirectX::Colors::Orange, 0, nullptr);
+		m_commandList->ClearDepthStencilView(depthStencilView, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+
+		m_commandList->OMSetRenderTargets(1, &renderTargetView, false, &depthStencilView);
+
+		// #DXR Extra - Refitting
 	// Refit the top-level acceleration structure to account for the new
 	// transform matrix of the triangle. Note that the build contains a barrier,
 	// hence we can do the rendering in the same command list
-	CreateTopLevelAS(m_instances);
-	// #DXR
-	// Bind the descriptor heap giving access to the top-level acceleration
-	// structure, as well as the raytracing output
-	std::vector<ID3D12DescriptorHeap*> heaps = { m_srvUavHeap.Get() };
-	m_commandList->SetDescriptorHeaps(static_cast<UINT>(heaps.size()),
-		heaps.data());
+		CreateTopLevelAS(m_instances);
+		// #DXR
+		// Bind the descriptor heap giving access to the top-level acceleration
+		// structure, as well as the raytracing output
+		std::vector<ID3D12DescriptorHeap*> heaps = { m_srvUavHeap.Get() };
+		m_commandList->SetDescriptorHeaps(static_cast<UINT>(heaps.size()),
+			heaps.data());
 
-	// On the last frame, the raytracing output was used as a copy source, to
-	// copy its contents into the render target. Now we need to transition it to
-	// a UAV so that the shaders can write in it.
-	CD3DX12_RESOURCE_BARRIER transition = CD3DX12_RESOURCE_BARRIER::Transition(
-		m_outputResource.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE,
-		D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-	m_commandList->ResourceBarrier(1, &transition);
+		// On the last frame, the raytracing output was used as a copy source, to
+		// copy its contents into the render target. Now we need to transition it to
+		// a UAV so that the shaders can write in it.
+		CD3DX12_RESOURCE_BARRIER transition = CD3DX12_RESOURCE_BARRIER::Transition(
+			m_outputResource.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE,
+			D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+		m_commandList->ResourceBarrier(1, &transition);
 
-	// Setup the raytracing task
-	D3D12_DISPATCH_RAYS_DESC desc = {};
-	// The layout of the SBT is as follows: ray generation shader, miss
-	// shaders, hit groups. As described in the CreateShaderBindingTable method,
-	// all SBT entries of a given type have the same size to allow a fixed
-	// stride.
+		// Setup the raytracing task
+		D3D12_DISPATCH_RAYS_DESC desc = {};
+		// The layout of the SBT is as follows: ray generation shader, miss
+		// shaders, hit groups. As described in the CreateShaderBindingTable method,
+		// all SBT entries of a given type have the same size to allow a fixed
+		// stride.
 
-	// The ray generation shaders are always at the beginning of the SBT.
-	uint32_t rayGenerationSectionSizeInBytes =
-		m_sbtHelper.GetRayGenSectionSize();
-	desc.RayGenerationShaderRecord.StartAddress =
-		m_sbtStorage->GetGPUVirtualAddress();
-	desc.RayGenerationShaderRecord.SizeInBytes =
-		rayGenerationSectionSizeInBytes;
+		// The ray generation shaders are always at the beginning of the SBT.
+		uint32_t rayGenerationSectionSizeInBytes =
+			m_sbtHelper.GetRayGenSectionSize();
+		desc.RayGenerationShaderRecord.StartAddress =
+			m_sbtStorage->GetGPUVirtualAddress();
+		desc.RayGenerationShaderRecord.SizeInBytes =
+			rayGenerationSectionSizeInBytes;
 
-	// The miss shaders are in the second SBT section, right after the ray
-	// generation shader. We have one miss shader for the camera rays and one
-	// for the shadow rays, so this section has a size of 2*m_sbtEntrySize. We
-	// also indicate the stride between the two miss shaders, which is the size
-	// of a SBT entry
-	uint32_t missSectionSizeInBytes = m_sbtHelper.GetMissSectionSize();
-	desc.MissShaderTable.StartAddress =
-		m_sbtStorage->GetGPUVirtualAddress() + rayGenerationSectionSizeInBytes;
-	desc.MissShaderTable.SizeInBytes = missSectionSizeInBytes;
-	desc.MissShaderTable.StrideInBytes = m_sbtHelper.GetMissEntrySize();
+		// The miss shaders are in the second SBT section, right after the ray
+		// generation shader. We have one miss shader for the camera rays and one
+		// for the shadow rays, so this section has a size of 2*m_sbtEntrySize. We
+		// also indicate the stride between the two miss shaders, which is the size
+		// of a SBT entry
+		uint32_t missSectionSizeInBytes = m_sbtHelper.GetMissSectionSize();
+		desc.MissShaderTable.StartAddress =
+			m_sbtStorage->GetGPUVirtualAddress() + rayGenerationSectionSizeInBytes;
+		desc.MissShaderTable.SizeInBytes = missSectionSizeInBytes;
+		desc.MissShaderTable.StrideInBytes = m_sbtHelper.GetMissEntrySize();
 
-	// The hit groups section start after the miss shaders. In this sample we
-	// have one 1 hit group for the triangle
-	uint32_t hitGroupsSectionSize = m_sbtHelper.GetHitGroupSectionSize();
-	desc.HitGroupTable.StartAddress = m_sbtStorage->GetGPUVirtualAddress() +
-		rayGenerationSectionSizeInBytes +
-		missSectionSizeInBytes;
-	desc.HitGroupTable.SizeInBytes = hitGroupsSectionSize;
-	desc.HitGroupTable.StrideInBytes = m_sbtHelper.GetHitGroupEntrySize();
+		// The hit groups section start after the miss shaders. In this sample we
+		// have one 1 hit group for the triangle
+		uint32_t hitGroupsSectionSize = m_sbtHelper.GetHitGroupSectionSize();
+		desc.HitGroupTable.StartAddress = m_sbtStorage->GetGPUVirtualAddress() +
+			rayGenerationSectionSizeInBytes +
+			missSectionSizeInBytes;
+		desc.HitGroupTable.SizeInBytes = hitGroupsSectionSize;
+		desc.HitGroupTable.StrideInBytes = m_sbtHelper.GetHitGroupEntrySize();
 
-	// Dimensions of the image to render, identical to a kernel launch dimension
-	desc.Width = m_deviceResources->GetOutputSize().Width;
-	desc.Height = m_deviceResources->GetOutputSize().Height;
-	desc.Depth = 1;
+		// Dimensions of the image to render, identical to a kernel launch dimension
+		desc.Width = m_deviceResources->GetScreenViewport().Width;
+		desc.Height = m_deviceResources->GetScreenViewport().Height;
+		desc.Depth = 1;
 
-	// Bind the raytracing pipeline
-	m_commandList->SetPipelineState1(m_rtStateObject.Get());
-	// Dispatch the rays and write to the raytracing output
-	m_commandList->DispatchRays(&desc);
+		// Bind the raytracing pipeline
+		m_commandList->SetPipelineState1(m_rtStateObject.Get());
+		// Dispatch the rays and write to the raytracing output
+		m_commandList->DispatchRays(&desc);
 
-	// The raytracing output needs to be copied to the actual render target used
-	// for display. For this, we need to transition the raytracing output from a
-	// UAV to a copy source, and the render target buffer to a copy destination.
-	// We can then do the actual copy, before transitioning the render target
-	// buffer into a render target, that will be then used to display the image
-	transition = CD3DX12_RESOURCE_BARRIER::Transition(
-		m_outputResource.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-		D3D12_RESOURCE_STATE_COPY_SOURCE);
-	m_commandList->ResourceBarrier(1, &transition);
-	transition = CD3DX12_RESOURCE_BARRIER::Transition(
-		m_deviceResources->GetRenderTarget(), D3D12_RESOURCE_STATE_RENDER_TARGET,
-		D3D12_RESOURCE_STATE_COPY_DEST);
-	m_commandList->ResourceBarrier(1, &transition);
+		// The raytracing output needs to be copied to the actual render target used
+		// for display. For this, we need to transition the raytracing output from a
+		// UAV to a copy source, and the render target buffer to a copy destination.
+		// We can then do the actual copy, before transitioning the render target
+		// buffer into a render target, that will be then used to display the image
+		transition = CD3DX12_RESOURCE_BARRIER::Transition(
+			m_outputResource.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+			D3D12_RESOURCE_STATE_COPY_SOURCE);
+		m_commandList->ResourceBarrier(1, &transition);
+		transition = CD3DX12_RESOURCE_BARRIER::Transition(
+			m_deviceResources->GetRenderTarget(), D3D12_RESOURCE_STATE_RENDER_TARGET,
+			D3D12_RESOURCE_STATE_COPY_DEST);
+		m_commandList->ResourceBarrier(1, &transition);
 
-	m_commandList->CopyResource(m_deviceResources->GetRenderTarget(),
-		m_outputResource.Get());
+		m_commandList->CopyResource(m_deviceResources->GetRenderTarget(),
+			m_outputResource.Get());
 
-	transition = CD3DX12_RESOURCE_BARRIER::Transition(
-		m_deviceResources->GetRenderTarget(), D3D12_RESOURCE_STATE_COPY_DEST,
-		D3D12_RESOURCE_STATE_RENDER_TARGET);
-	m_commandList->ResourceBarrier(1, &transition);
+		transition = CD3DX12_RESOURCE_BARRIER::Transition(
+			m_deviceResources->GetRenderTarget(), D3D12_RESOURCE_STATE_COPY_DEST,
+			D3D12_RESOURCE_STATE_RENDER_TARGET);
 
+		m_commandList->ResourceBarrier(1, &transition);
 
-	// Indicate that the back buffer will now be used to present.
-	m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
-		m_deviceResources->GetRenderTarget(),
-		D3D12_RESOURCE_STATE_RENDER_TARGET,
-		D3D12_RESOURCE_STATE_PRESENT));
+		m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
+			m_deviceResources->GetRenderTarget(),
+			D3D12_RESOURCE_STATE_RENDER_TARGET,
+			D3D12_RESOURCE_STATE_PRESENT));
+	}
+	PIXEndEvent(m_commandList.Get());
 
-	ThrowIfFailed(m_commandList->Close());
+	DX::ThrowIfFailed(m_commandList->Close());
+
 }
 
 
