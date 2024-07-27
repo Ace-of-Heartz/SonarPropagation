@@ -58,8 +58,8 @@ namespace SonarPropagation {
 		ComPtr<ID3D12RootSignature> CreateHitSignature();
 		ComPtr<ID3D12RootSignature> CreateMissSignature();
 
+		void PopulateCommandListWithPIX();
 		void PopulateCommandList();
-		void PopulateCommandList2();
 
 	private: 
 		// Raytracing pipeline objects

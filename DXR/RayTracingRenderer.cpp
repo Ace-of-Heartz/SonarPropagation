@@ -158,7 +158,7 @@ void SonarPropagation::RayTracingRenderer::CreateDeviceDependentResources() {
 			&defaultHeapProperties,
 			D3D12_HEAP_FLAG_NONE,
 			&vertexBufferDesc,
-			D3D12_RESOURCE_STATE_COPY_DEST,
+			D3D12_RESOURCE_STATE_COMMON, //D3D12_RESOURCE_STATE_COPY_DEST,
 			nullptr,
 			IID_PPV_ARGS(&m_vertexBuffer)));
 
@@ -183,7 +183,7 @@ void SonarPropagation::RayTracingRenderer::CreateDeviceDependentResources() {
 			UpdateSubresources(m_commandList.Get(), m_vertexBuffer.Get(), vertexBufferUpload.Get(), 0, 0, 1, &vertexData);
 
 			CD3DX12_RESOURCE_BARRIER vertexBufferResourceBarrier =
-				CD3DX12_RESOURCE_BARRIER::Transition(m_vertexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+				CD3DX12_RESOURCE_BARRIER::Transition(m_vertexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 			m_commandList->ResourceBarrier(1, &vertexBufferResourceBarrier);
 		}
 
@@ -222,7 +222,7 @@ void SonarPropagation::RayTracingRenderer::CreateDeviceDependentResources() {
 			&defaultHeapProperties,
 			D3D12_HEAP_FLAG_NONE,
 			&indexBufferDesc,
-			D3D12_RESOURCE_STATE_COPY_DEST,
+			D3D12_RESOURCE_STATE_COMMON, //D3D12_RESOURCE_STATE_COMMON,
 			nullptr,
 			IID_PPV_ARGS(&m_indexBuffer)));
 
@@ -250,7 +250,7 @@ void SonarPropagation::RayTracingRenderer::CreateDeviceDependentResources() {
 			UpdateSubresources(m_commandList.Get(), m_indexBuffer.Get(), indexBufferUpload.Get(), 0, 0, 1, &indexData);
 
 			CD3DX12_RESOURCE_BARRIER indexBufferResourceBarrier =
-				CD3DX12_RESOURCE_BARRIER::Transition(m_indexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER);
+				CD3DX12_RESOURCE_BARRIER::Transition(m_indexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST , D3D12_RESOURCE_STATE_INDEX_BUFFER);
 			m_commandList->ResourceBarrier(1, &indexBufferResourceBarrier);
 		}
 
@@ -318,9 +318,9 @@ void SonarPropagation::RayTracingRenderer::CreateDeviceDependentResources() {
 
 		});
 
-	
+
 	auto createDXRResources = createAssetsTask.then([this]() {
-		
+
 		CreateRaytracingPipeline();
 
 		CreateRaytracingOutputBuffer();
@@ -332,7 +332,7 @@ void SonarPropagation::RayTracingRenderer::CreateDeviceDependentResources() {
 		});
 
 	createDXRResources.then([this]() {
-		m_loadingComplete = true; 
+		m_loadingComplete = true;
 		});
 
 }
@@ -394,15 +394,15 @@ bool SonarPropagation::RayTracingRenderer::Render() {
 	{
 		return false;
 	}
-	PopulateCommandList2();
+	PopulateCommandListWithPIX();
 
 	ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
 	m_deviceResources->GetCommandQueue()->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
-	
+
 	m_deviceResources->Present();
 
 	m_deviceResources->WaitForGpu();
-	
+
 
 	return true;
 }
@@ -549,7 +549,7 @@ void SonarPropagation::RayTracingRenderer::CreateAccelerationStructures() {
 
 	// Just one instance for now
 	m_instances = { {bottomLevelBuffers.pResult, XMMatrixIdentity()} };
-	CreateTopLevelAS(m_instances,false);
+	CreateTopLevelAS(m_instances, false);
 
 	// Flush the command list and wait for it to finish
 	m_commandList->Close();
@@ -580,7 +580,8 @@ ComPtr<ID3D12RootSignature> SonarPropagation::RayTracingRenderer::CreateRayGenSi
 		  0 /*heap slot where the UAV is defined*/},
 		 {0 /*t0*/, 1, 0,
 		  D3D12_DESCRIPTOR_RANGE_TYPE_SRV /*Top-level acceleration structure*/,
-		  1} });
+		  1}
+		});
 
 	return rsc.Generate(m_dxrDevice.Get(), true);
 }
@@ -768,7 +769,7 @@ void SonarPropagation::RayTracingRenderer::CreateShaderBindingTable() {
 	// while DX12 uses the
 	// D3D12_GPU_DESCRIPTOR_HANDLE to define heap pointers. The pointer in this
 	// struct is a UINT64, which then has to be reinterpreted as a pointer.
-	auto heapPointer = reinterpret_cast<UINT64 *>(srvUavHeapHandle.ptr);
+	auto heapPointer = reinterpret_cast<UINT64*>(srvUavHeapHandle.ptr);
 	// The ray generation only uses heap data
 	m_sbtHelper.AddRayGenerationProgram(L"RayGen", { heapPointer });
 
@@ -798,7 +799,7 @@ void SonarPropagation::RayTracingRenderer::CreateShaderBindingTable() {
 }
 
 
-void SonarPropagation::RayTracingRenderer::PopulateCommandList2() {
+void SonarPropagation::RayTracingRenderer::PopulateCommandList() {
 	// Command list allocators can only be reset when the associated
   // command lists have finished execution on the GPU; apps should use
   // fences to determine GPU execution progress.
@@ -878,9 +879,7 @@ void SonarPropagation::RayTracingRenderer::PopulateCommandList2() {
 	// The hit groups section start after the miss shaders. In this sample we
 	// have one 1 hit group for the triangle
 	uint32_t hitGroupsSectionSize = m_sbtHelper.GetHitGroupSectionSize();
-	desc.HitGroupTable.StartAddress = m_sbtStorage->GetGPUVirtualAddress() +
-		rayGenerationSectionSizeInBytes +
-		missSectionSizeInBytes;
+	desc.HitGroupTable.StartAddress = m_sbtStorage->GetGPUVirtualAddress() + rayGenerationSectionSizeInBytes;
 	desc.HitGroupTable.SizeInBytes = hitGroupsSectionSize;
 	desc.HitGroupTable.StrideInBytes = m_sbtHelper.GetHitGroupEntrySize();
 
@@ -924,7 +923,7 @@ void SonarPropagation::RayTracingRenderer::PopulateCommandList2() {
 	ThrowIfFailed(m_commandList->Close());
 }
 
-void SonarPropagation::RayTracingRenderer::PopulateCommandList() {
+void SonarPropagation::RayTracingRenderer::PopulateCommandListWithPIX() {
 
 	ThrowIfFailed(m_deviceResources->GetCommandAllocator()->Reset());
 
@@ -964,7 +963,7 @@ void SonarPropagation::RayTracingRenderer::PopulateCommandList() {
 		// Refit the top-level acceleration structure to account for the new
 		// transform matrix of the triangle. Note that the build contains a barrier,
 		// hence we can do the rendering in the same command list
-		CreateTopLevelAS(m_instances,true);
+		CreateTopLevelAS(m_instances, true);
 		// #DXR
 		// Bind the descriptor heap giving access to the top-level acceleration
 		// structure, as well as the raytracing output
@@ -1010,8 +1009,7 @@ void SonarPropagation::RayTracingRenderer::PopulateCommandList() {
 		// have one 1 hit group for the triangle
 		uint32_t hitGroupsSectionSize = m_sbtHelper.GetHitGroupSectionSize();
 		desc.HitGroupTable.StartAddress = m_sbtStorage->GetGPUVirtualAddress() +
-			rayGenerationSectionSizeInBytes +
-			missSectionSizeInBytes;
+			rayGenerationSectionSizeInBytes;
 		desc.HitGroupTable.SizeInBytes = hitGroupsSectionSize;
 		desc.HitGroupTable.StrideInBytes = m_sbtHelper.GetHitGroupEntrySize();
 
