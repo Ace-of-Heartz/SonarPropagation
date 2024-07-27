@@ -394,7 +394,7 @@ bool SonarPropagation::RayTracingRenderer::Render() {
 	{
 		return false;
 	}
-	PopulateCommandList();
+	PopulateCommandList2();
 
 	ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
 	m_deviceResources->GetCommandQueue()->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
@@ -798,7 +798,134 @@ void SonarPropagation::RayTracingRenderer::CreateShaderBindingTable() {
 }
 
 
+void SonarPropagation::RayTracingRenderer::PopulateCommandList2() {
+	// Command list allocators can only be reset when the associated
+  // command lists have finished execution on the GPU; apps should use
+  // fences to determine GPU execution progress.
+	ThrowIfFailed(m_deviceResources->GetCommandAllocator()->Reset());
+
+	// However, when ExecuteCommandList() is called on a particular command
+	// list, that command list can then be reset at any time and must be before
+	// re-recording.
+	ThrowIfFailed(
+		m_commandList->Reset(m_deviceResources->GetCommandAllocator(), m_pipelineState.Get()));
+
+	// Set necessary state.
+	m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
+	m_commandList->RSSetViewports(1, &m_deviceResources->GetScreenViewport());
+	m_commandList->RSSetScissorRects(1, &m_scissorRect);
+
+	// Indicate that the back buffer will be used as a render target.
+	m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
+		m_deviceResources->GetRenderTarget(),
+		D3D12_RESOURCE_STATE_PRESENT,
+		D3D12_RESOURCE_STATE_RENDER_TARGET));
+
+	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_deviceResources->GetRenderTargetView();
+	// #DXR Extra: Depth Buffering
+	// Bind the depth buffer as a render target
+	CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle = m_deviceResources->GetDepthStencilView();
+
+	m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
+
+
+	// #DXR Extra - Refitting
+	// Refit the top-level acceleration structure to account for the new
+	// transform matrix of the triangle. Note that the build contains a barrier,
+	// hence we can do the rendering in the same command list
+	CreateTopLevelAS(m_instances, true);
+	// #DXR
+	// Bind the descriptor heap giving access to the top-level acceleration
+	// structure, as well as the raytracing output
+	std::vector<ID3D12DescriptorHeap*> heaps = { m_srvUavHeap.Get() };
+	m_commandList->SetDescriptorHeaps(static_cast<UINT>(heaps.size()),
+		heaps.data());
+
+	// On the last frame, the raytracing output was used as a copy source, to
+	// copy its contents into the render target. Now we need to transition it to
+	// a UAV so that the shaders can write in it.
+	CD3DX12_RESOURCE_BARRIER transition = CD3DX12_RESOURCE_BARRIER::Transition(
+		m_outputResource.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE,
+		D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+	m_commandList->ResourceBarrier(1, &transition);
+
+	// Setup the raytracing task
+	D3D12_DISPATCH_RAYS_DESC desc = {};
+	// The layout of the SBT is as follows: ray generation shader, miss
+	// shaders, hit groups. As described in the CreateShaderBindingTable method,
+	// all SBT entries of a given type have the same size to allow a fixed
+	// stride.
+
+	// The ray generation shaders are always at the beginning of the SBT.
+	uint32_t rayGenerationSectionSizeInBytes =
+		m_sbtHelper.GetRayGenSectionSize();
+	desc.RayGenerationShaderRecord.StartAddress =
+		m_sbtStorage->GetGPUVirtualAddress();
+	desc.RayGenerationShaderRecord.SizeInBytes =
+		rayGenerationSectionSizeInBytes;
+
+	// The miss shaders are in the second SBT section, right after the ray
+	// generation shader. We have one miss shader for the camera rays and one
+	// for the shadow rays, so this section has a size of 2*m_sbtEntrySize. We
+	// also indicate the stride between the two miss shaders, which is the size
+	// of a SBT entry
+	uint32_t missSectionSizeInBytes = m_sbtHelper.GetMissSectionSize();
+	desc.MissShaderTable.StartAddress =
+		m_sbtStorage->GetGPUVirtualAddress() + rayGenerationSectionSizeInBytes;
+	desc.MissShaderTable.SizeInBytes = missSectionSizeInBytes;
+	desc.MissShaderTable.StrideInBytes = m_sbtHelper.GetMissEntrySize();
+
+	// The hit groups section start after the miss shaders. In this sample we
+	// have one 1 hit group for the triangle
+	uint32_t hitGroupsSectionSize = m_sbtHelper.GetHitGroupSectionSize();
+	desc.HitGroupTable.StartAddress = m_sbtStorage->GetGPUVirtualAddress() +
+		rayGenerationSectionSizeInBytes +
+		missSectionSizeInBytes;
+	desc.HitGroupTable.SizeInBytes = hitGroupsSectionSize;
+	desc.HitGroupTable.StrideInBytes = m_sbtHelper.GetHitGroupEntrySize();
+
+	// Dimensions of the image to render, identical to a kernel launch dimension
+	desc.Width = m_deviceResources->GetScreenViewport().Width;
+	desc.Height = m_deviceResources->GetScreenViewport().Height;
+	desc.Depth = 1;
+
+	// Bind the raytracing pipeline
+	m_commandList->SetPipelineState1(m_rtStateObject.Get());
+	// Dispatch the rays and write to the raytracing output
+	m_commandList->DispatchRays(&desc);
+
+	// The raytracing output needs to be copied to the actual render target used
+	// for display. For this, we need to transition the raytracing output from a
+	// UAV to a copy source, and the render target buffer to a copy destination.
+	// We can then do the actual copy, before transitioning the render target
+	// buffer into a render target, that will be then used to display the image
+	transition = CD3DX12_RESOURCE_BARRIER::Transition(
+		m_outputResource.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+		D3D12_RESOURCE_STATE_COPY_SOURCE);
+	m_commandList->ResourceBarrier(1, &transition);
+	transition = CD3DX12_RESOURCE_BARRIER::Transition(
+		m_deviceResources->GetRenderTarget(), D3D12_RESOURCE_STATE_RENDER_TARGET,
+		D3D12_RESOURCE_STATE_COPY_DEST);
+	m_commandList->ResourceBarrier(1, &transition);
+
+	m_commandList->CopyResource(m_deviceResources->GetRenderTarget(),
+		m_outputResource.Get());
+
+	transition = CD3DX12_RESOURCE_BARRIER::Transition(
+		m_deviceResources->GetRenderTarget(), D3D12_RESOURCE_STATE_COPY_DEST,
+		D3D12_RESOURCE_STATE_RENDER_TARGET);
+	m_commandList->ResourceBarrier(1, &transition);
+
+	m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
+		m_deviceResources->GetRenderTarget(),
+		D3D12_RESOURCE_STATE_RENDER_TARGET,
+		D3D12_RESOURCE_STATE_PRESENT));
+
+	ThrowIfFailed(m_commandList->Close());
+}
+
 void SonarPropagation::RayTracingRenderer::PopulateCommandList() {
+
 	ThrowIfFailed(m_deviceResources->GetCommandAllocator()->Reset());
 
 	// The command list can be reset anytime after ExecuteCommandList() is called.
@@ -834,10 +961,10 @@ void SonarPropagation::RayTracingRenderer::PopulateCommandList() {
 		m_commandList->OMSetRenderTargets(1, &renderTargetView, false, &depthStencilView);
 
 		// #DXR Extra - Refitting
-	// Refit the top-level acceleration structure to account for the new
-	// transform matrix of the triangle. Note that the build contains a barrier,
-	// hence we can do the rendering in the same command list
-		CreateTopLevelAS(m_instances);
+		// Refit the top-level acceleration structure to account for the new
+		// transform matrix of the triangle. Note that the build contains a barrier,
+		// hence we can do the rendering in the same command list
+		CreateTopLevelAS(m_instances,true);
 		// #DXR
 		// Bind the descriptor heap giving access to the top-level acceleration
 		// structure, as well as the raytracing output
