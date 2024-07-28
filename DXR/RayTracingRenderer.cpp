@@ -117,13 +117,16 @@ void SonarPropagation::RayTracingRenderer::CreateDeviceDependentResources() {
 		state.RTVFormats[0] = m_deviceResources->GetBackBufferFormat();
 		state.DSVFormat = m_deviceResources->GetDepthBufferFormat();
 		state.SampleDesc.Count = 1;
+		state.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+
+
 
 		DX::ThrowIfFailed(m_dxrDevice.Get()->CreateGraphicsPipelineState(&state, IID_PPV_ARGS(&m_pipelineState)));
 
 		// Shader data can be deleted once the pipeline state is created.
 		m_vertexShader.clear();
 		m_pixelShader.clear();
-		});
+		});	
 
 	// Create and upload cube geometry resources to the GPU.
 	auto createAssetsTask = createPipelineStateTask.then([this]() {
@@ -136,13 +139,13 @@ void SonarPropagation::RayTracingRenderer::CreateDeviceDependentResources() {
 		// Cube vertices. Each vertex has a position and a color.
 		VertexPositionColor cubeVertices[] =
 		{
-			{ XMFLOAT3(-0.5f, -0.5f, -0.5f), XMFLOAT3(0.0f, 0.0f, 0.0f) },
-			{ XMFLOAT3(-0.5f, -0.5f,  0.5f), XMFLOAT3(0.0f, 0.0f, 1.0f) },
+			{ XMFLOAT3(-0.5f, -1.5f, -0.5f), XMFLOAT3(0.0f, 0.0f, 0.0f) },
+			{ XMFLOAT3(-0.5f, -1.5f,  0.5f), XMFLOAT3(0.0f, 0.0f, 1.0f) },
 			{ XMFLOAT3(-0.5f,  0.5f, -0.5f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
-			{ XMFLOAT3(-0.5f,  0.5f,  0.5f), XMFLOAT3(0.0f, 1.0f, 1.0f) },
+			{ XMFLOAT3(-0.5f,  1.5f,  0.5f), XMFLOAT3(0.0f, 1.0f, 1.0f) },
 			{ XMFLOAT3(0.5f, -0.5f, -0.5f), XMFLOAT3(1.0f, 0.0f, 0.0f) },
 			{ XMFLOAT3(0.5f, -0.5f,  0.5f), XMFLOAT3(1.0f, 0.0f, 1.0f) },
-			{ XMFLOAT3(0.5f,  0.5f, -0.5f), XMFLOAT3(1.0f, 1.0f, 0.0f) },
+			{ XMFLOAT3(0.5f,  1.5f, -0.5f), XMFLOAT3(1.0f, 1.0f, 0.0f) },
 			{ XMFLOAT3(0.5f,  0.5f,  0.5f), XMFLOAT3(1.0f, 1.0f, 1.0f) },
 		};
 
@@ -237,8 +240,7 @@ void SonarPropagation::RayTracingRenderer::CreateDeviceDependentResources() {
 		NAME_D3D12_OBJECT(m_indexBuffer);
 
 
-		// Create the acceleration structures
-		CreateAccelerationStructures();
+
 
 		// Upload the index buffer to the GPU.
 		{
@@ -250,7 +252,7 @@ void SonarPropagation::RayTracingRenderer::CreateDeviceDependentResources() {
 			UpdateSubresources(m_commandList.Get(), m_indexBuffer.Get(), indexBufferUpload.Get(), 0, 0, 1, &indexData);
 
 			CD3DX12_RESOURCE_BARRIER indexBufferResourceBarrier =
-				CD3DX12_RESOURCE_BARRIER::Transition(m_indexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST , D3D12_RESOURCE_STATE_INDEX_BUFFER);
+				CD3DX12_RESOURCE_BARRIER::Transition(m_indexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST , D3D12_RESOURCE_STATE_INDEX_BUFFER | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 			m_commandList->ResourceBarrier(1, &indexBufferResourceBarrier);
 		}
 
@@ -300,8 +302,8 @@ void SonarPropagation::RayTracingRenderer::CreateDeviceDependentResources() {
 		// We don't unmap this until the app closes. Keeping things mapped for the lifetime of the resource is okay.
 
 		// Close the command list and execute it to begin the vertex/index buffer copy into the GPU's default heap.
-		ThrowIfFailed(m_commandList->Close());
-		ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
+		//ThrowIfFailed(m_commandList->Close());
+		//ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
 		//m_deviceResources->GetCommandQueue()->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 
 		//Create vertex/index buffer views.
@@ -316,10 +318,17 @@ void SonarPropagation::RayTracingRenderer::CreateDeviceDependentResources() {
 		// Wait for the command list to finish executing; the vertex/index buffers need to be uploaded to the GPU before the upload resources go out of scope.
 		m_deviceResources->WaitForGpu();
 
+
+
 		});
 
 
 	auto createDXRResources = createAssetsTask.then([this]() {
+
+		// Create the acceleration structures
+		CreateAccelerationStructures();
+
+		ThrowIfFailed(m_commandList->Close());
 
 		CreateRaytracingPipeline();
 
@@ -691,7 +700,7 @@ void SonarPropagation::RayTracingRenderer::CreateRaytracingPipeline()
 	// then requires a trace depth of 1. Note that this recursion depth should be
 	// kept to a minimum for best performance. Path tracing algorithms can be
 	// easily flattened into a simple loop in the ray generation.
-	pipeline.SetMaxRecursionDepth(1);
+	pipeline.SetMaxRecursionDepth(2);
 
 	// Compile the pipeline for execution on the GPU
 	m_rtStateObject = pipeline.Generate();
