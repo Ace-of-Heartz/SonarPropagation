@@ -115,6 +115,9 @@
     <ClCompile Include="DXR\DXRHelpers\ShaderUtils.cpp">
       <Filter>DXR\AceRaytracing\Utils\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="DXR\DXRHelpers\MeshUtils.cpp">
+      <Filter>DXR\AceRaytracing\Utils\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h" />
@@ -166,6 +169,9 @@
       <Filter>DXR\AceRaytracing\Utils\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DXR\DXRHelpers\ShaderUtils.h">
+      <Filter>DXR\AceRaytracing\Utils\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DXR\DXRHelpers\MeshUtils.h">
       <Filter>DXR\AceRaytracing\Utils\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
