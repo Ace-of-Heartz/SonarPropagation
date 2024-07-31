@@ -296,7 +296,7 @@ void DX::DeviceResources::CreateWindowSizeDependentResources()
 			WCHAR name[25];
 			if (swprintf_s(name, L"m_renderTargets[%u]", n) > 0)
 			{
-				DX::SetName(m_renderTargets[n].Get(), name);
+				SetName(m_renderTargets[n].Get(), name);
 			}
 		}
 	}

@@ -25,7 +25,7 @@ void SonarPropagationMain::CreateRenderers(const std::shared_ptr<DX::DeviceResou
 {
 	// TODO: Replace this with your app's content initialization.
 	m_sceneRenderer = std::unique_ptr<RayTracingRenderer>(new RayTracingRenderer(deviceResources));
-	
+
 
 	OnWindowSizeChanged();
 }
@@ -35,10 +35,10 @@ void SonarPropagationMain::Update()
 {
 	// Update scene objects.
 	m_timer.Tick([&]()
-	{
-		// TODO: Replace this with your app's content update functions.
-		m_sceneRenderer->Update(m_timer);
-	});
+		{
+			// TODO: Replace this with your app's content update functions.
+			m_sceneRenderer->Update(m_timer);
+		});
 }
 
 // Renders the current frame according to the current application state.
@@ -90,4 +90,25 @@ void SonarPropagationMain::OnDeviceRemoved()
 	// and its resources which are no longer valid.
 	m_sceneRenderer->SaveState();
 	m_sceneRenderer = nullptr;
+}
+
+void SonarPropagationMain::OnKeyPressed(Windows::UI::Core::CoreWindow^ sender, Windows::UI::Core::KeyEventArgs^ args)
+{
+	m_sceneRenderer->KeyPressed(args);
+}
+
+void SonarPropagationMain::OnKeyReleased(Windows::UI::Core::CoreWindow^ sender, Windows::UI::Core::KeyEventArgs^ args)
+{
+	m_sceneRenderer->KeyReleased(args);
+}
+
+void SonarPropagationMain::OnMouseMoved(Windows::UI::Core::CoreWindow^ sender, Windows::UI::Core::PointerEventArgs^ args)
+{
+	m_sceneRenderer->MouseMoved(args);
+
+}
+
+void SonarPropagationMain::OnMouseWheelMoved(Windows::UI::Core::CoreWindow^ sender, Windows::UI::Core::PointerEventArgs^ args)
+{
+	m_sceneRenderer->MouseWheelMoved(args);
 }

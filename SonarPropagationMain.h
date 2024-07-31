@@ -21,6 +21,11 @@ namespace SonarPropagation
 		void OnResuming();
 		void OnDeviceRemoved();
 
+		void OnKeyPressed(Windows::UI::Core::CoreWindow^ sender,Windows::UI::Core::KeyEventArgs^ args);
+		void OnKeyReleased(Windows::UI::Core::CoreWindow^ sender, Windows::UI::Core::KeyEventArgs^ args);
+		void OnMouseMoved(Windows::UI::Core::CoreWindow^ sender, Windows::UI::Core::PointerEventArgs^ args);
+		void OnMouseWheelMoved(Windows::UI::Core::CoreWindow^ sender, Windows::UI::Core::PointerEventArgs^ args);
+
 	private:
 		// TODO: Replace with your own content renderers.
 		std::unique_ptr<RayTracingRenderer> m_sceneRenderer;

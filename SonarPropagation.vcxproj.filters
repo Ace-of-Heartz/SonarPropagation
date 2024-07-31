@@ -71,20 +71,32 @@
     <Filter Include="DXR\AceRaytracing\Graphics">
       <UniqueIdentifier>{335545d0-d880-45da-8a3e-eefd393edbcd}</UniqueIdentifier>
     </Filter>
-    <Filter Include="DXR\AceRaytracing\Graphics\Source Files">
-      <UniqueIdentifier>{48307bf6-f81e-4ce9-904a-49f1ec70e635}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="DXR\AceRaytracing\Graphics\Header Files">
-      <UniqueIdentifier>{e1baa34d-b172-419d-ac21-17ae3e30932c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="DXR\AceRaytracing\Utils">
+    <Filter Include="DXR\AceRaytracing\Graphics\Utils">
       <UniqueIdentifier>{95e639fb-733c-43d1-9f0e-06a14b27b07b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="DXR\AceRaytracing\Utils\Header Files">
+    <Filter Include="DXR\AceRaytracing\Graphics\Utils\Header Files">
       <UniqueIdentifier>{62b9c5b9-337b-4362-a568-576bda52004c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="DXR\AceRaytracing\Utils\Source Files">
+    <Filter Include="DXR\AceRaytracing\Graphics\Utils\Source Files">
       <UniqueIdentifier>{3cfbdd40-b45b-4074-a8bd-3eabb4e48842}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="DXR\AceRaytracing\Graphics\DXR">
+      <UniqueIdentifier>{b90a7df4-c52c-47ee-8251-9182db29ec63}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="DXR\AceRaytracing\Graphics\DXR\Source Files">
+      <UniqueIdentifier>{48307bf6-f81e-4ce9-904a-49f1ec70e635}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="DXR\AceRaytracing\Graphics\DXR\Header Files">
+      <UniqueIdentifier>{e1baa34d-b172-419d-ac21-17ae3e30932c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="DXR\AceRaytracing\Graphics\Common">
+      <UniqueIdentifier>{481f9b62-7f73-4f56-95e9-a27a95877ea8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="DXR\AceRaytracing\Graphics\Common\Header Files">
+      <UniqueIdentifier>{513d2d3a-e3b4-4852-8b4e-e7e0adc08bf2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="DXR\AceRaytracing\Graphics\Common\Source Files">
+      <UniqueIdentifier>{bff4e298-ab86-43ce-ba2e-9e9ccc18b5f9}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -92,7 +104,7 @@
     <ClCompile Include="SonarPropagationMain.cpp" />
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="DXR\RayTracingRenderer.cpp">
-      <Filter>DXR\AceRaytracing\Graphics\Source Files</Filter>
+      <Filter>DXR\AceRaytracing\Graphics\DXR\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DXR\Nvidia\nv_helpers_dx12\BottomLevelASGenerator.cpp">
       <Filter>DXR\NvidiaDev\Source Files</Filter>
@@ -113,10 +125,16 @@
       <Filter>DXR\NvidiaDev</Filter>
     </ClCompile>
     <ClCompile Include="DXR\DXRHelpers\ShaderUtils.cpp">
-      <Filter>DXR\AceRaytracing\Utils\Source Files</Filter>
+      <Filter>DXR\AceRaytracing\Graphics\Utils\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DXR\DXRHelpers\MeshUtils.cpp">
-      <Filter>DXR\AceRaytracing\Utils\Source Files</Filter>
+      <Filter>DXR\AceRaytracing\Graphics\Utils\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\Camera.cpp">
+      <Filter>DXR\AceRaytracing\Graphics\Common\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\CameraController.cpp">
+      <Filter>DXR\AceRaytracing\Graphics\Common\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -124,7 +142,7 @@
     <ClInclude Include="SonarPropagationMain.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="DXR\RayTracingRenderer.h">
-      <Filter>DXR\AceRaytracing\Graphics\Header Files</Filter>
+      <Filter>DXR\AceRaytracing\Graphics\DXR\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DXR\Nvidia\nv_helpers_dx12\BottomLevelASGenerator.h">
       <Filter>DXR\NvidiaDev\Header Files</Filter>
@@ -160,19 +178,25 @@
       <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="DXR\DXRHelpers\Structures.h">
-      <Filter>DXR\AceRaytracing\Utils\Header Files</Filter>
+      <Filter>DXR\AceRaytracing\Graphics\Utils\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DXR\DXRHelpers\Common.h">
-      <Filter>DXR\AceRaytracing\Utils\Header Files</Filter>
+      <Filter>DXR\AceRaytracing\Graphics\Utils\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DXR\DXRHelpers\thirdparty\dxc\dxcapi.use.h">
-      <Filter>DXR\AceRaytracing\Utils\Header Files</Filter>
+      <Filter>DXR\AceRaytracing\Graphics\Utils\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DXR\DXRHelpers\ShaderUtils.h">
-      <Filter>DXR\AceRaytracing\Utils\Header Files</Filter>
+      <Filter>DXR\AceRaytracing\Graphics\Utils\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DXR\DXRHelpers\MeshUtils.h">
-      <Filter>DXR\AceRaytracing\Utils\Header Files</Filter>
+      <Filter>DXR\AceRaytracing\Graphics\Utils\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\Camera.h">
+      <Filter>DXR\AceRaytracing\Graphics\Common\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\CameraController.h">
+      <Filter>DXR\AceRaytracing\Graphics\Common\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

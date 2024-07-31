@@ -52,6 +52,8 @@ void App::Initialize(CoreApplicationView^ applicationView)
 
 	CoreApplication::Resuming +=
 		ref new EventHandler<Platform::Object^>(this, &App::OnResuming);
+
+	
 }
 
 // Called when the CoreWindow object is created (or re-created).
@@ -76,6 +78,12 @@ void App::SetWindow(CoreWindow^ window)
 
 	DisplayInformation::DisplayContentsInvalidated +=
 		ref new TypedEventHandler<DisplayInformation^, Object^>(this, &App::OnDisplayContentsInvalidated);
+
+	window->KeyDown += ref new TypedEventHandler<CoreWindow^, KeyEventArgs^>(this, &App::OnKeyPressed);
+	window->KeyUp += ref new TypedEventHandler<CoreWindow^, KeyEventArgs^>(this, &App::OnKeyReleased);
+	window->PointerMoved += ref new TypedEventHandler<CoreWindow^, PointerEventArgs^>(this, &App::OnMouseMoved);
+	window->PointerWheelChanged += ref new TypedEventHandler<CoreWindow^, PointerEventArgs^>(this, &App::OnMouseWheelMoved);
+
 }
 
 // Initializes scene resources, or loads a previously saved app state.
@@ -111,6 +119,7 @@ void App::Run()
 				}
 			}
 			PIXEndEvent(commandQueue);
+
 		}
 		else
 		{
@@ -124,6 +133,7 @@ void App::Run()
 // class is torn down while the app is in the foreground.
 void App::Uninitialize()
 {
+
 }
 
 // Application lifecycle event handlers.
@@ -225,4 +235,31 @@ std::shared_ptr<DX::DeviceResources> App::GetDeviceResources()
 		m_main->CreateRenderers(m_deviceResources);
 	}
 	return m_deviceResources;
+}
+
+void App::OnKeyPressed(CoreWindow^ sender, KeyEventArgs^ args)
+{
+	switch(args->VirtualKey)
+	{
+		case VirtualKey::Escape:
+			CoreApplication::Exit();
+			break;
+	}
+
+	m_main->OnKeyPressed(sender, args);
+}
+
+void App::OnKeyReleased(CoreWindow^ sender, KeyEventArgs^ args)
+{
+	m_main->OnKeyReleased(sender, args);
+}
+
+void App::OnMouseMoved(CoreWindow^ sender, PointerEventArgs^ args)
+{
+	m_main->OnMouseMoved(sender, args);
+}
+
+void App::OnMouseWheelMoved(CoreWindow^ sender, PointerEventArgs^ args)
+{
+	m_main->OnMouseWheelMoved(sender, args);
 }

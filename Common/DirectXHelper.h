@@ -41,18 +41,18 @@ namespace DX
 	}
 
 	// Assign a name to the object to aid with debugging.
-#if defined(_DEBUG)
-	inline void SetName(ID3D12Object* pObject, LPCWSTR name)
-	{
-		pObject->SetName(name);
-	}
-#else
-	inline void SetName(ID3D12Object*, LPCWSTR)
-	{
-	}
-#endif
+//#if defined(_DEBUG)
+//	inline void SetName(ID3D12Object* pObject, LPCWSTR name)
+//	{
+//		pObject->SetName(name);
+//	}
+//#else
+//	inline void SetName(ID3D12Object*, LPCWSTR)
+//	{
+//	}
+//#endif
 }
 
 // Naming helper function for ComPtr<T>.
 // Assigns the name of the variable as the name of the object.
-#define NAME_D3D12_OBJECT(x) DX::SetName(x.Get(), L#x)
+//#define NAME_D3D12_OBJECT(x) DX::SetName(x.Get(), L#x)

@@ -35,7 +35,7 @@ Contacts for feedback:
 
 // Helper to compute aligned buffer sizes
 #ifndef ROUND_UP
-#define ROUND_UP(v, powerOf2Alignment)                                         \
+#define ROUND_UP(v, powerOf2Alignment)                                         
   (((v) + (powerOf2Alignment)-1) & ~((powerOf2Alignment)-1))
 #endif
 
