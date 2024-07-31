@@ -14,6 +14,7 @@ SonarPropagation::Graphics::Utils::Camera::Camera()
 	m_nearZ = 0.1f;
 	m_farZ = 1000.0f;
 
+	UpdateParameters();
 }
 
 
@@ -70,3 +71,9 @@ void SonarPropagation::Graphics::Utils::Camera::UpdateCameraBuffer()
 	m_cameraBuffer->Unmap(0, nullptr);
 }
 
+void SonarPropagation::Graphics::Utils::Camera::UpdateParameters()
+{
+	m_forward = XMVector3Normalize(m_at - m_eye);
+	m_right = XMVector3Normalize(XMVector3Cross(m_up, m_forward));
+	m_upward = XMVector3Normalize(XMVector3Cross(m_forward, m_right));
+}

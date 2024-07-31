@@ -11,6 +11,8 @@ namespace SonarPropagation {
 		namespace Utils {
 
 			class Camera {
+				friend class CameraController;
+
 			public:
 				Camera();
 				~Camera();
@@ -34,9 +36,17 @@ namespace SonarPropagation {
 
 			private:
 
+				void UpdateParameters();
+
+				bool m_isDirty = true;
+
 				XMVECTOR m_eye;
 				XMVECTOR m_at;
 				XMVECTOR m_up;
+
+				XMVECTOR m_forward;
+				XMVECTOR m_right;
+				XMVECTOR m_upward;
 
 				float m_fovAngleY;
 				float m_aspectRatio;
