@@ -3,6 +3,13 @@
     "directx-dxc",
     "directxmath",
     "directxtk12",
-    "directx-headers"
+    "directx-headers",
+    {
+      "name": "imgui",
+      "features": [
+        "dx12-binding"      
+
+      ]
+    }
   ]
 }

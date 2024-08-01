@@ -3,7 +3,7 @@
 
 
 
-void SonarPropagation::Graphics::Utils::CreateTriangleMesh(
+void SonarPropagation::Graphics::Utils::CreatePyramidMesh(
 	ComPtr<ID3D12Device> device,
 	ComPtr<ID3D12Resource> vertexBuffer,
 	D3D12_VERTEX_BUFFER_VIEW& vertexBufferView,
@@ -12,9 +12,9 @@ void SonarPropagation::Graphics::Utils::CreateTriangleMesh(
 ) {
 	VertexPositionColor vertices[] =
 	{
-		{{std::sqrtf(8.f / 9.f), 0.f, -1.f / 3.f}, {1.f, 0.f, 0.f}},
-		{{-std::sqrtf(2.f / 9.f), std::sqrtf(2.f / 3.f), -1.f / 3.f},{0.f, 1.f, 0.f}},
-		{{-std::sqrtf(2.f / 9.f), -std::sqrtf(2.f / 3.f), -1.f / 3.f},{0.f, 0.f, 1.f}},
+		{{std::sqrtf(8.f / 9.f), 0.f, 1.f / 3.f}, {1.f, 0.f, 0.f}},
+		{{-std::sqrtf(2.f / 9.f), std::sqrtf(2.f / 3.f), 1.f / 3.f},{0.f, 1.f, 0.f}},
+		{{-std::sqrtf(2.f / 9.f), -std::sqrtf(2.f / 3.f), 1.f / 3.f},{0.f, 0.f, 1.f}},
 		{{0.f, 0.f, 1.f}, {1, 0, 1}}
 	};
 

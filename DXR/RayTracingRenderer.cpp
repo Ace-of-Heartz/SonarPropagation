@@ -50,7 +50,6 @@ SonarPropagation::Graphics::DXR::RayTracingRenderer::~RayTracingRenderer() {
 #pragma region Graphics Init.: 
 
 
-
 void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateDeviceDependentResources() {
 
 	CreateRaytracingInterfaces();
@@ -265,6 +264,9 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateDeviceDependentR
 
 		CreateShaderBindingTable();
 
+		m_imguiManager.InitImGui(DX::c_frameCount, m_deviceResources->GetBackBufferFormat(), m_dxrDevice.Get(), m_srvUavHeap.Get());
+
+
 		});
 
 	createDXRResources.then([this]() {
@@ -278,6 +280,9 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateWindowSizeDepend
 	Size outputSize = m_deviceResources->GetOutputSize();
 	m_aspectRatio = outputSize.Width / outputSize.Height;
 	float fovAngleY = 70.0f * XM_PI / 180.0f;
+
+	m_camera.SetAspectRatio(m_aspectRatio);
+
 
 	D3D12_VIEWPORT viewport = m_deviceResources->GetScreenViewport();
 	m_scissorRect = { 0, 0, static_cast<LONG>(viewport.Width), static_cast<LONG>(viewport.Height) };
@@ -449,7 +454,7 @@ ComPtr<ID3D12RootSignature> SonarPropagation::Graphics::DXR::RayTracingRenderer:
 		 {0 /*t0*/, 1, 0,
 		  D3D12_DESCRIPTOR_RANGE_TYPE_SRV /*Top-level acceleration structure*/,
 		  1},
-	     {0, 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 2}
+		 {0, 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 2}
 		});
 
 	return rsc.Generate(m_dxrDevice.Get(), true);
@@ -538,7 +543,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateRaytracingOutput
 void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateShaderResourceHeap() {
 
 	m_srvUavHeap = CreateDescriptorHeap(
-		m_dxrDevice.Get(), 3, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, true);
+		m_dxrDevice.Get(), 4, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, true);
 
 
 	D3D12_CPU_DESCRIPTOR_HANDLE srvHandle =
@@ -567,6 +572,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateShaderResourceHe
 	cbvDesc.BufferLocation = m_camera.GetCameraBuffer()->GetGPUVirtualAddress();
 	cbvDesc.SizeInBytes = m_camera.GetCameraBufferSize();
 	m_dxrDevice->CreateConstantBufferView(&cbvDesc, srvHandle);
+
 }
 
 void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateShaderBindingTable() {
@@ -906,6 +912,9 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::PopulateCommandListWit
 
 		m_commandList->ResourceBarrier(1, &transition);
 
+		//m_imguiManager.RenderImGui(m_commandList.Get());
+
+
 		m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
 			m_deviceResources->GetRenderTarget(),
 			D3D12_RESOURCE_STATE_RENDER_TARGET,
@@ -918,20 +927,19 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::PopulateCommandListWit
 }
 
 void SonarPropagation::Graphics::DXR::RayTracingRenderer::KeyPressed(Windows::UI::Core::KeyEventArgs^ args) {
-	m_cameraController.KeyPressed( args);
+	m_cameraController.KeyPressed(args);
 }
 
 void SonarPropagation::Graphics::DXR::RayTracingRenderer::KeyReleased(Windows::UI::Core::KeyEventArgs^ args) {
 	m_cameraController.KeyReleased(args);
 }
 
-void SonarPropagation::Graphics::DXR::RayTracingRenderer::MouseMoved(Windows::UI::Core::PointerEventArgs^ args) {
+void SonarPropagation::Graphics::DXR::RayTracingRenderer::MouseMoved(Windows::Devices::Input::MouseEventArgs^ args) {
 	m_cameraController.MouseMoved(args);
 }
 
 void SonarPropagation::Graphics::DXR::RayTracingRenderer::MouseWheelMoved(Windows::UI::Core::PointerEventArgs^ args) {
 	m_cameraController.MouseWheelMoved(args);
 }
-
 
 #pragma endregion

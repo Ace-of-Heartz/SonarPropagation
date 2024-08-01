@@ -23,7 +23,7 @@ namespace SonarPropagation {
 				void KeyPressed(Windows::UI::Core::KeyEventArgs^ args);
 				void KeyReleased(Windows::UI::Core::KeyEventArgs^ args);
 
-				void MouseMoved(Windows::UI::Core::PointerEventArgs^ args);
+				void MouseMoved(Windows::Devices::Input::MouseEventArgs^ args);
 				void MouseWheelMoved(Windows::UI::Core::PointerEventArgs^ args);
 
 			private:
@@ -36,6 +36,9 @@ namespace SonarPropagation {
 				float m_sidewaysSpeed = 0.0f;
 				float m_upwardsSpeed  = 0.0f;
 
+				float m_yawSpeed = 0.0f;
+				float m_pitchSpeed = 0.0f;
+				float m_rollSpeed = 0.0f;
 			};
 		}
 	}

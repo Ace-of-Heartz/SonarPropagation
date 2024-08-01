@@ -136,6 +136,12 @@
     <ClCompile Include="Common\CameraController.cpp">
       <Filter>DXR\AceRaytracing\Graphics\Common\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Common\ImGuiManager.cpp">
+      <Filter>DXR\AceRaytracing\Graphics\Common\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\thirdparty\imgui_impl_uwp.cpp">
+      <Filter>DXR\AceRaytracing\Graphics\Common\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h" />
@@ -196,6 +202,12 @@
       <Filter>DXR\AceRaytracing\Graphics\Common\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Common\CameraController.h">
+      <Filter>DXR\AceRaytracing\Graphics\Common\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\ImGuiManager.h">
+      <Filter>DXR\AceRaytracing\Graphics\Common\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\thirdparty\imgui_impl_uwp.h">
       <Filter>DXR\AceRaytracing\Graphics\Common\Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -14,7 +14,7 @@ using namespace Windows::UI::Input;
 using namespace Windows::System;
 using namespace Windows::Foundation;
 using namespace Windows::Graphics::Display;
-
+using namespace Windows::Devices::Input;
 using Microsoft::WRL::ComPtr;
 
 // The DirectX 12 Application template is documented at https://go.microsoft.com/fwlink/?LinkID=613670&clcid=0x409
@@ -81,9 +81,10 @@ void App::SetWindow(CoreWindow^ window)
 
 	window->KeyDown += ref new TypedEventHandler<CoreWindow^, KeyEventArgs^>(this, &App::OnKeyPressed);
 	window->KeyUp += ref new TypedEventHandler<CoreWindow^, KeyEventArgs^>(this, &App::OnKeyReleased);
-	window->PointerMoved += ref new TypedEventHandler<CoreWindow^, PointerEventArgs^>(this, &App::OnMouseMoved);
+	//window->PointerMoved += ref new TypedEventHandler<CoreWindow^, PointerEventArgs^>(this, &App::OnMouseMoved);
 	window->PointerWheelChanged += ref new TypedEventHandler<CoreWindow^, PointerEventArgs^>(this, &App::OnMouseWheelMoved);
 
+	Windows::Devices::Input::MouseDevice::GetForCurrentView()->MouseMoved += ref new TypedEventHandler<Windows::Devices::Input::MouseDevice^, Windows::Devices::Input::MouseEventArgs^>(this, &App::OnMouseMoved);
 }
 
 // Initializes scene resources, or loads a previously saved app state.
@@ -254,7 +255,7 @@ void App::OnKeyReleased(CoreWindow^ sender, KeyEventArgs^ args)
 	m_main->OnKeyReleased(sender, args);
 }
 
-void App::OnMouseMoved(CoreWindow^ sender, PointerEventArgs^ args)
+void App::OnMouseMoved(MouseDevice^ sender, MouseEventArgs^ args)
 {
 	m_main->OnMouseMoved(sender, args);
 }

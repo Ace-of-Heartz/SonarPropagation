@@ -22,18 +22,30 @@ void SonarPropagation::Graphics::Utils::CameraController::ProcessCameraUpdate(DX
 	{
 		XMVECTOR deltaPosition = (m_forwardSpeed * m_camera->m_forward 
 			+ m_sidewaysSpeed * m_camera->m_right 
-			+ m_upwardsSpeed * m_camera->m_up) * timer.GetElapsedSeconds() * 2.5;
+			+ m_upwardsSpeed * m_camera->m_up) * timer.GetElapsedSeconds() * 5.5;
 
 		m_camera->m_eye += deltaPosition;
 		m_camera->m_at += deltaPosition;
-		m_camera->m_isDirty = true;
+		m_camera->m_isViewDirty = true;
 	}
 
-	if (m_camera->m_isDirty)
+
+
+	if (m_camera->m_isViewDirty)
 	{
-		//m_camera->UpdateParameters();
+		m_camera->UpdateViewMatrix();
+	}
+
+	if (m_camera->m_isProjectionDirty)
+	{
+		m_camera->UpdateProjectionMatrix();
+	}
+
+	if (m_camera-> m_isProjectionDirty || m_camera->m_isViewDirty)
+	{	
 		m_camera->UpdateCameraBuffer();
-		m_camera->m_isDirty = false;
+		m_camera->m_isProjectionDirty = false;
+		m_camera->m_isViewDirty = false;
 	}
 
 
@@ -61,7 +73,18 @@ void SonarPropagation::Graphics::Utils::CameraController::KeyPressed(Windows::UI
 	case Windows::System::VirtualKey::E:
 		m_upwardsSpeed = 0.2f;
 		break;
-
+	case Windows::System::VirtualKey::Up:
+		m_pitchSpeed = 0.5f;
+		break;
+	case Windows::System::VirtualKey::Down:
+		m_pitchSpeed = -0.5f;
+		break;
+	case Windows::System::VirtualKey::Left:
+		m_yawSpeed = -0.5f;
+		break;
+	case Windows::System::VirtualKey::Right:
+		m_yawSpeed = 0.5f;
+		break;
 
 	
 	}
@@ -89,24 +112,35 @@ void SonarPropagation::Graphics::Utils::CameraController::KeyReleased(Windows::U
 	case Windows::System::VirtualKey::E:
 		m_upwardsSpeed = 0.0f;
 		break;
+	case Windows::System::VirtualKey::Up:
+		m_pitchSpeed = 0.0f;
+		break;
+	case Windows::System::VirtualKey::Down:
+		m_pitchSpeed = 0.0f;
+		break;
+	case Windows::System::VirtualKey::Left:
+		m_yawSpeed = 0.0f;
+		break;
+	case Windows::System::VirtualKey::Right:
+		m_yawSpeed = 0.0f;
+		break;
+
+	case Windows::System::VirtualKey::F1:
+		DebugBreak();
+		break;
 	}
 }
 
-void SonarPropagation::Graphics::Utils::CameraController::MouseMoved(Windows::UI::Core::PointerEventArgs^ args)
+void SonarPropagation::Graphics::Utils::CameraController::MouseMoved(Windows::Devices::Input::MouseEventArgs^ args)
 {
-	//if (args->CurrentPoint->Properties->IsLeftButtonPressed)
-	//{
+	float xrel = args->MouseDelta.X / 800.f;
+	float yrel = args->MouseDelta.Y / -800.f;
 
-	//	//TODO: Fix this, cause it's not working properly
-	//	float xrel = args->CurrentPoint->Position.X / 9000.0f;
-	//	float yrel = args->CurrentPoint->Position.Y / 9000.0f;
-
-	//	m_camera->UpdateUV(xrel,yrel);
-	//}
-
+	m_camera->UpdateUV(yrel, xrel);
 }
 
 void SonarPropagation::Graphics::Utils::CameraController::MouseWheelMoved(Windows::UI::Core::PointerEventArgs^ args)
 {
-	
+	float delta = args->CurrentPoint->Properties->MouseWheelDelta;
+	m_camera->UpdateDistance(delta / 120.0f);
 }

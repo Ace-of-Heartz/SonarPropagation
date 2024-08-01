@@ -3,6 +3,7 @@
 #include <memory.h>
 #include <pch.h>
 #include "pix3.h"
+#include "Common/ImGuiManager.h"
 
 using namespace Microsoft::WRL;
 using namespace DirectX;
@@ -42,7 +43,7 @@ namespace SonarPropagation{
 				
 				void KeyPressed(Windows::UI::Core::KeyEventArgs^ args);
 				void KeyReleased(Windows::UI::Core::KeyEventArgs^ args);
-				void MouseMoved(Windows::UI::Core::PointerEventArgs^ args);
+				void MouseMoved(Windows::Devices::Input::MouseEventArgs^ args);
 				void MouseWheelMoved(Windows::UI::Core::PointerEventArgs^ args);
 
 				// Raytracing Utils.:
@@ -75,10 +76,6 @@ namespace SonarPropagation{
 					std::vector<std::pair<ComPtr<ID3D12Resource>, uint32_t>> vIndexBuffers
 				);
 
-				// Camera Initialization & Update:
-				//void CreateCameraBuffer();
-				//void UpdateCameraBuffer();
-
 			private:
 				// Raytracing pipeline objects:
 				ComPtr<ID3D12StateObject> m_rtStateObject;
@@ -89,7 +86,7 @@ namespace SonarPropagation{
 				static const UINT c_alignedConstantBufferSize = (sizeof(ModelViewProjectionConstantBuffer) + 255) & ~255;
 
 				// Cached pointer to device resources:
-				std::shared_ptr<DX::DeviceResources> m_deviceResources;
+				std::shared_ptr<DX::DeviceResources>				m_deviceResources;
 
 				// Generic 3D Objects:
 				Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList4>	m_commandList;
@@ -108,16 +105,16 @@ namespace SonarPropagation{
 				D3D12_VERTEX_BUFFER_VIEW							m_vertexBufferView;
 				D3D12_INDEX_BUFFER_VIEW								m_indexBufferView;
 				ModelViewProjectionConstantBuffer					m_constantBufferData;
-				UINT8* m_mappedConstantBuffer;
+				UINT8*												m_mappedConstantBuffer;
 
 				// DXR Specific Attributes:
-				ComPtr<ID3D12Device5> m_dxrDevice;
+				ComPtr<ID3D12Device5>								m_dxrDevice;
 
-				ComPtr<ID3D12Resource> m_outputResource;
+				ComPtr<ID3D12Resource>								m_outputResource;
 
-				ComPtr<ID3D12DescriptorHeap> m_srvUavHeap;
-				nv_helpers_dx12::ShaderBindingTableGenerator m_sbtHelper;
-				ComPtr<ID3D12Resource> m_sbtStorage;
+				ComPtr<ID3D12DescriptorHeap>						m_srvUavHeap;
+				nv_helpers_dx12::ShaderBindingTableGenerator		m_sbtHelper;
+				ComPtr<ID3D12Resource>								m_sbtStorage;
 				ComPtr<ID3D12Resource>								m_bottomLevelAS;
 				AccelerationStructureBuffers						m_topLevelASBuffers;
 				nv_helpers_dx12::TopLevelASGenerator				m_topLevelASGenerator;
@@ -130,27 +127,34 @@ namespace SonarPropagation{
 				std::vector<byte>									m_hitShader;
 
 				// Shader Libraries:
-				ComPtr<IDxcBlob> m_rayGenLibrary;
-				ComPtr<IDxcBlob> m_hitLibrary;
-				ComPtr<IDxcBlob> m_missLibrary;
+				ComPtr<IDxcBlob>									m_rayGenLibrary;
+				ComPtr<IDxcBlob>									m_hitLibrary;
+				ComPtr<IDxcBlob>									m_missLibrary;
 
 				// Root Signatures for Shader:
-				ComPtr<ID3D12RootSignature> m_rayGenSignature;
-				ComPtr<ID3D12RootSignature> m_hitSignature;
-				ComPtr<ID3D12RootSignature> m_missSignature;
+				ComPtr<ID3D12RootSignature>							m_rayGenSignature;
+				ComPtr<ID3D12RootSignature>							m_hitSignature;
+				ComPtr<ID3D12RootSignature>							m_missSignature;
 
 				// Instances: 
 				std::vector<std::pair<ComPtr<ID3D12Resource>, XMMATRIX>>	m_instances;
 
 				// Camera: 
 
-				SonarPropagation::Graphics::Utils::Camera m_camera;
+				SonarPropagation::Graphics::Utils::Camera			m_camera;
 				SonarPropagation::Graphics::Utils::CameraController m_cameraController;
 
-				uint32_t m_aspectRatio;
+				uint32_t											m_aspectRatio;
+
+				// ImGUI:
+
+				ComPtr<ID3D12DescriptorHeap>						m_imguiHeap;
+
+				SonarPropagation::Graphics::Utils::ImGuiManager 										m_imguiManager;
+
 
 				// Variables used with the rendering loop:
-				bool	m_loadingComplete;
+				bool												m_loadingComplete;
 
 			};
 		}

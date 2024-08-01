@@ -12,7 +12,7 @@ using namespace Microsoft::WRL;
 namespace SonarPropagation {
 	namespace Graphics {
 		namespace Utils {
-			void CreateTriangleMesh(
+			void CreatePyramidMesh(
 				ComPtr<ID3D12Device> device,
 				ComPtr<ID3D12Resource> vertexBuffer,
 				D3D12_VERTEX_BUFFER_VIEW& vertexBufferView,
