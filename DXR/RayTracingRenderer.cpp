@@ -116,7 +116,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateDeviceDependentR
 		state.RTVFormats[0] = m_deviceResources->GetBackBufferFormat();
 		state.DSVFormat = m_deviceResources->GetDepthBufferFormat();
 		state.SampleDesc.Count = 1;
-		state.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+		state.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
 
 
 
@@ -508,7 +508,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateRaytracingPipeli
 
 	pipeline.SetMaxAttributeSize(2 * sizeof(float)); // barycentric coordinates
 
-	pipeline.SetMaxRecursionDepth(2);
+	pipeline.SetMaxRecursionDepth(1);
 
 	// Compile the pipeline for execution on the GPU
 	m_rtStateObject = pipeline.Generate();
@@ -639,7 +639,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::Update(DX::StepTimer c
 
 	// Update camera here ...
 
-	m_cameraController.ProcessCameraUpdate();
+	m_cameraController.ProcessCameraUpdate(timer);
 
 }
 
@@ -727,12 +727,9 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::PopulateCommandList() 
 	// stride.
 
 	// The ray generation shaders are always at the beginning of the SBT.
-	uint32_t rayGenerationSectionSizeInBytes =
-		m_sbtHelper.GetRayGenSectionSize();
-	desc.RayGenerationShaderRecord.StartAddress =
-		m_sbtStorage->GetGPUVirtualAddress();
-	desc.RayGenerationShaderRecord.SizeInBytes =
-		rayGenerationSectionSizeInBytes;
+	uint32_t rayGenerationSectionSizeInBytes = m_sbtHelper.GetRayGenSectionSize();
+	desc.RayGenerationShaderRecord.StartAddress = m_sbtStorage->GetGPUVirtualAddress();
+	desc.RayGenerationShaderRecord.SizeInBytes = rayGenerationSectionSizeInBytes;
 
 	// The miss shaders are in the second SBT section, right after the ray
 	// generation shader. We have one miss shader for the camera rays and one
@@ -740,15 +737,14 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::PopulateCommandList() 
 	// also indicate the stride between the two miss shaders, which is the size
 	// of a SBT entry
 	uint32_t missSectionSizeInBytes = m_sbtHelper.GetMissSectionSize();
-	desc.MissShaderTable.StartAddress =
-		m_sbtStorage->GetGPUVirtualAddress() + rayGenerationSectionSizeInBytes;
+	desc.MissShaderTable.StartAddress = m_sbtStorage->GetGPUVirtualAddress() + rayGenerationSectionSizeInBytes;
 	desc.MissShaderTable.SizeInBytes = missSectionSizeInBytes;
 	desc.MissShaderTable.StrideInBytes = m_sbtHelper.GetMissEntrySize();
 
 	// The hit groups section start after the miss shaders. In this sample we
 	// have one 1 hit group for the triangle
 	uint32_t hitGroupsSectionSize = m_sbtHelper.GetHitGroupSectionSize();
-	desc.HitGroupTable.StartAddress = m_sbtStorage->GetGPUVirtualAddress() + rayGenerationSectionSizeInBytes;
+	desc.HitGroupTable.StartAddress = m_sbtStorage->GetGPUVirtualAddress() + rayGenerationSectionSizeInBytes + missSectionSizeInBytes;
 	desc.HitGroupTable.SizeInBytes = hitGroupsSectionSize;
 	desc.HitGroupTable.StrideInBytes = m_sbtHelper.GetHitGroupEntrySize();
 
@@ -856,12 +852,9 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::PopulateCommandListWit
 		// stride.
 
 		// The ray generation shaders are always at the beginning of the SBT.
-		uint32_t rayGenerationSectionSizeInBytes =
-			m_sbtHelper.GetRayGenSectionSize();
-		desc.RayGenerationShaderRecord.StartAddress =
-			m_sbtStorage->GetGPUVirtualAddress();
-		desc.RayGenerationShaderRecord.SizeInBytes =
-			rayGenerationSectionSizeInBytes;
+		uint32_t rayGenerationSectionSizeInBytes = m_sbtHelper.GetRayGenSectionSize();
+		desc.RayGenerationShaderRecord.StartAddress = m_sbtStorage->GetGPUVirtualAddress();
+		desc.RayGenerationShaderRecord.SizeInBytes = rayGenerationSectionSizeInBytes;
 
 		// The miss shaders are in the second SBT section, right after the ray
 		// generation shader. We have one miss shader for the camera rays and one
@@ -869,16 +862,14 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::PopulateCommandListWit
 		// also indicate the stride between the two miss shaders, which is the size
 		// of a SBT entry
 		uint32_t missSectionSizeInBytes = m_sbtHelper.GetMissSectionSize();
-		desc.MissShaderTable.StartAddress =
-			m_sbtStorage->GetGPUVirtualAddress() + rayGenerationSectionSizeInBytes;
+		desc.MissShaderTable.StartAddress = m_sbtStorage->GetGPUVirtualAddress() + rayGenerationSectionSizeInBytes;
 		desc.MissShaderTable.SizeInBytes = missSectionSizeInBytes;
 		desc.MissShaderTable.StrideInBytes = m_sbtHelper.GetMissEntrySize();
 
 		// The hit groups section start after the miss shaders. In this sample we
 		// have one 1 hit group for the triangle
 		uint32_t hitGroupsSectionSize = m_sbtHelper.GetHitGroupSectionSize();
-		desc.HitGroupTable.StartAddress = m_sbtStorage->GetGPUVirtualAddress() +
-			rayGenerationSectionSizeInBytes;
+		desc.HitGroupTable.StartAddress = m_sbtStorage->GetGPUVirtualAddress() + rayGenerationSectionSizeInBytes + missSectionSizeInBytes;
 		desc.HitGroupTable.SizeInBytes = hitGroupsSectionSize;
 		desc.HitGroupTable.StrideInBytes = m_sbtHelper.GetHitGroupEntrySize();
 

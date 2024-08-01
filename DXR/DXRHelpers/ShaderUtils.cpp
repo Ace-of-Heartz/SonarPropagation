@@ -29,7 +29,9 @@ IDxcBlob* SonarPropagation::Graphics::Common::CompileShader(LPCWSTR fileName) {
 
 	// Compile
 	IDxcOperationResult* pResult;
-	ThrowIfFailed(pCompiler->Compile(pShaderText, fileName, L"", L"lib_6_3", nullptr, 0, nullptr, 0,
+	std::vector<LPCWSTR> args = { L"-Zi",L"-Qembed_debug", L"-Od" };
+
+	ThrowIfFailed(pCompiler->Compile(pShaderText, fileName, L"", L"lib_6_3", args.data(), args.size(), nullptr, 0,
 		dxcIncludeHandler, &pResult));
 
 	// Verify the result

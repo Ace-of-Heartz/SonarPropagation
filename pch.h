@@ -15,6 +15,7 @@
 #include <dxcapi.h>
 
 // 
+#include "Common\StepTimer.h"
 #include "Common\Camera.h"
 #include "Common\CameraController.h"
 #include "Common\DeviceResources.h"
