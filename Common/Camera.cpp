@@ -4,9 +4,18 @@
 
 SonarPropagation::Graphics::Utils::Camera::Camera()
 {
-	m_eye = XMVectorSet(1.0f, 1.0f, -1.0f, 0.0f);
+	m_eye = XMVectorSet(0.0f, 0.0f, -1.0f, 0.0f);
 	m_at = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
 	m_up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+
+	m_forward = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
+	m_right = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
+	m_upward = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+
+	m_u = 0.0f;
+	m_v = 1.5f;
+
+	m_distance = 1.0f;
 
 	m_fovAngleY = 45.0f;
 	m_aspectRatio = 1.0f;
@@ -73,7 +82,24 @@ void SonarPropagation::Graphics::Utils::Camera::UpdateCameraBuffer()
 
 void SonarPropagation::Graphics::Utils::Camera::UpdateParameters()
 {
-	m_forward = XMVector3Normalize(m_at - m_eye);
+	XMVECTOR lookDirection{ cosf(m_u) * sinf(m_v),cosf(m_v), sinf(m_u) * sinf(m_v) };
+
+	m_at = m_eye + m_distance * lookDirection; 
+
+	m_forward = lookDirection;
+
 	m_right = XMVector3Normalize(XMVector3Cross(m_up, m_forward));
 	m_upward = XMVector3Normalize(XMVector3Cross(m_forward, m_right));
+
+	m_isDirty = true;
 }
+
+void SonarPropagation::Graphics::Utils::Camera::UpdateUV(float du, float dv)
+{
+	m_u += du;
+	m_v = m_v + dv < 0.1f ? 0.1 : m_v + dv > 3.1f ? 3.1f : m_v + dv;
+
+
+	UpdateParameters();
+}
+

@@ -37,6 +37,7 @@ namespace SonarPropagation {
 			private:
 
 				void UpdateParameters();
+				void UpdateUV(float du, float dv);
 
 				bool m_isDirty = true;
 
@@ -47,6 +48,11 @@ namespace SonarPropagation {
 				XMVECTOR m_forward;
 				XMVECTOR m_right;
 				XMVECTOR m_upward;
+
+				float m_u;
+				float m_v;
+
+				float m_distance;
 
 				float m_fovAngleY;
 				float m_aspectRatio;

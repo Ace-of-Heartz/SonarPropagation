@@ -1,6 +1,7 @@
 #pragma once
 #include "pch.h"
 
+
 namespace SonarPropagation {
 	namespace Graphics {
 		namespace Utils {
@@ -17,7 +18,7 @@ namespace SonarPropagation {
 					m_camera = camera;
 				}
 
-				void ProcessCameraUpdate();
+				void ProcessCameraUpdate(DX::StepTimer const& timer);
 				
 				void KeyPressed(Windows::UI::Core::KeyEventArgs^ args);
 				void KeyReleased(Windows::UI::Core::KeyEventArgs^ args);
