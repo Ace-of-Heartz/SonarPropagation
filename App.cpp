@@ -81,10 +81,9 @@ void App::SetWindow(CoreWindow^ window)
 
 	window->KeyDown += ref new TypedEventHandler<CoreWindow^, KeyEventArgs^>(this, &App::OnKeyPressed);
 	window->KeyUp += ref new TypedEventHandler<CoreWindow^, KeyEventArgs^>(this, &App::OnKeyReleased);
-	//window->PointerMoved += ref new TypedEventHandler<CoreWindow^, PointerEventArgs^>(this, &App::OnMouseMoved);
+	window->PointerMoved += ref new TypedEventHandler<CoreWindow^, PointerEventArgs^>(this, &App::OnMouseMoved);
 	window->PointerWheelChanged += ref new TypedEventHandler<CoreWindow^, PointerEventArgs^>(this, &App::OnMouseWheelMoved);
 
-	Windows::Devices::Input::MouseDevice::GetForCurrentView()->MouseMoved += ref new TypedEventHandler<Windows::Devices::Input::MouseDevice^, Windows::Devices::Input::MouseEventArgs^>(this, &App::OnMouseMoved);
 }
 
 // Initializes scene resources, or loads a previously saved app state.
@@ -255,7 +254,7 @@ void App::OnKeyReleased(CoreWindow^ sender, KeyEventArgs^ args)
 	m_main->OnKeyReleased(sender, args);
 }
 
-void App::OnMouseMoved(MouseDevice^ sender, MouseEventArgs^ args)
+void App::OnMouseMoved(CoreWindow^ sender, PointerEventArgs^ args)
 {
 	m_main->OnMouseMoved(sender, args);
 }

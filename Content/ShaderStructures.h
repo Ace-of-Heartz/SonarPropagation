@@ -16,4 +16,22 @@ namespace SonarPropagation
 		DirectX::XMFLOAT3 pos;
 		DirectX::XMFLOAT3 color;
 	};
+
+	struct VertexPositionNormal
+	{
+		DirectX::XMFLOAT3 pos;
+		DirectX::XMFLOAT3 normal;
+	};
+	
+	struct VertexPositionNormalTexcoord
+	{
+		DirectX::XMFLOAT3 pos;
+		DirectX::XMFLOAT3 normal;
+		DirectX::XMFLOAT2 texcoord;
+	};
+
+	struct VertexPosition 
+	{
+		DirectX::XMFLOAT3 pos;
+	};
 }

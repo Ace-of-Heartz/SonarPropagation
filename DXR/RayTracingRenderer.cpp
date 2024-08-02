@@ -49,6 +49,53 @@ SonarPropagation::Graphics::DXR::RayTracingRenderer::~RayTracingRenderer() {
 
 #pragma region Graphics Init.: 
 
+void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreatePerInstanceConstantBuffers() {
+
+	// Due to HLSL packing rules, we create the CB with 9 float4 (each needs to start on a 16-byte
+// boundary)
+	XMVECTOR bufferData[] = {
+		// A
+		XMVECTOR{1.0f, 0.0f, 0.0f, 1.0f},
+		XMVECTOR{1.0f, 0.4f, 0.0f, 1.0f},
+		XMVECTOR{1.f, 0.7f, 0.0f, 1.0f},
+		XMVECTOR{0.0f, 0.0f, 1.0, 1.0f},
+
+		// B
+		XMVECTOR{0.0f, 1.0f, 0.0f, 1.0f},
+		XMVECTOR{0.0f, 1.0f, 0.4f, 1.0f},
+		XMVECTOR{0.0f, 1.0f, 0.7f, 1.0f},
+		XMVECTOR{0.0f, 0.0f, 1.0, 1.0f},
+
+		// C
+		XMVECTOR{0.0f, 0.0f, 1.0f, 1.0f},
+		XMVECTOR{0.4f, 0.0f, 1.0f, 1.0f},
+		XMVECTOR{0.7f, 0.0f, 1.0f, 1.0f},
+		XMVECTOR{0.0f, 0.0f, 1.0, 1.0f},
+
+		XMVECTOR{0.0f, 0.0f, 1.0f, 1.0f},
+		XMVECTOR{0.4f, 0.0f, 1.0f, 1.0f},
+		XMVECTOR{0.7f, 0.0f, 1.0f, 1.0f},
+		XMVECTOR{0.0f, 0.0f, 1.0, 1.0f},
+	};
+
+	m_perInstanceConstantBuffers.resize(3);
+	int i(0);
+	for (auto& cb : m_perInstanceConstantBuffers)
+	{
+		const uint32_t bufferSize = sizeof(XMVECTOR) * 3;
+		cb = nv_helpers_dx12::CreateBuffer(m_dxrDevice.Get(), bufferSize, D3D12_RESOURCE_FLAG_NONE,
+			D3D12_RESOURCE_STATE_GENERIC_READ,
+			nv_helpers_dx12::kUploadHeapProps);
+		uint8_t* pData;
+		ThrowIfFailed(cb->Map(0, nullptr, (void**)&pData));
+		memcpy(pData, &bufferData[i * 4], bufferSize);
+		cb->Unmap(0, nullptr);
+		++i;
+	}
+}
+
+
+
 
 void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateDeviceDependentResources() {
 
@@ -138,61 +185,110 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateDeviceDependentR
 
 		auto aspectRatio = m_deviceResources->GetOutputSize().Width / m_deviceResources->GetOutputSize().Height;
 
-		VertexPositionColor vertices[] = {
-			{{std::sqrtf(8.f / 9.f), 0.f, -1.f / 3.f}, {1.f, 0.f, 0.f}},
-			{{-std::sqrtf(2.f / 9.f), std::sqrtf(2.f / 3.f), -1.f / 3.f}, {0.f, 1.f, 0.f}},
-			{{-std::sqrtf(2.f / 9.f), -std::sqrtf(2.f / 3.f), -1.f / 3.f}, {0.f, 0.f, 1.f}},
-			{{0.f, 0.f, 1.f}, {1, 0, 1}}
-		};
-
-		const UINT vertexBufferSize = sizeof(vertices);
-
-		ThrowIfFailed(m_dxrDevice->CreateCommittedResource(
-			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), D3D12_HEAP_FLAG_NONE,
-			&CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize),
-			D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
-			IID_PPV_ARGS(&m_vertexBuffer)));
-
-		UINT8* pVertexDataBegin;
-		CD3DX12_RANGE readRange(
-			0, 0); // We do not intend to read from this resource on the CPU.
-		ThrowIfFailed(m_vertexBuffer->Map(
-			0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin)));
-		memcpy(pVertexDataBegin, vertices, sizeof(vertices));
-		m_vertexBuffer->Unmap(0, nullptr);
-
-		m_vertexBufferView.BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
-		m_vertexBufferView.StrideInBytes = sizeof(VertexPositionColor);
-		m_vertexBufferView.SizeInBytes = vertexBufferSize;
-
-		NAME_D3D12_OBJECT(m_vertexBuffer);
-
-		std::vector<UINT> indices = { 0, 1, 2, 0, 3, 1, 0, 2, 3, 1, 3, 2 };
-		const UINT indexBufferSize =
-			static_cast<UINT>(indices.size()) * sizeof(UINT);
 
 		CD3DX12_HEAP_PROPERTIES heapProperty =
 			CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-		CD3DX12_RESOURCE_DESC bufferResource =
-			CD3DX12_RESOURCE_DESC::Buffer(indexBufferSize);
-		ThrowIfFailed(m_dxrDevice->CreateCommittedResource(
-			&heapProperty, D3D12_HEAP_FLAG_NONE, &bufferResource, //
-			D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
-			IID_PPV_ARGS(&m_indexBuffer)));
+		{
+			std::vector<VertexPosition> tetrahedronVertices = GetTetrahedronVertices();
 
-		// Copy the triangle data to the index buffer.
-		UINT8* pIndexDataBegin;
-		ThrowIfFailed(m_indexBuffer->Map(
-			0, &readRange, reinterpret_cast<void**>(&pIndexDataBegin)));
-		memcpy(pIndexDataBegin, indices.data(), indexBufferSize);
-		m_indexBuffer->Unmap(0, nullptr);
+			const UINT tetrahedronVertexBufferSize = sizeof(tetrahedronVertices);
 
-		// Initialize the index buffer view.
-		m_indexBufferView.BufferLocation = m_indexBuffer->GetGPUVirtualAddress();
-		m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
-		m_indexBufferView.SizeInBytes = indexBufferSize;
+			ThrowIfFailed(m_dxrDevice->CreateCommittedResource(
+				&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), D3D12_HEAP_FLAG_NONE,
+				&CD3DX12_RESOURCE_DESC::Buffer(tetrahedronVertexBufferSize),
+				D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
+				IID_PPV_ARGS(&m_tetrahedronVertexBuffer)));
 
-		NAME_D3D12_OBJECT(m_indexBuffer);
+			UINT8* pVertexDataBegin;
+			CD3DX12_RANGE readRange(
+				0, 0); // We do not intend to read from this resource on the CPU.
+			ThrowIfFailed(m_tetrahedronVertexBuffer->Map(
+				0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin)));
+			memcpy(pVertexDataBegin, tetrahedronVertices.data(), tetrahedronVertexBufferSize);
+			m_tetrahedronVertexBuffer->Unmap(0, nullptr);
+
+			m_tetrahedronVertexBufferView.BufferLocation = m_tetrahedronVertexBuffer->GetGPUVirtualAddress();
+			m_tetrahedronVertexBufferView.StrideInBytes = sizeof(VertexPosition);
+			m_tetrahedronVertexBufferView.SizeInBytes = tetrahedronVertexBufferSize;
+
+			NAME_D3D12_OBJECT(m_tetrahedronVertexBuffer);
+
+			std::vector<UINT> indices = GetTetrahedronIndices();
+			const UINT indexBufferSize =
+				static_cast<UINT>(indices.size()) * sizeof(UINT);
+
+			CD3DX12_RESOURCE_DESC bufferResource =
+				CD3DX12_RESOURCE_DESC::Buffer(indexBufferSize);
+			ThrowIfFailed(m_dxrDevice->CreateCommittedResource(
+				&heapProperty, D3D12_HEAP_FLAG_NONE, &bufferResource, //
+				D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
+				IID_PPV_ARGS(&m_tetrahedronIndexBuffer)));
+
+			// Copy the triangle data to the index buffer.
+			UINT8* pIndexDataBegin;
+			ThrowIfFailed(m_tetrahedronIndexBuffer->Map(
+				0, &readRange, reinterpret_cast<void**>(&pIndexDataBegin)));
+			memcpy(pIndexDataBegin, indices.data(), indexBufferSize);
+			m_tetrahedronIndexBuffer->Unmap(0, nullptr);
+
+			// Initialize the index buffer view.
+			m_tetrahedronIndexBufferView.BufferLocation = m_tetrahedronIndexBuffer->GetGPUVirtualAddress();
+			m_tetrahedronIndexBufferView.Format = DXGI_FORMAT_R32_UINT;
+			m_tetrahedronIndexBufferView.SizeInBytes = indexBufferSize;
+
+			NAME_D3D12_OBJECT(m_tetrahedronIndexBuffer);
+		}
+
+		{
+			std::vector<VertexPosition> quadVertices = GetQuadVertices(1,1);
+			const UINT quadVertexBufferSize = sizeof(quadVertices);
+
+			ThrowIfFailed(m_dxrDevice->CreateCommittedResource(
+				&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), D3D12_HEAP_FLAG_NONE,
+				&CD3DX12_RESOURCE_DESC::Buffer(quadVertexBufferSize),
+				D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
+				IID_PPV_ARGS(&m_quadVertexBuffer)));
+
+			UINT8* pVertexDataBegin;
+			CD3DX12_RANGE readRange(
+				0, 0); // We do not intend to read from this resource on the CPU.
+			ThrowIfFailed(m_quadVertexBuffer->Map(
+				0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin)));
+			memcpy(pVertexDataBegin, quadVertices.data(), quadVertexBufferSize);
+			m_quadVertexBuffer->Unmap(0, nullptr);
+
+			m_quadVertexBufferView.BufferLocation = m_quadVertexBuffer->GetGPUVirtualAddress();
+			m_quadVertexBufferView.StrideInBytes = sizeof(VertexPosition);
+			m_quadVertexBufferView.SizeInBytes = quadVertexBufferSize;
+
+			NAME_D3D12_OBJECT(m_quadVertexBuffer);
+
+			std::vector<UINT> indices = GetQuadIndices();
+			const UINT quadIndexBufferSize =
+				static_cast<UINT>(indices.size()) * sizeof(UINT);
+
+			CD3DX12_RESOURCE_DESC bufferResource =
+				CD3DX12_RESOURCE_DESC::Buffer(quadIndexBufferSize);
+			ThrowIfFailed(m_dxrDevice->CreateCommittedResource(
+				&heapProperty, D3D12_HEAP_FLAG_NONE, &bufferResource, //
+				D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
+				IID_PPV_ARGS(&m_quadIndexBuffer)));
+
+			// Copy the triangle data to the index buffer.
+			UINT8* pIndexDataBegin;
+			ThrowIfFailed(m_quadIndexBuffer->Map(
+				0, &readRange, reinterpret_cast<void**>(&pIndexDataBegin)));
+			memcpy(pIndexDataBegin, indices.data(), quadIndexBufferSize);
+			m_quadIndexBuffer->Unmap(0, nullptr);
+
+			// Initialize the index buffer view.
+			m_quadIndexBufferView.BufferLocation = m_tetrahedronIndexBuffer->GetGPUVirtualAddress();
+			m_quadIndexBufferView.Format = DXGI_FORMAT_R32_UINT;
+			m_quadIndexBufferView.SizeInBytes = quadIndexBufferSize;
+
+			NAME_D3D12_OBJECT(m_tetrahedronIndexBuffer);
+
+		}
 
 		// Create a descriptor heap for the constant buffers.
 		{
@@ -254,6 +350,8 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateDeviceDependentR
 
 		CreateRaytracingPipeline();
 
+		CreatePerInstanceConstantBuffers();
+
 		CreateRaytracingOutputBuffer();
 
 		m_camera.CreateCameraBuffer(m_dxrDevice);
@@ -265,7 +363,6 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateDeviceDependentR
 		CreateShaderBindingTable();
 
 		m_imguiManager.InitImGui(DX::c_frameCount, m_deviceResources->GetBackBufferFormat(), m_dxrDevice.Get(), m_srvUavHeap.Get());
-
 
 		});
 
@@ -336,11 +433,22 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateWindowSizeDepend
 /// </summary>
 void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateAccelerationStructures() {
 	AccelerationStructureBuffers bottomLevelBuffers =
-		CreateBottomLevelAS({ {m_vertexBuffer.Get(), 4} },
-			{ {m_indexBuffer.Get(), 12} }
+		CreateBottomLevelAS({ {m_tetrahedronVertexBuffer.Get(), 4}},
+			{ {m_tetrahedronIndexBuffer.Get(), 12}}
 		);
 
-	m_instances = { {bottomLevelBuffers.pResult, XMMatrixIdentity()} };
+
+	AccelerationStructureBuffers planeBottomLevelBuffers =
+		CreateBottomLevelAS({ {m_quadVertexBuffer.Get(), 4} },
+			{ {m_quadIndexBuffer.Get(), 12} }
+		);
+
+	m_instances = {
+		{bottomLevelBuffers.pResult, XMMatrixIdentity()},
+		{bottomLevelBuffers.pResult, XMMatrixTranslation(-.6f, 0, 0) },
+		{bottomLevelBuffers.pResult, XMMatrixTranslation(.6f, 0, 0)},
+		{planeBottomLevelBuffers.pResult, XMMatrixIdentity() },
+	};
 	CreateTopLevelAS(m_instances, false);
 
 	m_commandList->Close();
@@ -372,13 +480,13 @@ SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateBottomLevelAS(
 	for (size_t i = 0; i < vVertexBuffers.size(); i++) {
 		if (i < vIndexBuffers.size() && vIndexBuffers[i].second > 0)
 			bottomLevelAS.AddVertexBuffer(vVertexBuffers[i].first.Get(), 0,
-				vVertexBuffers[i].second, sizeof(VertexPositionColor),
+				vVertexBuffers[i].second, sizeof(VertexPosition),
 				vIndexBuffers[i].first.Get(), 0,
 				vIndexBuffers[i].second, nullptr, 0, true);
 
 		else
 			bottomLevelAS.AddVertexBuffer(vVertexBuffers[i].first.Get(), 0,
-				vVertexBuffers[i].second, sizeof(VertexPositionColor), 0,
+				vVertexBuffers[i].second, sizeof(VertexPosition), 0,
 				0);
 	}
 
@@ -412,7 +520,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateTopLevelAS(const
 		for (size_t i = 0; i < instances.size(); i++) {
 			m_topLevelASGenerator.AddInstance(
 				instances[i].first.Get(), instances[i].second, static_cast<UINT>(i),
-				static_cast<UINT>(2 * i));
+				static_cast<UINT>(i));
 		}
 
 		UINT64 scratchSize, resultSize, instanceDescsSize;
@@ -469,6 +577,7 @@ ComPtr<ID3D12RootSignature> SonarPropagation::Graphics::DXR::RayTracingRenderer:
 
 	rsc.AddRootParameter(D3D12_ROOT_PARAMETER_TYPE_SRV, 0);
 	rsc.AddRootParameter(D3D12_ROOT_PARAMETER_TYPE_SRV, 1);
+	rsc.AddRootParameter(D3D12_ROOT_PARAMETER_TYPE_CBV, 0);
 
 	return rsc.Generate(m_dxrDevice.Get(), true);
 }
@@ -575,38 +684,40 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateShaderResourceHe
 
 }
 
+
+/// <summary>
+/// Create the shader binding table for the raytracing pipeline by initializing the RayGen, Miss shaders
+/// and the Hit shaders per instances.
+/// </summary>
 void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateShaderBindingTable() {
-	// The SBT helper class collects calls to Add*Program.  If called several
-	// times, the helper must be emptied before re-adding shaders.
+
 	m_sbtHelper.Reset();
 
-	// The pointer to the beginning of the heap is the only parameter required by
-	// shaders without root parameters
 	D3D12_GPU_DESCRIPTOR_HANDLE srvUavHeapHandle =
 		m_srvUavHeap->GetGPUDescriptorHandleForHeapStart();
-	// The helper treats both root parameter pointers and heap pointers as void*,
-	// while DX12 uses the
-	// D3D12_GPU_DESCRIPTOR_HANDLE to define heap pointers. The pointer in this
-	// struct is a UINT64, which then has to be reinterpreted as a pointer.
+
 	auto heapPointer = reinterpret_cast<UINT64*>(srvUavHeapHandle.ptr);
-	// The ray generation only uses heap data
 	m_sbtHelper.AddRayGenerationProgram(L"RayGen", { heapPointer });
 
-	// The miss and hit shaders do not access any external resources: instead they
-	// communicate their results through the ray payload
 	m_sbtHelper.AddMissProgram(L"Miss", {});
 
-	// Adding the triangle hit shader
-	m_sbtHelper.AddHitGroup(L"HitGroup", { (void*)(m_vertexBuffer->GetGPUVirtualAddress()),
-		(void*)(m_indexBuffer->GetGPUVirtualAddress()) });
 
-	// Compute the size of the SBT given the number of shaders and their
-	// parameters
+	auto constNum = m_perInstanceConstantBuffers.size();
+
+	for (int i = 0; i < constNum; ++i) {
+		m_sbtHelper.AddHitGroup(
+			L"HitGroup",
+			{
+				(void*)(m_tetrahedronVertexBuffer->GetGPUVirtualAddress()),
+				(void*)(m_tetrahedronIndexBuffer->GetGPUVirtualAddress()),
+
+				(void*)(m_perInstanceConstantBuffers[i]->GetGPUVirtualAddress())
+			});
+	}
+
+
 	uint32_t sbtSize = m_sbtHelper.ComputeSBTSize();
 
-	// Create the SBT on the upload heap. This is required as the helper will use
-	// mapping to write the SBT contents. After the SBT compilation it could be
-	// copied to the default heap for performance.
 	m_sbtStorage = nv_helpers_dx12::CreateBuffer(
 		m_dxrDevice.Get(), sbtSize, D3D12_RESOURCE_FLAG_NONE,
 		D3D12_RESOURCE_STATE_GENERIC_READ, nv_helpers_dx12::kUploadHeapProps);
@@ -614,7 +725,6 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateShaderBindingTab
 		throw std::logic_error("Could not allocate the shader binding table");
 	}
 
-	// Compile the SBT from the shader and parameters info
 	m_sbtHelper.Generate(m_sbtStorage.Get(), m_rtStateObjectProps.Get());
 }
 
@@ -934,7 +1044,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::KeyReleased(Windows::U
 	m_cameraController.KeyReleased(args);
 }
 
-void SonarPropagation::Graphics::DXR::RayTracingRenderer::MouseMoved(Windows::Devices::Input::MouseEventArgs^ args) {
+void SonarPropagation::Graphics::DXR::RayTracingRenderer::MouseMoved(Windows::UI::Core::PointerEventArgs^ args) {
 	m_cameraController.MouseMoved(args);
 }
 

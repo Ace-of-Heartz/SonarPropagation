@@ -22,6 +22,9 @@ namespace SonarPropagation{
 				ComPtr<ID3D12Resource> pInstanceDesc; // Used only for top-level AS
 			};
 
+
+
+
 			/// <summary>
 			/// Main class for the RayTracingRenderer. Responsible for creating the RayTracing Pipeline.
 			/// </summary>
@@ -43,7 +46,7 @@ namespace SonarPropagation{
 				
 				void KeyPressed(Windows::UI::Core::KeyEventArgs^ args);
 				void KeyReleased(Windows::UI::Core::KeyEventArgs^ args);
-				void MouseMoved(Windows::Devices::Input::MouseEventArgs^ args);
+				void MouseMoved(Windows::UI::Core::PointerEventArgs^ args);
 				void MouseWheelMoved(Windows::UI::Core::PointerEventArgs^ args);
 
 				// Raytracing Utils.:
@@ -64,6 +67,7 @@ namespace SonarPropagation{
 				void CreateRaytracingOutputBuffer();
 				void CreateShaderResourceHeap();
 				void CreateShaderBindingTable();
+				void CreatePerInstanceConstantBuffers();
 
 				// Raytracing Render Loop:
 				void PopulateCommandListWithPIX();
@@ -98,12 +102,23 @@ namespace SonarPropagation{
 				D3D12_RECT											m_scissorRect;
 
 				// Generic Direct3D Buffers:
-				Microsoft::WRL::ComPtr<ID3D12Resource>				m_vertexBuffer;
-				Microsoft::WRL::ComPtr<ID3D12Resource>				m_indexBuffer;
+				Microsoft::WRL::ComPtr<ID3D12Resource>				m_tetrahedronVertexBuffer;
+				Microsoft::WRL::ComPtr<ID3D12Resource>				m_tetrahedronIndexBuffer;
+				UINT 												m_tetrahedronInstanceCount;
+
+				Microsoft::WRL::ComPtr<ID3D12Resource>				m_quadVertexBuffer;
+				Microsoft::WRL::ComPtr<ID3D12Resource>				m_quadIndexBuffer;
+				UINT												m_quadInstanceCount;
+
+
 				Microsoft::WRL::ComPtr<ID3D12Resource>				m_constantBuffer;
 
-				D3D12_VERTEX_BUFFER_VIEW							m_vertexBufferView;
-				D3D12_INDEX_BUFFER_VIEW								m_indexBufferView;
+				D3D12_VERTEX_BUFFER_VIEW							m_tetrahedronVertexBufferView;
+				D3D12_INDEX_BUFFER_VIEW								m_tetrahedronIndexBufferView;
+
+				D3D12_VERTEX_BUFFER_VIEW 							m_quadVertexBufferView;
+				D3D12_INDEX_BUFFER_VIEW 							m_quadIndexBufferView;
+
 				ModelViewProjectionConstantBuffer					m_constantBufferData;
 				UINT8*												m_mappedConstantBuffer;
 
@@ -138,6 +153,7 @@ namespace SonarPropagation{
 
 				// Instances: 
 				std::vector<std::pair<ComPtr<ID3D12Resource>, XMMATRIX>>	m_instances;
+				std::vector<ComPtr<ID3D12Resource>> 					m_perInstanceConstantBuffers;
 
 				// Camera: 
 
@@ -150,11 +166,13 @@ namespace SonarPropagation{
 
 				ComPtr<ID3D12DescriptorHeap>						m_imguiHeap;
 
-				SonarPropagation::Graphics::Utils::ImGuiManager 										m_imguiManager;
+				SonarPropagation::Graphics::Utils::ImGuiManager		m_imguiManager;
 
 
 				// Variables used with the rendering loop:
 				bool												m_loadingComplete;
+				
+
 
 			};
 		}

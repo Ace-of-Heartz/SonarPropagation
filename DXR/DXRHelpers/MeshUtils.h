@@ -12,12 +12,20 @@ using namespace Microsoft::WRL;
 namespace SonarPropagation {
 	namespace Graphics {
 		namespace Utils {
-			void CreatePyramidMesh(
-				ComPtr<ID3D12Device> device,
-				ComPtr<ID3D12Resource> vertexBuffer,
-				D3D12_VERTEX_BUFFER_VIEW& vertexBufferView,
-				ComPtr<ID3D12Resource> indexBuffer,
-				D3D12_INDEX_BUFFER_VIEW indexBufferView);
+
+			std::vector<VertexPosition> GetTetrahedronVertices(
+			);
+
+			std::vector<UINT> GetTetrahedronIndices(
+			);
+
+
+			std::vector<VertexPosition> GetQuadVertices(
+				float width, float height
+			);
+
+			std::vector<UINT> GetQuadIndices(
+			);
 		}
 	}
 }

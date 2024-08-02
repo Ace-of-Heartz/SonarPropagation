@@ -171,7 +171,8 @@ UINT ShaderBindingTableGenerator::GetRayGenEntrySize() const
 // Get the size in bytes of the SBT section dedicated to miss programs
 UINT ShaderBindingTableGenerator::GetMissSectionSize() const
 {
-  return m_missEntrySize * static_cast<UINT>(m_miss.size());
+    return m_missEntrySize * static_cast<UINT>(m_miss.size());
+  //return ROUND_UP(m_missEntrySize * static_cast<UINT>(m_miss.size()),64);
 }
 
 //--------------------------------------------------------------------------------------------------

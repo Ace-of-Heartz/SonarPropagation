@@ -5,6 +5,8 @@
 namespace SonarPropagation {
 	namespace Graphics {
 		namespace Utils {
+			static Windows::Foundation::Point m_prevPointer;
+
 			class CameraController {
 			public: 
 
@@ -23,10 +25,12 @@ namespace SonarPropagation {
 				void KeyPressed(Windows::UI::Core::KeyEventArgs^ args);
 				void KeyReleased(Windows::UI::Core::KeyEventArgs^ args);
 
-				void MouseMoved(Windows::Devices::Input::MouseEventArgs^ args);
+				void MouseMoved(Windows::UI::Core::PointerEventArgs^ args);
 				void MouseWheelMoved(Windows::UI::Core::PointerEventArgs^ args);
 
 			private:
+
+				
 
 				Camera* m_camera;
 

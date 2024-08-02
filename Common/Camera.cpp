@@ -5,7 +5,7 @@
 
 SonarPropagation::Graphics::Utils::Camera::Camera()
 {
-	m_eye = XMVectorSet(1.5f, 1.5f, 25.5f, 0.0f);
+	m_eye = XMVectorSet(1.5f, 1.5f, 1.5f, 0.0f);
 	m_at = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
 
 	m_forward = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
@@ -15,7 +15,10 @@ SonarPropagation::Graphics::Utils::Camera::Camera()
 	m_worldUp = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
 	m_u = XM_PI;
-	m_v = 0.0f;
+	m_v = XM_PI/2.f;
+
+	//m_rotationQ = XMQuaternionRotationRollPitchYaw(XM_PI,0.f,0.f);
+
 
 	m_distance = 0.5f;
 
@@ -77,23 +80,6 @@ void SonarPropagation::Graphics::Utils::Camera::UpdateProjectionMatrix()
 
 void SonarPropagation::Graphics::Utils::Camera::UpdateCameraBuffer()
 {
-	//std::vector<XMMATRIX> matrices(4);
-
-	//matrices[0] = XMMatrixLookAtRH(m_eye, m_at, m_up);
-
-	//float fovAngleY = 45.0f * XM_PI / 180.0f;
-	//matrices[1] =
-	//	XMMatrixPerspectiveFovRH(fovAngleY, m_aspectRatio, 0.1f, 1000.0f);
-
-	//// Raytracing has to do the contrary of rasterization: rays are defined in
-	//// camera space, and are transformed into world space. To do this, we need to
-	//// store the inverse matrices as well.
-	//XMVECTOR det;
-	//matrices[2] = XMMatrixInverse(&det, matrices[0]);
-	//matrices[3] = XMMatrixInverse(&det, matrices[1]);
-
-
-
 	allMatrices = { m_viewMatrix,m_projectionMatrix, m_viewMatrixInv, m_projectionMatrixInv };
 
 	uint8_t* pData;
@@ -105,7 +91,9 @@ void SonarPropagation::Graphics::Utils::Camera::UpdateCameraBuffer()
 void SonarPropagation::Graphics::Utils::Camera::UpdateParameters()
 {
 
-	XMVECTOR lookDirection{ cosf(m_u) * sinf(m_v), sinf(m_u) * sinf(m_v),cosf(m_u), };
+	XMVECTOR lookDirection{ cosf(m_u) * sinf(m_v),sinf(m_u) * sinf(m_v),cosf(m_u)  };
+
+	//XMVECTOR lookDirection = XMVector3Rotate(m_forward, m_rotationQ);
 
 	m_at = m_eye + m_distance * lookDirection; 
 
@@ -115,15 +103,21 @@ void SonarPropagation::Graphics::Utils::Camera::UpdateParameters()
 	m_up = XMVector3Normalize(XMVector3Cross(m_right,m_forward));
 
 	m_isViewDirty = true;
+	m_isProjectionDirty = true;
 }
 
 void SonarPropagation::Graphics::Utils::Camera::UpdateUV(float du, float dv)
 {
-	m_u += du;
-	m_v = m_v + dv < 0.1f ? 0.1 : m_v + dv > 3.1f ? 3.1f : m_v + dv;
+	m_u += m_u;
+	m_v = m_v + dv < 0.01f ? 0.01 : m_v + dv > 0.1f ? 0.1f : m_v + dv;
 
+	//ApplyRotation(du, dv, 0.0f);
 	UpdateParameters();
+
 }
+
+
+
 
 void SonarPropagation::Graphics::Utils::Camera::UpdateDistance(float dDistance) {
 
@@ -132,5 +126,14 @@ void SonarPropagation::Graphics::Utils::Camera::UpdateDistance(float dDistance) 
 
 	m_distance += dDistance;
 
+	UpdateParameters();
+}
+
+
+void SonarPropagation::Graphics::Utils::Camera::ApplyRotation(float yaw, float pitch, float roll) {
+	XMVECTOR q = XMQuaternionRotationRollPitchYaw(pitch, yaw, roll);
+	
+	//m_rotationQ = XMQuaternionSlerp(m_rotationQ, q, 0.01f);
+	
 	UpdateParameters();
 }

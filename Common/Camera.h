@@ -52,6 +52,8 @@ namespace SonarPropagation {
 				void UpdateViewMatrix();
 				void UpdateProjectionMatrix();
 
+				void ApplyRotation(float yaw, float pitch, float roll);
+
 				bool m_isViewDirty = true;
 				bool m_isProjectionDirty = true;
 
@@ -64,6 +66,7 @@ namespace SonarPropagation {
 
 				XMVECTOR m_worldUp;
 
+				//XMVECTOR m_rotationQ;
 				float m_u;
 				float m_v;
 
@@ -72,6 +75,8 @@ namespace SonarPropagation {
 				float m_fovAngleY;
 				float m_aspectRatio;
 				
+				float m_lastYaw;
+				float m_lastPitch;
 
 				float m_nearZ;
 				float m_farZ;

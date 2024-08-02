@@ -102,7 +102,7 @@ void SonarPropagationMain::OnKeyReleased(Windows::UI::Core::CoreWindow^ sender, 
 	m_sceneRenderer->KeyReleased(args);
 }
 
-void SonarPropagationMain::OnMouseMoved(Windows::Devices::Input::MouseDevice^ sender, Windows::Devices::Input::MouseEventArgs^ args)
+void SonarPropagationMain::OnMouseMoved(Windows::UI::Core::CoreWindow^ sender, Windows::UI::Core::PointerEventArgs^ args)
 {
 	m_sceneRenderer->MouseMoved(args);
 
