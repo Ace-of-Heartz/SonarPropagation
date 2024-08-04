@@ -29,9 +29,23 @@ namespace SonarPropagation {
 					m_aspectRatio = aspectRatio;
 					m_isProjectionDirty = true;
 				}
+				inline void SetFOV(float fovAngleY) {
+					m_fovAngleY = fovAngleY;
+					m_isProjectionDirty = true;
+				}
 
 				void CreateCameraBuffer(ComPtr<ID3D12Device> device);
 				void UpdateCameraBuffer();
+				void RenderCameraImGui();
+
+
+				inline void EnableQuaternionRotation() {
+					m_useQuaternion = true;
+				}
+
+				inline void DisableQuaternionRotation() {
+					m_useQuaternion = false;
+				}
 
 				inline ComPtr<ID3D12Resource> GetCameraBuffer() {
 					return m_cameraBuffer;
@@ -44,6 +58,59 @@ namespace SonarPropagation {
 					return m_cameraBufferSize;
 				}
 
+				inline XMVECTOR GetEye() {
+					return m_eye;
+				}
+				
+				inline XMVECTOR GetAt() {
+					return m_at;
+				}
+
+				inline XMVECTOR GetForward() {
+					return m_forward;
+				}
+
+				inline XMVECTOR GetRight() {
+					return m_right;
+				}
+
+				inline XMVECTOR GetUp() {
+					return m_up;
+				}
+
+				inline float GetYaw() {
+					return m_yaw;
+				}
+
+				inline float GetPitch() {
+					return m_pitch;
+				}
+
+				inline float GetU() {
+					return m_u;
+				}
+
+				inline float GetV() {
+					return m_v;
+				}
+
+				inline float GetDistance() {
+					return m_distance;
+				}
+
+				inline float GetFovAngleY() {
+					return m_fovAngleY;
+				}
+
+				inline float GetAspectRatio() {
+					return m_aspectRatio;
+				}
+
+				inline float GetSpeed() {
+					return m_speed;
+				}
+				
+
 			private:
 
 				void UpdateParameters();
@@ -51,8 +118,6 @@ namespace SonarPropagation {
 				void UpdateDistance(float dDistance);
 				void UpdateViewMatrix();
 				void UpdateProjectionMatrix();
-
-				void ApplyRotation(float yaw, float pitch, float roll);
 
 				bool m_isViewDirty = true;
 				bool m_isProjectionDirty = true;
@@ -66,9 +131,15 @@ namespace SonarPropagation {
 
 				XMVECTOR m_worldUp;
 
-				//XMVECTOR m_rotationQ;
+				bool m_useQuaternion = true;
+
+				float m_yaw;
+				float m_pitch;
+
 				float m_u;
 				float m_v;
+
+				XMVECTOR m_rotationQ;
 
 				float m_distance;
 
@@ -78,8 +149,11 @@ namespace SonarPropagation {
 				float m_lastYaw;
 				float m_lastPitch;
 
+
 				float m_nearZ;
 				float m_farZ;
+
+				float m_speed;
 
 				XMMATRIX m_viewMatrix;
 				XMMATRIX m_viewMatrixInv;

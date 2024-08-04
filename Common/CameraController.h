@@ -28,9 +28,9 @@ namespace SonarPropagation {
 				void MouseMoved(Windows::UI::Core::PointerEventArgs^ args);
 				void MouseWheelMoved(Windows::UI::Core::PointerEventArgs^ args);
 
-			private:
+				void RenderImGui();
 
-				
+			private:
 
 				Camera* m_camera;
 
