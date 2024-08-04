@@ -4,6 +4,7 @@
 #include <pch.h>
 #include "pix3.h"
 #include "Common/ImGuiManager.h"
+#include <map>
 
 using namespace Microsoft::WRL;
 using namespace DirectX;
@@ -52,8 +53,6 @@ namespace SonarPropagation{
 				// Raytracing Utils.:
 				void CheckRayTracingSupport();
 
-
-
 			private:
 
 				// Raytracing Initialization:
@@ -68,11 +67,16 @@ namespace SonarPropagation{
 				void CreateShaderResourceHeap();
 				void CreateShaderBindingTable();
 				void CreatePerInstanceConstantBuffers();
+				void CreateInstances(std::vector<std::pair<AccelerationStructureBuffers, uint32_t>> asBuffers);
+
 
 				// Raytracing Render Loop:
 				void PopulateCommandListWithPIX();
 				void PopulateCommandList();
-
+				void UpdateInstanceTransforms();
+				
+				void RenderImGui();
+				
 				// Raytracing Initialization:
 				void LoadState();
 				void CreateTopLevelAS(const std::vector < std::pair < ComPtr<ID3D12Resource>, DirectX::XMMATRIX>>& instances, bool updateOnly);
@@ -119,8 +123,8 @@ namespace SonarPropagation{
 				D3D12_VERTEX_BUFFER_VIEW 							m_quadVertexBufferView;
 				D3D12_INDEX_BUFFER_VIEW 							m_quadIndexBufferView;
 
-				ModelViewProjectionConstantBuffer					m_constantBufferData;
-				UINT8*												m_mappedConstantBuffer;
+				//ModelViewProjectionConstantBuffer					m_constantBufferData;
+				//UINT8*												m_mappedConstantBuffer;
 
 				// DXR Specific Attributes:
 				ComPtr<ID3D12Device5>								m_dxrDevice;
@@ -145,11 +149,13 @@ namespace SonarPropagation{
 				ComPtr<IDxcBlob>									m_rayGenLibrary;
 				ComPtr<IDxcBlob>									m_hitLibrary;
 				ComPtr<IDxcBlob>									m_missLibrary;
+				ComPtr<IDxcBlob>									m_shadowLibrary;
 
 				// Root Signatures for Shader:
 				ComPtr<ID3D12RootSignature>							m_rayGenSignature;
 				ComPtr<ID3D12RootSignature>							m_hitSignature;
 				ComPtr<ID3D12RootSignature>							m_missSignature;
+				ComPtr<ID3D12RootSignature>							m_shadowSignature;
 
 				// Instances: 
 				std::vector<std::pair<ComPtr<ID3D12Resource>, XMMATRIX>>	m_instances;
@@ -165,14 +171,16 @@ namespace SonarPropagation{
 				// ImGUI:
 
 				ComPtr<ID3D12DescriptorHeap>						m_imguiHeap;
-
 				SonarPropagation::Graphics::Utils::ImGuiManager		m_imguiManager;
 
 
 				// Variables used with the rendering loop:
 				bool												m_loadingComplete;
-				
+				bool m_showDemoWindow = false;
+				bool m_showRaytracingWindow = true;
+				bool m_cameraWindow = false;
 
+				uint32_t m_time = 0;
 
 			};
 		}

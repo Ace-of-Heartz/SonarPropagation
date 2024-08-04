@@ -26,11 +26,9 @@ using Size = Windows::Foundation::Size;
 SonarPropagation::Graphics::DXR::RayTracingRenderer::RayTracingRenderer(
 	const std::shared_ptr<DX::DeviceResources>& deviceResources) :
 	m_loadingComplete(false),
-	m_deviceResources(deviceResources),
-	m_mappedConstantBuffer(nullptr)
+	m_deviceResources(deviceResources)
 {
 	LoadState();
-	ZeroMemory(&m_constantBufferData, sizeof(m_constantBufferData));
 
 	CreateDeviceDependentResources();
 	CreateWindowSizeDependentResources();
@@ -41,8 +39,6 @@ SonarPropagation::Graphics::DXR::RayTracingRenderer::RayTracingRenderer(
 #pragma region Destructor
 
 SonarPropagation::Graphics::DXR::RayTracingRenderer::~RayTracingRenderer() {
-	m_constantBuffer->Unmap(0, nullptr);
-	m_mappedConstantBuffer = nullptr;
 }
 
 #pragma endregion
@@ -73,16 +69,35 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreatePerInstanceConst
 		XMVECTOR{0.0f, 0.0f, 1.0, 1.0f},
 
 		XMVECTOR{0.0f, 0.0f, 1.0f, 1.0f},
-		XMVECTOR{0.4f, 0.0f, 1.0f, 1.0f},
-		XMVECTOR{0.7f, 0.0f, 1.0f, 1.0f},
+		XMVECTOR{0.0f, 0.0f, 0.2f, 1.0f},
+		XMVECTOR{0.0f, 0.0f, 0.5f, 1.0f},
 		XMVECTOR{0.0f, 0.0f, 1.0, 1.0f},
+
+		XMVECTOR{0.0f, 0.2f, 0.0f, 1.0f},
+		XMVECTOR{0.4f, 0.3f, 0.0f, 1.0f},
+		XMVECTOR{0.7f, 0.5f, 0.0f, 1.0f},
+		XMVECTOR{0.0f, 1.0f, 0.0, 1.0f},
+
+		XMVECTOR{0.0f, 0.8f, 0.5f, 1.0f},
+		XMVECTOR{0.7f, 0.9f, 0.0f, 1.0f},
+		XMVECTOR{0.7f, 0.8f, 0.6f, 1.0f},
+		XMVECTOR{0.2f, 0.9f, 1.0, 1.0f},
+
+		XMVECTOR{0.949f, 0.843f, 0.561, 1.0f},
+		XMVECTOR{0.949f, 0.843f, 0.561, 1.0f},
+		XMVECTOR{0.949f, 0.843f, 0.561, 1.0f},
+		XMVECTOR{0.949f, 0.843f, 0.561, 1.0f},
+
 	};
 
-	m_perInstanceConstantBuffers.resize(3);
+	m_perInstanceConstantBuffers.resize(7);
+
+	auto vertexCountPerInstance = 4; 
+
 	int i(0);
 	for (auto& cb : m_perInstanceConstantBuffers)
 	{
-		const uint32_t bufferSize = sizeof(XMVECTOR) * 3;
+		const uint32_t bufferSize = sizeof(XMVECTOR) * vertexCountPerInstance;
 		cb = nv_helpers_dx12::CreateBuffer(m_dxrDevice.Get(), bufferSize, D3D12_RESOURCE_FLAG_NONE,
 			D3D12_RESOURCE_STATE_GENERIC_READ,
 			nv_helpers_dx12::kUploadHeapProps);
@@ -240,7 +255,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateDeviceDependentR
 		}
 
 		{
-			std::vector<VertexPosition> quadVertices = GetQuadVertices(1,1);
+			std::vector<VertexPosition> quadVertices = GetQuadVertices(7,7);
 			const UINT quadVertexBufferSize = sizeof(quadVertices);
 
 			ThrowIfFailed(m_dxrDevice->CreateCommittedResource(
@@ -302,38 +317,16 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateDeviceDependentR
 			NAME_D3D12_OBJECT(m_cbvHeap);
 		}
 
-		CD3DX12_RESOURCE_DESC constantBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(DX::c_frameCount * c_alignedConstantBufferSize);
-		ThrowIfFailed(d3dDevice->CreateCommittedResource(
-			&uploadHeapProperties,
-			D3D12_HEAP_FLAG_NONE,
-			&constantBufferDesc,
-			D3D12_RESOURCE_STATE_GENERIC_READ,
-			nullptr,
-			IID_PPV_ARGS(&m_constantBuffer)));
 
-		NAME_D3D12_OBJECT(m_constantBuffer);
-
-		// Create constant buffer views to access the upload buffer.
-		D3D12_GPU_VIRTUAL_ADDRESS cbvGpuAddress = m_constantBuffer->GetGPUVirtualAddress();
-		CD3DX12_CPU_DESCRIPTOR_HANDLE cbvCpuHandle(m_cbvHeap->GetCPUDescriptorHandleForHeapStart());
-		m_cbvDescriptorSize = d3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-
-		for (int n = 0; n < DX::c_frameCount; n++)
 		{
-			D3D12_CONSTANT_BUFFER_VIEW_DESC desc;
-			desc.BufferLocation = cbvGpuAddress;
-			desc.SizeInBytes = c_alignedConstantBufferSize;
-			d3dDevice->CreateConstantBufferView(&desc, cbvCpuHandle);
-
-			cbvGpuAddress += desc.SizeInBytes;
-			cbvCpuHandle.Offset(m_cbvDescriptorSize);
+			D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
+			heapDesc.NumDescriptors = 1;
+			heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+			// This flag indicates that this descriptor heap can be bound to the pipeline and that descriptors contained in it can be referenced by a root table.
+			heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+			ThrowIfFailed(d3dDevice->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&m_imguiHeap)));
 		}
 
-		// Map the constant buffers.
-		CD3DX12_RANGE readRangeConstant(0, 0);		// We do not intend to read from this resource on the CPU.
-		ThrowIfFailed(m_constantBuffer->Map(0, &readRangeConstant, reinterpret_cast<void**>(&m_mappedConstantBuffer)));
-		ZeroMemory(m_mappedConstantBuffer, DX::c_frameCount * c_alignedConstantBufferSize);
-		// We don't unmap this until the app closes. Keeping things mapped for the lifetime of the resource is okay.
 
 		// Wait for the command list to finish executing; the vertex/index buffers need to be uploaded to the GPU before the upload resources go out of scope.
 		m_deviceResources->WaitForGpu();
@@ -362,7 +355,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateDeviceDependentR
 
 		CreateShaderBindingTable();
 
-		m_imguiManager.InitImGui(DX::c_frameCount, m_deviceResources->GetBackBufferFormat(), m_dxrDevice.Get(), m_srvUavHeap.Get());
+		m_imguiManager.InitImGui(DX::c_frameCount, m_deviceResources->GetBackBufferFormat(), m_dxrDevice.Get(), m_imguiHeap.Get());
 
 		});
 
@@ -379,7 +372,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateWindowSizeDepend
 	float fovAngleY = 70.0f * XM_PI / 180.0f;
 
 	m_camera.SetAspectRatio(m_aspectRatio);
-
+	m_camera.SetFOV(fovAngleY);
 
 	D3D12_VIEWPORT viewport = m_deviceResources->GetScreenViewport();
 	m_scissorRect = { 0, 0, static_cast<LONG>(viewport.Width), static_cast<LONG>(viewport.Height) };
@@ -392,36 +385,15 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateWindowSizeDepend
 	}
 
 
-	// Note that the OrientationTransform3D matrix is post-multiplied here
-	// in order to correctly orient the scene to match the display orientation.
-	// This post-multiplication step is required for any draw calls that are
-	// made to the swap chain render target. For draw calls to other targets,
-	// this transform should not be applied.
+	//Initialization dependent resources
+	if (!m_loadingComplete) {
+		return;
+	}
 
+	CreateRaytracingOutputBuffer();
+	CreateShaderResourceHeap();
+	CreateShaderBindingTable();
 
-
-	// This sample makes use of a right-handed coordinate system using row-major matrices.
-	XMMATRIX perspectiveMatrix = XMMatrixPerspectiveFovRH(
-		fovAngleY,
-		m_aspectRatio,
-		0.01f,
-		100.0f
-	);
-
-	XMFLOAT4X4 orientation = m_deviceResources->GetOrientationTransform3D();
-	XMMATRIX orientationMatrix = XMLoadFloat4x4(&orientation);
-
-	XMStoreFloat4x4(
-		&m_constantBufferData.projection,
-		XMMatrixTranspose(perspectiveMatrix * orientationMatrix)
-	);
-
-	// Eye is at (0,0.7,1.5), looking at point (0,-0.1,0) with the up-vector along the y-axis.
-	static const XMVECTORF32 eye = { 0.0f, 0.7f, 1.5f, 0.0f };
-	static const XMVECTORF32 at = { 0.0f, -0.1f, 0.0f, 0.0f };
-	static const XMVECTORF32 up = { 0.0f, 1.0f, 0.0f, 0.0f };
-
-	XMStoreFloat4x4(&m_constantBufferData.view, XMMatrixTranspose(XMMatrixLookAtRH(eye, at, up)));
 }
 
 #pragma endregion
@@ -443,12 +415,15 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateAccelerationStru
 			{ {m_quadIndexBuffer.Get(), 12} }
 		);
 
-	m_instances = {
-		{bottomLevelBuffers.pResult, XMMatrixIdentity()},
-		{bottomLevelBuffers.pResult, XMMatrixTranslation(-.6f, 0, 0) },
-		{bottomLevelBuffers.pResult, XMMatrixTranslation(.6f, 0, 0)},
-		{planeBottomLevelBuffers.pResult, XMMatrixIdentity() },
-	};
+
+	CreateInstances(
+		{
+			{bottomLevelBuffers,6},
+		}
+	);
+
+	m_instances.push_back({ planeBottomLevelBuffers.pResult, XMMatrixTranslation(2.5f,-2.5f,-2.5f) });
+
 	CreateTopLevelAS(m_instances, false);
 
 	m_commandList->Close();
@@ -579,6 +554,12 @@ ComPtr<ID3D12RootSignature> SonarPropagation::Graphics::DXR::RayTracingRenderer:
 	rsc.AddRootParameter(D3D12_ROOT_PARAMETER_TYPE_SRV, 1);
 	rsc.AddRootParameter(D3D12_ROOT_PARAMETER_TYPE_CBV, 0);
 
+	rsc.AddHeapRangesParameter(
+		{
+			{2,1,0,D3D12_DESCRIPTOR_RANGE_TYPE_SRV,1},
+		}
+	);
+
 	return rsc.Generate(m_dxrDevice.Get(), true);
 }
 
@@ -602,27 +583,31 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateRaytracingPipeli
 	m_rayGenLibrary = CompileShader(L"RayGen.hlsl");
 	m_missLibrary = CompileShader(L"Miss.hlsl");
 	m_hitLibrary = CompileShader(L"Hit.hlsl");
+	m_shadowLibrary = CompileShader(L"Shadow.hlsl");
 
 	pipeline.AddLibrary(m_rayGenLibrary.Get(), { L"RayGen" });
 	pipeline.AddLibrary(m_missLibrary.Get(), { L"Miss" });
-	pipeline.AddLibrary(m_hitLibrary.Get(), { L"ClosestHit" });
-
+	pipeline.AddLibrary(m_hitLibrary.Get(), { L"ClosestHit",L"QuadClosestHit"});
+	pipeline.AddLibrary(m_shadowLibrary.Get(), { L"ShadowClosestHit",L"ShadowMiss"});
+	
 	m_rayGenSignature = CreateRayGenSignature();
 	m_missSignature = CreateMissSignature();
 	m_hitSignature = CreateHitSignature();
 
 	pipeline.AddHitGroup(L"HitGroup", L"ClosestHit");
+	pipeline.AddHitGroup(L"QuadHitGroup", L"QuadClosestHit");
+	pipeline.AddHitGroup(L"ShadowHitGroup", L"ShadowClosestHit");
 
 	pipeline.AddRootSignatureAssociation(m_rayGenSignature.Get(), { L"RayGen" });
-	pipeline.AddRootSignatureAssociation(m_missSignature.Get(), { L"Miss" });
-	pipeline.AddRootSignatureAssociation(m_hitSignature.Get(), { L"HitGroup" });
-
-
+	pipeline.AddRootSignatureAssociation(m_missSignature.Get(), { L"Miss", L"ShadowMiss"});
+	pipeline.AddRootSignatureAssociation(m_hitSignature.Get(), { L"HitGroup",	L"QuadHitGroup"});
+	pipeline.AddRootSignatureAssociation(m_shadowSignature.Get(), { L"ShadowHitGroup" });
+	
 	pipeline.SetMaxPayloadSize(4 * sizeof(float)); // RGB + distance
 
 	pipeline.SetMaxAttributeSize(2 * sizeof(float)); // barycentric coordinates
 
-	pipeline.SetMaxRecursionDepth(1);
+	pipeline.SetMaxRecursionDepth(2);
 
 	// Compile the pipeline for execution on the GPU
 	m_rtStateObject = pipeline.Generate();
@@ -700,20 +685,34 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateShaderBindingTab
 	m_sbtHelper.AddRayGenerationProgram(L"RayGen", { heapPointer });
 
 	m_sbtHelper.AddMissProgram(L"Miss", {});
-
+	m_sbtHelper.AddMissProgram(L"ShadowMiss", {});
 
 	auto constNum = m_perInstanceConstantBuffers.size();
 
-	for (int i = 0; i < constNum; ++i) {
+	for (int i = 0; i < constNum-1; ++i) {
 		m_sbtHelper.AddHitGroup(
 			L"HitGroup",
 			{
 				(void*)(m_tetrahedronVertexBuffer->GetGPUVirtualAddress()),
 				(void*)(m_tetrahedronIndexBuffer->GetGPUVirtualAddress()),
-
-				(void*)(m_perInstanceConstantBuffers[i]->GetGPUVirtualAddress())
+				(void*)(m_perInstanceConstantBuffers[i]->GetGPUVirtualAddress()),
+				heapPointer,
 			});
 	}
+
+	m_sbtHelper.AddHitGroup(
+		L"QuadHitGroup",
+		{
+			(void*)(m_quadVertexBuffer->GetGPUVirtualAddress()),
+			(void*)(m_quadIndexBuffer->GetGPUVirtualAddress()),
+			(void*)(m_perInstanceConstantBuffers[constNum - 1]->GetGPUVirtualAddress()),
+			heapPointer
+		});
+
+
+	m_sbtHelper.AddHitGroup(L"ShadowHitGroup", {}); 
+	// Shadow hit group is added after each addition of the original hitgroup, 
+	// so that all geometry can be hit!
 
 
 	uint32_t sbtSize = m_sbtHelper.ComputeSBTSize();
@@ -727,6 +726,32 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateShaderBindingTab
 
 	m_sbtHelper.Generate(m_sbtStorage.Get(), m_rtStateObjectProps.Get());
 }
+
+/// <summary>
+/// Creates the transform matrices for the instances and populates the associated metadata.
+/// </summary>
+void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateInstances(
+	std::vector<std::pair<AccelerationStructureBuffers, uint32_t>> asBuffers
+) {
+
+
+	for (int i = 0; i < asBuffers.size(); ++i) {
+
+		float amount = asBuffers[i].second;
+
+
+		for (int j = 0; j < amount; ++j) {
+			m_instances.push_back({ asBuffers[i].first.pResult, (
+				XMMatrixTranslation(1.75f,.0f,.0f)*
+				XMMatrixRotationAxis(XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f), (360.f / amount) * j)
+				) });
+
+
+		}
+
+	}
+}
+
 
 #pragma endregion
 
@@ -753,10 +778,11 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::Update(DX::StepTimer c
 		return;
 	}
 
-	// Update camera here ...
-
+	UpdateInstanceTransforms();
+	
 	m_cameraController.ProcessCameraUpdate(timer);
-
+	
+	
 }
 
 bool SonarPropagation::Graphics::DXR::RayTracingRenderer::Render() {
@@ -915,7 +941,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::PopulateCommandListWit
 	{
 		// Set the graphics root signature and descriptor heaps to be used by this frame.
 		m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
-		ID3D12DescriptorHeap* ppHeaps[] = { m_cbvHeap.Get() };
+		ID3D12DescriptorHeap* ppHeaps[] = { m_cbvHeap.Get()};
 		m_commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 
 		// Bind the current frame's constant buffer to the pipeline.
@@ -1022,8 +1048,8 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::PopulateCommandListWit
 
 		m_commandList->ResourceBarrier(1, &transition);
 
-		//m_imguiManager.RenderImGui(m_commandList.Get());
-
+		// Render ImGui
+		RenderImGui();
 
 		m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
 			m_deviceResources->GetRenderTarget(),
@@ -1036,6 +1062,63 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::PopulateCommandListWit
 
 }
 
+void SonarPropagation::Graphics::DXR::RayTracingRenderer::RenderImGui() {
+	m_imguiManager.BeginImGui(m_commandList.Get());
+
+	{
+		ImGui::Begin("Main Window");
+		
+		ImGui::Checkbox("Show Demo Window", &m_showDemoWindow);
+		ImGui::Checkbox("Show Raytracing Controls", &m_showRaytracingWindow);
+		ImGui::Checkbox("Show Camera Controls", &m_cameraWindow);
+
+		ImGui::End();
+	}
+
+	{
+		if(m_showDemoWindow)
+			ImGui::ShowDemoWindow(&m_showDemoWindow);
+	}
+
+	{
+		if(m_cameraWindow)
+		{
+			m_camera.RenderCameraImGui();
+		}
+	}
+
+	{
+		if (m_showRaytracingWindow) 
+		{
+			ImGui::Begin("Raytracing Controls");
+
+			ImGui::End();
+		}
+	}
+
+
+
+	m_imguiManager.EndImGui(m_commandList.Get());
+
+}
+
+void SonarPropagation::Graphics::DXR::RayTracingRenderer::UpdateInstanceTransforms() {
+	m_time++;
+
+	auto tetrahedronAmount = m_instances.size() - 1;
+
+	auto sinT = sinf(m_time);
+
+	for (size_t i = 0; i < tetrahedronAmount; i++) {
+		m_instances[i].second =
+
+			XMMatrixTranslation(1.75f, .0f, .0f) *
+			XMMatrixRotationAxis(XMVector4Normalize(XMVectorSet(0.0f, 0.8f, 0.2f, 0.0f)), (360.f / tetrahedronAmount)* i + (m_time) / 600.f );
+
+	}
+}
+
+
 void SonarPropagation::Graphics::DXR::RayTracingRenderer::KeyPressed(Windows::UI::Core::KeyEventArgs^ args) {
 	m_cameraController.KeyPressed(args);
 }
@@ -1045,7 +1128,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::KeyReleased(Windows::U
 }
 
 void SonarPropagation::Graphics::DXR::RayTracingRenderer::MouseMoved(Windows::UI::Core::PointerEventArgs^ args) {
-	m_cameraController.MouseMoved(args);
+	//m_cameraController.MouseMoved(args);
 }
 
 void SonarPropagation::Graphics::DXR::RayTracingRenderer::MouseWheelMoved(Windows::UI::Core::PointerEventArgs^ args) {
