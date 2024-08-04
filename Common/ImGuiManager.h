@@ -12,8 +12,8 @@ namespace SonarPropagation {
 				~ImGuiManager();
 
 				void InitImGui(int frameCount, DXGI_FORMAT backBufferFormat, ID3D12Device5* dxrDevice, ID3D12DescriptorHeap* srvHeap);
-				void RenderImGui(ID3D12GraphicsCommandList4* commandList);
-				
+				void BeginImGui(ID3D12GraphicsCommandList4* commandList);
+				void EndImGui(ID3D12GraphicsCommandList4* commandList);
 
 
 			private: 
