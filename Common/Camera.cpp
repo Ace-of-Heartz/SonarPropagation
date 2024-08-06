@@ -14,9 +14,10 @@ SonarPropagation::Graphics::Utils::Camera::Camera()
 
 	m_worldUp = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
+	m_yaw = 0.0f;
+	m_pitch = 0.0f;
 
-
-	m_rotationQ = XMQuaternionRotationRollPitchYaw(XM_PI,0.f,0.f);
+	m_rotationQ = XMQuaternionRotationRollPitchYaw(m_yaw,m_pitch,0.0);
 
 
 	m_distance = 0.5f;
