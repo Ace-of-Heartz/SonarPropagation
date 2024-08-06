@@ -87,12 +87,11 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreatePerInstanceConst
 		XMVECTOR{0.949f, 0.843f, 0.561, 1.0f},
 		XMVECTOR{0.949f, 0.843f, 0.561, 1.0f},
 		XMVECTOR{0.949f, 0.843f, 0.561, 1.0f},
-
 	};
 
 	m_perInstanceConstantBuffers.resize(7);
 
-	auto vertexCountPerInstance = 4; 
+	auto vertexCountPerInstance = 4;
 
 	int i(0);
 	for (auto& cb : m_perInstanceConstantBuffers)
@@ -255,7 +254,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateDeviceDependentR
 		}
 
 		{
-			std::vector<VertexPosition> quadVertices = GetQuadVertices(7,7);
+			std::vector<VertexPosition> quadVertices = GetQuadVertices(7, 7);
 			const UINT quadVertexBufferSize = sizeof(quadVertices);
 
 			ThrowIfFailed(m_dxrDevice->CreateCommittedResource(
@@ -301,7 +300,8 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateDeviceDependentR
 			m_quadIndexBufferView.Format = DXGI_FORMAT_R32_UINT;
 			m_quadIndexBufferView.SizeInBytes = quadIndexBufferSize;
 
-			NAME_D3D12_OBJECT(m_tetrahedronIndexBuffer);
+
+			NAME_D3D12_OBJECT(m_quadIndexBuffer);
 
 		}
 
@@ -325,6 +325,8 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateDeviceDependentR
 			// This flag indicates that this descriptor heap can be bound to the pipeline and that descriptors contained in it can be referenced by a root table.
 			heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 			ThrowIfFailed(d3dDevice->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&m_imguiHeap)));
+		
+			NAME_D3D12_OBJECT(m_imguiHeap);
 		}
 
 
@@ -405,8 +407,8 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateWindowSizeDepend
 /// </summary>
 void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateAccelerationStructures() {
 	AccelerationStructureBuffers bottomLevelBuffers =
-		CreateBottomLevelAS({ {m_tetrahedronVertexBuffer.Get(), 4}},
-			{ {m_tetrahedronIndexBuffer.Get(), 12}}
+		CreateBottomLevelAS({ {m_tetrahedronVertexBuffer.Get(), 4} },
+			{ {m_tetrahedronIndexBuffer.Get(), 12} }
 		);
 
 
@@ -420,7 +422,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateAccelerationStru
 		{
 			{bottomLevelBuffers,6},
 		}
-	);
+		);
 
 	m_instances.push_back({ planeBottomLevelBuffers.pResult, XMMatrixTranslation(2.5f,-2.5f,-2.5f) });
 
@@ -435,6 +437,8 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateAccelerationStru
 		m_commandList->Reset(m_deviceResources->GetCommandAllocator(), m_pipelineState.Get()));
 
 	m_bottomLevelAS = bottomLevelBuffers.pResult;
+
+	NAME_D3D12_OBJECT(m_bottomLevelAS);
 }
 
 /// <summary>
@@ -495,7 +499,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateTopLevelAS(const
 		for (size_t i = 0; i < instances.size(); i++) {
 			m_topLevelASGenerator.AddInstance(
 				instances[i].first.Get(), instances[i].second, static_cast<UINT>(i),
-				static_cast<UINT>(i));
+				static_cast<UINT>(i * 2));
 		}
 
 		UINT64 scratchSize, resultSize, instanceDescsSize;
@@ -558,7 +562,7 @@ ComPtr<ID3D12RootSignature> SonarPropagation::Graphics::DXR::RayTracingRenderer:
 		{
 			{2,1,0,D3D12_DESCRIPTOR_RANGE_TYPE_SRV,1},
 		}
-	);
+		);
 
 	return rsc.Generate(m_dxrDevice.Get(), true);
 }
@@ -584,25 +588,32 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateRaytracingPipeli
 	m_missLibrary = CompileShader(L"Miss.hlsl");
 	m_hitLibrary = CompileShader(L"Hit.hlsl");
 	m_shadowLibrary = CompileShader(L"Shadow.hlsl");
+	m_reflectionLibrary = CompileShader(L"Reflection.hlsl");
 
 	pipeline.AddLibrary(m_rayGenLibrary.Get(), { L"RayGen" });
 	pipeline.AddLibrary(m_missLibrary.Get(), { L"Miss" });
-	pipeline.AddLibrary(m_hitLibrary.Get(), { L"ClosestHit",L"QuadClosestHit"});
-	pipeline.AddLibrary(m_shadowLibrary.Get(), { L"ShadowClosestHit",L"ShadowMiss"});
-	
+	pipeline.AddLibrary(m_hitLibrary.Get(), { L"ClosestHit",L"QuadClosestHit",L"QuadReflectionClosestHit"});
+	pipeline.AddLibrary(m_shadowLibrary.Get(), { L"ShadowClosestHit",L"ShadowMiss" });
+	pipeline.AddLibrary(m_reflectionLibrary.Get(), { L"ReflectionClosestHit", L"ReflectionMiss"});
+
 	m_rayGenSignature = CreateRayGenSignature();
 	m_missSignature = CreateMissSignature();
 	m_hitSignature = CreateHitSignature();
+	//m_shadowSignature = CreateHitSignature();
+	//m_reflectionSignature = CreateHitSignature();
 
 	pipeline.AddHitGroup(L"HitGroup", L"ClosestHit");
 	pipeline.AddHitGroup(L"QuadHitGroup", L"QuadClosestHit");
+	pipeline.AddHitGroup(L"QuadReflectionHitGroup", L"QuadReflectionClosestHit");
 	pipeline.AddHitGroup(L"ShadowHitGroup", L"ShadowClosestHit");
+	pipeline.AddHitGroup(L"ReflectionHitGroup",L"ReflectionClosestHit");
 
 	pipeline.AddRootSignatureAssociation(m_rayGenSignature.Get(), { L"RayGen" });
-	pipeline.AddRootSignatureAssociation(m_missSignature.Get(), { L"Miss", L"ShadowMiss"});
-	pipeline.AddRootSignatureAssociation(m_hitSignature.Get(), { L"HitGroup",	L"QuadHitGroup"});
+	pipeline.AddRootSignatureAssociation(m_missSignature.Get(), { L"Miss",L"ShadowMiss", L"ReflectionMiss"});
+	pipeline.AddRootSignatureAssociation(m_hitSignature.Get(), { L"HitGroup",	L"QuadHitGroup", L"QuadReflectionHitGroup"});
 	pipeline.AddRootSignatureAssociation(m_shadowSignature.Get(), { L"ShadowHitGroup" });
-	
+	pipeline.AddRootSignatureAssociation(m_reflectionSignature.Get(), { L"ReflectionHitGroup" });
+
 	pipeline.SetMaxPayloadSize(4 * sizeof(float)); // RGB + distance
 
 	pipeline.SetMaxAttributeSize(2 * sizeof(float)); // barycentric coordinates
@@ -639,6 +650,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateShaderResourceHe
 	m_srvUavHeap = CreateDescriptorHeap(
 		m_dxrDevice.Get(), 4, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, true);
 
+	NAME_D3D12_OBJECT(m_srvUavHeap);
 
 	D3D12_CPU_DESCRIPTOR_HANDLE srvHandle =
 		m_srvUavHeap->GetCPUDescriptorHandleForHeapStart();
@@ -682,14 +694,22 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateShaderBindingTab
 		m_srvUavHeap->GetGPUDescriptorHandleForHeapStart();
 
 	auto heapPointer = reinterpret_cast<UINT64*>(srvUavHeapHandle.ptr);
-	m_sbtHelper.AddRayGenerationProgram(L"RayGen", { heapPointer });
 
+
+	m_sbtHelper.AddRayGenerationProgram(L"RayGen", { heapPointer });
 	m_sbtHelper.AddMissProgram(L"Miss", {});
-	m_sbtHelper.AddMissProgram(L"ShadowMiss", {});
+
+
+	if (m_useReflections) {
+		m_sbtHelper.AddMissProgram(L"ReflectionMiss", {});
+	}
+	else {
+		m_sbtHelper.AddMissProgram(L"ShadowMiss", {});
+	}
 
 	auto constNum = m_perInstanceConstantBuffers.size();
 
-	for (int i = 0; i < constNum-1; ++i) {
+	for (int i = 0; i < constNum - 1; ++i) {
 		m_sbtHelper.AddHitGroup(
 			L"HitGroup",
 			{
@@ -698,19 +718,38 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateShaderBindingTab
 				(void*)(m_perInstanceConstantBuffers[i]->GetGPUVirtualAddress()),
 				heapPointer,
 			});
+		if (m_useReflections) {
+			m_sbtHelper.AddHitGroup(L"ReflectionHitGroup", {});
+		}
+		else {
+			m_sbtHelper.AddHitGroup(L"ShadowHitGroup", {});
+		}
 	}
 
-	m_sbtHelper.AddHitGroup(
-		L"QuadHitGroup",
-		{
-			(void*)(m_quadVertexBuffer->GetGPUVirtualAddress()),
-			(void*)(m_quadIndexBuffer->GetGPUVirtualAddress()),
-			(void*)(m_perInstanceConstantBuffers[constNum - 1]->GetGPUVirtualAddress()),
-			heapPointer
-		});
+	if (m_useReflections) {
+		m_sbtHelper.AddHitGroup(
+			L"QuadReflectionHitGroup",
+			{
+				(void*)(m_quadVertexBuffer->GetGPUVirtualAddress()),
+				(void*)(m_quadIndexBuffer->GetGPUVirtualAddress()),
+				(void*)(m_perInstanceConstantBuffers[constNum - 1]->GetGPUVirtualAddress()),
+				heapPointer,
+			});
+	}
+	else {
+		m_sbtHelper.AddHitGroup(
+			L"QuadHitGroup",
+			{
+				(void*)(m_quadVertexBuffer->GetGPUVirtualAddress()),
+				(void*)(m_quadIndexBuffer->GetGPUVirtualAddress()),
+				(void*)(m_perInstanceConstantBuffers[constNum - 1]->GetGPUVirtualAddress()),
+				heapPointer,
+			});
 
 
-	m_sbtHelper.AddHitGroup(L"ShadowHitGroup", {}); 
+	}
+
+
 	// Shadow hit group is added after each addition of the original hitgroup, 
 	// so that all geometry can be hit!
 
@@ -742,7 +781,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateInstances(
 
 		for (int j = 0; j < amount; ++j) {
 			m_instances.push_back({ asBuffers[i].first.pResult, (
-				XMMatrixTranslation(1.75f,.0f,.0f)*
+				XMMatrixTranslation(1.75f,.0f,.0f) *
 				XMMatrixRotationAxis(XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f), (360.f / amount) * j)
 				) });
 
@@ -779,10 +818,10 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::Update(DX::StepTimer c
 	}
 
 	UpdateInstanceTransforms();
-	
+
 	m_cameraController.ProcessCameraUpdate(timer);
-	
-	
+
+
 }
 
 bool SonarPropagation::Graphics::DXR::RayTracingRenderer::Render() {
@@ -812,124 +851,6 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::LoadState() {
 	return;
 }
 
-void SonarPropagation::Graphics::DXR::RayTracingRenderer::PopulateCommandList() {
-	// Command list allocators can only be reset when the associated
-  // command lists have finished execution on the GPU; apps should use
-  // fences to determine GPU execution progress.
-	ThrowIfFailed(m_deviceResources->GetCommandAllocator()->Reset());
-
-	// However, when ExecuteCommandList() is called on a particular command
-	// list, that command list can then be reset at any time and must be before
-	// re-recording.
-	ThrowIfFailed(
-		m_commandList->Reset(m_deviceResources->GetCommandAllocator(), m_pipelineState.Get()));
-
-	// Set necessary state.
-	m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
-	m_commandList->RSSetViewports(1, &m_deviceResources->GetScreenViewport());
-	m_commandList->RSSetScissorRects(1, &m_scissorRect);
-
-	// Indicate that the back buffer will be used as a render target.
-	m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
-		m_deviceResources->GetRenderTarget(),
-		D3D12_RESOURCE_STATE_PRESENT,
-		D3D12_RESOURCE_STATE_RENDER_TARGET));
-
-	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_deviceResources->GetRenderTargetView();
-	CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle = m_deviceResources->GetDepthStencilView();
-
-	m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
-
-
-	// #DXR Extra - Refitting
-	// Refit the top-level acceleration structure to account for the new
-	// transform matrix of the triangle. Note that the build contains a barrier,
-	// hence we can do the rendering in the same command list
-	CreateTopLevelAS(m_instances, true);
-	// #DXR
-	// Bind the descriptor heap giving access to the top-level acceleration
-	// structure, as well as the raytracing output
-	std::vector<ID3D12DescriptorHeap*> heaps = { m_srvUavHeap.Get() };
-	m_commandList->SetDescriptorHeaps(static_cast<UINT>(heaps.size()),
-		heaps.data());
-
-	// On the last frame, the raytracing output was used as a copy source, to
-	// copy its contents into the render target. Now we need to transition it to
-	// a UAV so that the shaders can write in it.
-	CD3DX12_RESOURCE_BARRIER transition = CD3DX12_RESOURCE_BARRIER::Transition(
-		m_outputResource.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE,
-		D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-	m_commandList->ResourceBarrier(1, &transition);
-
-	// Setup the raytracing task
-	D3D12_DISPATCH_RAYS_DESC desc = {};
-	// The layout of the SBT is as follows: ray generation shader, miss
-	// shaders, hit groups. As described in the CreateShaderBindingTable method,
-	// all SBT entries of a given type have the same size to allow a fixed
-	// stride.
-
-	// The ray generation shaders are always at the beginning of the SBT.
-	uint32_t rayGenerationSectionSizeInBytes = m_sbtHelper.GetRayGenSectionSize();
-	desc.RayGenerationShaderRecord.StartAddress = m_sbtStorage->GetGPUVirtualAddress();
-	desc.RayGenerationShaderRecord.SizeInBytes = rayGenerationSectionSizeInBytes;
-
-	// The miss shaders are in the second SBT section, right after the ray
-	// generation shader. We have one miss shader for the camera rays and one
-	// for the shadow rays, so this section has a size of 2*m_sbtEntrySize. We
-	// also indicate the stride between the two miss shaders, which is the size
-	// of a SBT entry
-	uint32_t missSectionSizeInBytes = m_sbtHelper.GetMissSectionSize();
-	desc.MissShaderTable.StartAddress = m_sbtStorage->GetGPUVirtualAddress() + rayGenerationSectionSizeInBytes;
-	desc.MissShaderTable.SizeInBytes = missSectionSizeInBytes;
-	desc.MissShaderTable.StrideInBytes = m_sbtHelper.GetMissEntrySize();
-
-	// The hit groups section start after the miss shaders. In this sample we
-	// have one 1 hit group for the triangle
-	uint32_t hitGroupsSectionSize = m_sbtHelper.GetHitGroupSectionSize();
-	desc.HitGroupTable.StartAddress = m_sbtStorage->GetGPUVirtualAddress() + rayGenerationSectionSizeInBytes + missSectionSizeInBytes;
-	desc.HitGroupTable.SizeInBytes = hitGroupsSectionSize;
-	desc.HitGroupTable.StrideInBytes = m_sbtHelper.GetHitGroupEntrySize();
-
-	// Dimensions of the image to render, identical to a kernel launch dimension
-	desc.Width = m_deviceResources->GetScreenViewport().Width;
-	desc.Height = m_deviceResources->GetScreenViewport().Height;
-	desc.Depth = 1;
-
-	// Bind the raytracing pipeline
-	m_commandList->SetPipelineState1(m_rtStateObject.Get());
-	// Dispatch the rays and write to the raytracing output
-	m_commandList->DispatchRays(&desc);
-
-	// The raytracing output needs to be copied to the actual render target used
-	// for display. For this, we need to transition the raytracing output from a
-	// UAV to a copy source, and the render target buffer to a copy destination.
-	// We can then do the actual copy, before transitioning the render target
-	// buffer into a render target, that will be then used to display the image
-	transition = CD3DX12_RESOURCE_BARRIER::Transition(
-		m_outputResource.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-		D3D12_RESOURCE_STATE_COPY_SOURCE);
-	m_commandList->ResourceBarrier(1, &transition);
-	transition = CD3DX12_RESOURCE_BARRIER::Transition(
-		m_deviceResources->GetRenderTarget(), D3D12_RESOURCE_STATE_RENDER_TARGET,
-		D3D12_RESOURCE_STATE_COPY_DEST);
-	m_commandList->ResourceBarrier(1, &transition);
-
-	m_commandList->CopyResource(m_deviceResources->GetRenderTarget(),
-		m_outputResource.Get());
-
-	transition = CD3DX12_RESOURCE_BARRIER::Transition(
-		m_deviceResources->GetRenderTarget(), D3D12_RESOURCE_STATE_COPY_DEST,
-		D3D12_RESOURCE_STATE_RENDER_TARGET);
-	m_commandList->ResourceBarrier(1, &transition);
-
-	m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
-		m_deviceResources->GetRenderTarget(),
-		D3D12_RESOURCE_STATE_RENDER_TARGET,
-		D3D12_RESOURCE_STATE_PRESENT));
-
-	ThrowIfFailed(m_commandList->Close());
-}
-
 void SonarPropagation::Graphics::DXR::RayTracingRenderer::PopulateCommandListWithPIX() {
 
 	ThrowIfFailed(m_deviceResources->GetCommandAllocator()->Reset());
@@ -937,11 +858,11 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::PopulateCommandListWit
 	// The command list can be reset anytime after ExecuteCommandList() is called.
 	ThrowIfFailed(m_commandList->Reset(m_deviceResources->GetCommandAllocator(), m_pipelineState.Get()));
 
-	PIXBeginEvent(m_commandList.Get(), 0, L"Draw Triangle");
+	PIXBeginEvent(m_commandList.Get(), 0, L"Draw Scene");
 	{
 		// Set the graphics root signature and descriptor heaps to be used by this frame.
 		m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
-		ID3D12DescriptorHeap* ppHeaps[] = { m_cbvHeap.Get()};
+		ID3D12DescriptorHeap* ppHeaps[] = { m_cbvHeap.Get() };
 		m_commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 
 		// Bind the current frame's constant buffer to the pipeline.
@@ -1049,6 +970,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::PopulateCommandListWit
 		m_commandList->ResourceBarrier(1, &transition);
 
 		// Render ImGui
+		m_commandList->SetDescriptorHeaps(1, m_imguiHeap.GetAddressOf());
 		RenderImGui();
 
 		m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
@@ -1067,7 +989,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::RenderImGui() {
 
 	{
 		ImGui::Begin("Main Window");
-		
+
 		ImGui::Checkbox("Show Demo Window", &m_showDemoWindow);
 		ImGui::Checkbox("Show Raytracing Controls", &m_showRaytracingWindow);
 		ImGui::Checkbox("Show Camera Controls", &m_cameraWindow);
@@ -1076,21 +998,26 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::RenderImGui() {
 	}
 
 	{
-		if(m_showDemoWindow)
+		if (m_showDemoWindow)
 			ImGui::ShowDemoWindow(&m_showDemoWindow);
 	}
 
 	{
-		if(m_cameraWindow)
+		if (m_cameraWindow)
 		{
 			m_camera.RenderCameraImGui();
 		}
 	}
 
 	{
-		if (m_showRaytracingWindow) 
+		if (m_showRaytracingWindow)
 		{
 			ImGui::Begin("Raytracing Controls");
+
+			if (ImGui::Checkbox("Use reflective materials?", &m_useReflections))
+			{
+				CreateShaderBindingTable();
+			}
 
 			ImGui::End();
 		}
@@ -1113,7 +1040,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::UpdateInstanceTransfor
 		m_instances[i].second =
 
 			XMMatrixTranslation(1.75f, .0f, .0f) *
-			XMMatrixRotationAxis(XMVector4Normalize(XMVectorSet(0.0f, 0.8f, 0.2f, 0.0f)), (360.f / tetrahedronAmount)* i + (m_time) / 600.f );
+			XMMatrixRotationAxis(XMVector4Normalize(XMVectorSet(0.0f, 0.8f, 0.2f, 0.0f)), (360.f / tetrahedronAmount) * i + (m_time) / 600.f);
 
 	}
 }

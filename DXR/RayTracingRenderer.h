@@ -72,7 +72,6 @@ namespace SonarPropagation{
 
 				// Raytracing Render Loop:
 				void PopulateCommandListWithPIX();
-				void PopulateCommandList();
 				void UpdateInstanceTransforms();
 				
 				void RenderImGui();
@@ -150,12 +149,14 @@ namespace SonarPropagation{
 				ComPtr<IDxcBlob>									m_hitLibrary;
 				ComPtr<IDxcBlob>									m_missLibrary;
 				ComPtr<IDxcBlob>									m_shadowLibrary;
+				ComPtr<IDxcBlob> 								    m_reflectionLibrary;
 
 				// Root Signatures for Shader:
 				ComPtr<ID3D12RootSignature>							m_rayGenSignature;
 				ComPtr<ID3D12RootSignature>							m_hitSignature;
 				ComPtr<ID3D12RootSignature>							m_missSignature;
 				ComPtr<ID3D12RootSignature>							m_shadowSignature;
+				ComPtr<ID3D12RootSignature>							m_reflectionSignature;	
 
 				// Instances: 
 				std::vector<std::pair<ComPtr<ID3D12Resource>, XMMATRIX>>	m_instances;
@@ -179,6 +180,8 @@ namespace SonarPropagation{
 				bool m_showDemoWindow = false;
 				bool m_showRaytracingWindow = true;
 				bool m_cameraWindow = false;
+
+				bool m_useReflections = true;
 
 				uint32_t m_time = 0;
 
