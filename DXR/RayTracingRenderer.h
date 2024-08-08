@@ -61,7 +61,10 @@ namespace SonarPropagation{
 				ComPtr<ID3D12RootSignature> CreateMissSignature();
 
 				void CreateRaytracingInterfaces();
+
+				template <typename V>
 				void CreateAccelerationStructures();
+
 				void CreateRaytracingPipeline();
 				void CreateRaytracingOutputBuffer();
 				void CreateShaderResourceHeap();
@@ -69,6 +72,10 @@ namespace SonarPropagation{
 				void CreatePerInstanceConstantBuffers();
 				void CreateInstances(std::vector<std::pair<AccelerationStructureBuffers, uint32_t>> asBuffers);
 
+				template <typename V>
+				void CreateVertexBuffers();
+
+				void CreateIndexBuffers();
 
 				// Raytracing Render Loop:
 				void PopulateCommandListWithPIX();
@@ -78,7 +85,10 @@ namespace SonarPropagation{
 				
 				// Raytracing Initialization:
 				void LoadState();
+				
 				void CreateTopLevelAS(const std::vector < std::pair < ComPtr<ID3D12Resource>, DirectX::XMMATRIX>>& instances, bool updateOnly);
+				
+				template <typename V>
 				AccelerationStructureBuffers CreateBottomLevelAS(std::vector<std::pair<ComPtr<ID3D12Resource>, uint32_t>> vVertexBuffers,
 					std::vector<std::pair<ComPtr<ID3D12Resource>, uint32_t>> vIndexBuffers
 				);
