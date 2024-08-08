@@ -17,7 +17,7 @@ SonarPropagation::Graphics::Utils::Camera::Camera()
 	m_yaw = 0.0f;
 	m_pitch = 0.0f;
 
-	m_rotationQ = XMQuaternionRotationRollPitchYaw(m_yaw,m_pitch,0.0);
+	m_rotationQ = XMQuaternionRotationRollPitchYaw(m_yaw, m_pitch, 0.0);
 
 
 	m_distance = 0.5f;
@@ -25,8 +25,9 @@ SonarPropagation::Graphics::Utils::Camera::Camera()
 	m_fovAngleY = 75.0f;
 	m_aspectRatio = 1.0;
 
-	m_nearZ = 0.1f;
-	m_farZ = 1000.0f;
+	m_zNear = 0.1f;
+	m_zFar = 10000.0f;
+
 
 	m_speed = 5.0f;
 
@@ -75,8 +76,9 @@ void SonarPropagation::Graphics::Utils::Camera::UpdateViewMatrix()
 void SonarPropagation::Graphics::Utils::Camera::UpdateProjectionMatrix()
 {
 	XMVECTOR det;
-
-	m_projectionMatrix = XMMatrixPerspectiveFovRH(m_fovAngleY, m_aspectRatio, 0.1f, 1000.0f);
+	m_viewMatrix = XMMatrixLookAtRH(m_eye, m_at, m_up);
+	m_viewMatrixInv = XMMatrixInverse(&det, m_viewMatrix);
+	m_projectionMatrix = XMMatrixPerspectiveFovRH(m_fovAngleY, m_aspectRatio, m_zNear, m_zFar);
 	m_projectionMatrixInv = XMMatrixInverse(&det, m_projectionMatrix);
 }
 
@@ -94,19 +96,13 @@ void SonarPropagation::Graphics::Utils::Camera::UpdateParameters()
 {
 	XMVECTOR lookDirection;
 
-	if (m_useQuaternion) {
-		lookDirection = XMVector3Rotate(XMVectorSet(0.f,0.f,1.0f,0.0f), m_rotationQ);
-	}
-	else {
-		lookDirection = { cosf(m_u) * sinf(m_v),sinf(m_u) * sinf(m_v),cosf(m_u) };
-	}
-
-	m_at = m_eye + m_distance * lookDirection; 
+	lookDirection = XMVector3Rotate(XMVectorSet(0.f, 0.f, 1.0f, 0.0f), m_rotationQ);
+	m_at = m_eye + m_distance * lookDirection;
 
 	m_forward = lookDirection;
 
-	m_right = XMVector3Normalize(XMVector3Cross(m_forward,m_worldUp));
-	m_up = XMVector3Normalize(XMVector3Cross(m_right,m_forward));
+	m_right = XMVector3Normalize(XMVector3Cross(m_forward, m_worldUp));
+	m_up = XMVector3Normalize(XMVector3Cross(m_right, m_forward));
 
 	m_isViewDirty = true;
 	m_isProjectionDirty = true;
@@ -114,16 +110,11 @@ void SonarPropagation::Graphics::Utils::Camera::UpdateParameters()
 
 void SonarPropagation::Graphics::Utils::Camera::UpdateUV(float du, float dv)
 {
-	if (m_useQuaternion) {
-		m_yaw += du;
-		m_pitch += dv;
+	m_yaw += du;
+	m_pitch += dv;
 
-		m_rotationQ = XMQuaternionRotationRollPitchYaw(m_pitch, m_yaw, 0.0f);
-	}
-	else {
-		m_u += du;
-		m_v += dv;
-	}
+	m_rotationQ = XMQuaternionRotationRollPitchYaw(m_pitch, m_yaw, 0.0f);
+
 
 	UpdateParameters();
 
@@ -145,58 +136,44 @@ void SonarPropagation::Graphics::Utils::Camera::RenderCameraImGui() {
 
 	static bool showCameraInfo = false;
 	static bool showCameraControls = false;
-	bool static useQuaternion = false;
 	ImGui::Checkbox("Show Info", &showCameraInfo);
 	ImGui::Checkbox("Show Controls", &showCameraControls);
 
 	if (showCameraInfo)
 	{
-		ImGui::BeginChild("Camera Info", ImVec2(400, 200));
+		ImGui::BeginChild("Camera Info", ImVec2(400, 400));
 
-		auto camEyeVec = GetEye();
-		std::vector<float> camEyeFloat = { XMVectorGetX(camEyeVec) , XMVectorGetY(camEyeVec), XMVectorGetZ(camEyeVec) };
 
-		auto camTargetVec = GetAt();
-		std::vector<float> camTargetFloat = { XMVectorGetX(camTargetVec) , XMVectorGetY(camTargetVec), XMVectorGetZ(camTargetVec) };
+		std::vector<float> camEyeFloat = { XMVectorGetX(m_eye) , XMVectorGetY(m_eye), XMVectorGetZ(m_eye) };
+		std::vector<float> camTargetFloat = { XMVectorGetX(m_at) , XMVectorGetY(m_at), XMVectorGetZ(m_at) };
+		std::vector<float> camForwardFloat = { XMVectorGetX(m_forward) , XMVectorGetY(m_forward), XMVectorGetZ(m_forward) };
+		std::vector<float> camRightFloat = { XMVectorGetX(m_right) , XMVectorGetY(m_right), XMVectorGetZ(m_right) };
+		std::vector<float> camUpFloat = { XMVectorGetX(m_up) , XMVectorGetY(m_up), XMVectorGetZ(m_up) };
 
-		auto camForwardVec = GetForward();
-		std::vector<float> camForwardFloat = { XMVectorGetX(camForwardVec) , XMVectorGetY(camForwardVec), XMVectorGetZ(camForwardVec) };
-
-		auto camRightVec = GetRight();
-		std::vector<float> camRightFloat = { XMVectorGetX(camRightVec) , XMVectorGetY(camRightVec), XMVectorGetZ(camRightVec) };
-
-		auto camUpVec = GetUp();
-		std::vector<float> camUpFloat = { XMVectorGetX(camUpVec) , XMVectorGetY(camUpVec), XMVectorGetZ(camUpVec) };
+		int camBufferSize = m_cameraBufferSize;
 
 		ImGui::InputFloat3("Camera Eye", camEyeFloat.data(), "%.3f", ImGuiInputTextFlags_ReadOnly);
 		ImGui::InputFloat3("Camera Target", camTargetFloat.data(), "%.3f", ImGuiInputTextFlags_ReadOnly);
+
 		ImGui::Separator();
+
 		ImGui::InputFloat3("Camera Forward", camForwardFloat.data(), "%.3f", ImGuiInputTextFlags_ReadOnly);
 		ImGui::InputFloat3("Camera Right", camRightFloat.data(), "%.3f", ImGuiInputTextFlags_ReadOnly);
 		ImGui::InputFloat3("Camera Up", camUpFloat.data(), "%.3f", ImGuiInputTextFlags_ReadOnly);
+
 		ImGui::Separator();
 
-		if (useQuaternion) {
+		ImGui::InputFloat3("Camera Yaw", &m_yaw, "%.3f", ImGuiInputTextFlags_ReadOnly);
+		ImGui::InputFloat3("Camera Pitch", &m_pitch, "%.3f", ImGuiInputTextFlags_ReadOnly);
 
-			EnableQuaternionRotation();
-			auto camYaw = GetYaw();
-			auto camPitch = GetPitch();
+		ImGui::Separator();
 
-			ImGui::InputFloat3("Camera Yaw", &camYaw, "%.3f", ImGuiInputTextFlags_ReadOnly);
-			ImGui::InputFloat3("Camera Pitch", &camPitch, "%.3f", ImGuiInputTextFlags_ReadOnly);
+		ImGui::InputFloat("Aspect Ratio", &m_aspectRatio, 0.f, 0.f, "%.3f", ImGuiInputTextFlags_ReadOnly);
+		ImGui::InputFloat("FOV Y", &m_fovAngleY, 0.f, 0.f,"%.3f", ImGuiInputTextFlags_ReadOnly);
 
-		}
-		else {
-			DisableQuaternionRotation();
+		ImGui::Separator();
 
-			auto camU = GetU();
-			auto camV = GetV();
-
-			ImGui::InputFloat3("Camera U", &camU, "%.3f", ImGuiInputTextFlags_ReadOnly);
-			ImGui::InputFloat3("Camera V", &camV, "%.3f", ImGuiInputTextFlags_ReadOnly);
-
-		}
-
+		ImGui::InputInt("Camera Buffer Size", &camBufferSize, 0, 0, ImGuiInputTextFlags_ReadOnly);
 
 		ImGui::EndChild();
 	}
@@ -207,25 +184,29 @@ void SonarPropagation::Graphics::Utils::Camera::RenderCameraImGui() {
 
 		ImGui::BeginChild("Camera Controls", ImVec2(400, 200));
 
-		ImGui::Checkbox("Enable rotation with quaternions?", &useQuaternion);
 
 		ImGui::Separator();
+		{	//Yaw, pitch controls - update when values are changed
+			bool yawChanged = false;
+			bool pitchChanged = false;
 
-		bool yawChanged = false;
-		bool pitchChanged = false;
+			yawChanged = ImGui::SliderFloat("Yaw", &m_yaw, -XM_PI, XM_PI);
+			pitchChanged = ImGui::SliderFloat("Pitch", &m_pitch, -XM_PI / 2.f, XM_PI / 2.f);
 
-		yawChanged = ImGui::SliderFloat("Yaw", &m_yaw, -XM_PI, XM_PI);
-		pitchChanged = ImGui::SliderFloat("Pitch", &m_pitch, -XM_PI / 2.f, XM_PI / 2.f);
-		
-		if (yawChanged || pitchChanged) {
-			UpdateUV(0.f,0.f);
+			if (yawChanged || pitchChanged) {
+				UpdateUV(0.f, 0.f);
+			}
 		}
+		ImGui::Separator();
 
-		ImGui::EndChild();
+		ImGui::SliderFloat("Speed", &m_speed, 0.1f, 20.0f);
 
 		ImGui::Separator();
 
-		ImGui::SliderFloat("Speed", &m_speed, 0.1f, 10.0f);
+		if (ImGui::SliderFloat("FOV Y", &m_fovAngleY, 1.0f, 179.0f))
+		{
+			m_isProjectionDirty = true;
+		}
 
 		ImGui::Separator();
 
@@ -235,6 +216,7 @@ void SonarPropagation::Graphics::Utils::Camera::RenderCameraImGui() {
 
 		}
 
+		ImGui::EndChild();
 
 	}
 

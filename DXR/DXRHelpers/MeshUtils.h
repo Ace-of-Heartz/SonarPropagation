@@ -13,14 +13,15 @@ namespace SonarPropagation {
 	namespace Graphics {
 		namespace Utils {
 
-			std::vector<VertexPosition> GetTetrahedronVertices(
+			template <typename V>
+			std::vector<V> GetTetrahedronVertices(
 			);
 
 			std::vector<UINT> GetTetrahedronIndices(
 			);
 
-
-			std::vector<VertexPosition> GetQuadVertices(
+			template <typename V>
+			std::vector<V> GetQuadVertices(
 				float width, float height
 			);
 
