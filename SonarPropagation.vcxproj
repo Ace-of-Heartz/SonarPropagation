@@ -231,6 +231,9 @@
       <AdditionalIncludeDirectories>C:\Users\secon\projects\SonarPropagation\SonarPropagation\Content;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ObjectFileOutput>$(OutDir)%(Filename).cso</ObjectFileOutput>
     </FxCompile>
+    <PreBuildEvent>
+      <Command>xcopy "$(SolutionDir)Shaders\*" "$(TargetDir)AppX" /Y /I /E</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Link>
