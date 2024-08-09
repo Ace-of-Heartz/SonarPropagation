@@ -768,15 +768,9 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateShaderBindingTab
 				(void*)(m_perInstanceConstantBuffers[constNum - 1]->GetGPUVirtualAddress()),
 				heapPointer,
 			});
-
-
 	}
-
-
 	// Shadow hit group is added after each addition of the original hitgroup, 
 	// so that all geometry can be hit!
-
-
 	uint32_t sbtSize = m_sbtHelper.ComputeSBTSize();
 
 	m_sbtStorage = nv_helpers_dx12::CreateBuffer(
@@ -807,8 +801,6 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateInstances(
 				XMMatrixTranslation(1.75f,.0f,.0f) *
 				XMMatrixRotationAxis(XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f), (360.f / amount) * j)
 				) });
-
-
 		}
 
 	}
@@ -985,14 +977,19 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::PopulateCommandListWit
 		// UAV to a copy source, and the render target buffer to a copy destination.
 		// We can then do the actual copy, before transitioning the render target
 		// buffer into a render target, that will be then used to display the image
-		transition = CD3DX12_RESOURCE_BARRIER::Transition(
-			m_outputResource.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-			D3D12_RESOURCE_STATE_COPY_SOURCE);
-		m_commandList->ResourceBarrier(1, &transition);
-		transition = CD3DX12_RESOURCE_BARRIER::Transition(
-			m_deviceResources->GetRenderTarget(), D3D12_RESOURCE_STATE_RENDER_TARGET,
-			D3D12_RESOURCE_STATE_COPY_DEST);
-		m_commandList->ResourceBarrier(1, &transition);
+		{
+			auto transitionOutputResource = CD3DX12_RESOURCE_BARRIER::Transition(
+				m_outputResource.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+				D3D12_RESOURCE_STATE_COPY_SOURCE);
+			//m_commandList->ResourceBarrier(1, &transition);
+			auto transitionDeviceResources = CD3DX12_RESOURCE_BARRIER::Transition(
+				m_deviceResources->GetRenderTarget(), D3D12_RESOURCE_STATE_RENDER_TARGET,
+				D3D12_RESOURCE_STATE_COPY_DEST);
+			
+			std::vector<CD3DX12_RESOURCE_BARRIER> transitions = { transitionOutputResource, transitionDeviceResources };
+
+			m_commandList->ResourceBarrier(2, transitions.data());
+		}
 
 		m_commandList->CopyResource(m_deviceResources->GetRenderTarget(),
 			m_outputResource.Get());
@@ -1025,7 +1022,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::RenderImGui() {
 		if (ImGui::Begin("Main Window"))
 		{
 			ImGuiTabBarFlags tabBarFlags = ImGuiTabBarFlags_None;
-			if (ImGui::BeginTabBar("Windows",tabBarFlags))
+			if (ImGui::BeginTabBar("Windows", tabBarFlags))
 			{
 				if (ImGui::BeginTabItem("Controls"))
 				{
@@ -1033,14 +1030,12 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::RenderImGui() {
 					ImGui::Checkbox("Show Raytracing Controls", &m_showRaytracingWindow);
 					ImGui::Checkbox("Show Camera Controls", &m_cameraWindow);
 					ImGui::EndTabItem();
-
 				}
 
 				if (ImGui::BeginTabItem("Animation"))
 				{
 					ImGui::Checkbox("Animate", &m_animate);
 					ImGui::EndTabItem();
-
 				}
 				ImGui::EndTabBar();
 			}
@@ -1049,7 +1044,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::RenderImGui() {
 	}
 
 	{
-		if (m_showDemoWindow) 
+		if (m_showDemoWindow)
 		{
 			ImGui::ShowDemoWindow(&m_showDemoWindow);
 		}
@@ -1086,7 +1081,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::RenderImGui() {
 						ImGui::EndChild();
 					}
 				}
-				
+
 				if (showDXRControls)
 				{
 					if (ImGui::BeginChild("Controls"))
@@ -1106,7 +1101,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::RenderImGui() {
 						ImGui::EndChild();
 					}
 				}
-				
+
 				ImGui::End();
 
 			}

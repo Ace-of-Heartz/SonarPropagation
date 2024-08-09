@@ -10,6 +10,5 @@ struct RayTracingConfig {
 		m_recursionDepth(recursionDepth),
 		m_maxPayloadSize(maxPayloadSize),
 		m_maxAttributeSize(maxAttributeSize)
-	{
-	}
+	{}
 };
