@@ -108,10 +108,10 @@ void SonarPropagation::Graphics::Utils::Camera::UpdateParameters()
 	m_isProjectionDirty = true;
 }
 
-void SonarPropagation::Graphics::Utils::Camera::UpdateUV(float du, float dv)
+void SonarPropagation::Graphics::Utils::Camera::UpdateUV(float yaw, float pitch)
 {
-	m_yaw += du;
-	m_pitch += dv;
+	m_yaw += yaw;
+	m_pitch += pitch;
 
 	m_rotationQ = XMQuaternionRotationRollPitchYaw(m_pitch, m_yaw, 0.0f);
 

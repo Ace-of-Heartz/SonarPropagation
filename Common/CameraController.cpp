@@ -151,11 +151,9 @@ void SonarPropagation::Graphics::Utils::CameraController::MouseMoved(Windows::UI
 		float xrel = (pointer.X - m_prevPointer.X) / 600.f;
 		float yrel = (pointer.Y - m_prevPointer.Y) / 600.f;
 
-		m_camera->UpdateUV(yrel, xrel);
+		m_camera->UpdateUV(xrel, yrel);
 		m_prevPointer = pointer;
-
 	}
-
 }
 
 void SonarPropagation::Graphics::Utils::CameraController::MouseWheelMoved(Windows::UI::Core::PointerEventArgs^ args)
