@@ -281,6 +281,7 @@
     <ClInclude Include="DXR\Nvidia\nv_helpers_dx12\RootSignatureGenerator.h" />
     <ClInclude Include="DXR\Nvidia\nv_helpers_dx12\ShaderBindingTableGenerator.h" />
     <ClInclude Include="DXR\Nvidia\nv_helpers_dx12\TopLevelASGenerator.h" />
+    <ClInclude Include="DXR\RayTracingConfig.h" />
     <ClInclude Include="DXR\RayTracingRenderer.h" />
     <ClInclude Include="SonarPropagationMain.h" />
     <ClInclude Include="Common\StepTimer.h" />

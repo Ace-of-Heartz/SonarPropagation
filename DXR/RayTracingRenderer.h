@@ -4,6 +4,7 @@
 #include <pch.h>
 #include "pix3.h"
 #include "Common/ImGuiManager.h"
+#include "DXR/RayTracingConfig.h"
 #include <map>
 
 using namespace Microsoft::WRL;
@@ -147,12 +148,11 @@ namespace SonarPropagation{
 				AccelerationStructureBuffers						m_topLevelASBuffers;
 				nv_helpers_dx12::TopLevelASGenerator				m_topLevelASGenerator;
 
+				RayTracingConfig									m_dxrConfig;
+
 				// Shaders Bytes: 
 				std::vector<byte>									m_vertexShader;
 				std::vector<byte>									m_pixelShader;
-				std::vector<byte>									m_rayGenShader;
-				std::vector<byte>									m_missShader;
-				std::vector<byte>									m_hitShader;
 
 				// Shader Libraries:
 				ComPtr<IDxcBlob>									m_rayGenLibrary;
@@ -192,6 +192,13 @@ namespace SonarPropagation{
 				bool m_cameraWindow = false;
 
 				bool m_useReflections = true;
+
+				bool m_pipelineDirty;
+				bool m_sbtDirty;
+				bool m_ASDirty;
+
+				bool m_animate = true;
+
 
 				uint32_t m_time = 0;
 

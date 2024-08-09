@@ -26,7 +26,8 @@ using Size = Windows::Foundation::Size;
 SonarPropagation::Graphics::DXR::RayTracingRenderer::RayTracingRenderer(
 	const std::shared_ptr<DX::DeviceResources>& deviceResources) :
 	m_loadingComplete(false),
-	m_deviceResources(deviceResources)
+	m_deviceResources(deviceResources),
+	m_dxrConfig({ 1, 4 * sizeof(float), 2 * sizeof(float) })
 {
 	LoadState();
 
@@ -108,9 +109,6 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreatePerInstanceConst
 	}
 }
 
-
-
-
 void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateDeviceDependentResources() {
 
 	CreateRaytracingInterfaces();
@@ -178,8 +176,6 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateDeviceDependentR
 		state.SampleDesc.Count = 1;
 		state.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
 
-
-
 		DX::ThrowIfFailed(m_dxrDevice.Get()->CreateGraphicsPipelineState(&state, IID_PPV_ARGS(&m_pipelineState)));
 
 		// Shader data can be deleted once the pipeline state is created.
@@ -199,14 +195,12 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateDeviceDependentR
 
 		auto aspectRatio = m_deviceResources->GetOutputSize().Width / m_deviceResources->GetOutputSize().Height;
 
-
 		CD3DX12_HEAP_PROPERTIES heapProperty =
 			CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 
 		CreateVertexBuffers<VertexPositionColor>();
 
 		CreateIndexBuffers();
-
 
 		// Create a descriptor heap for the constant buffers.
 		{
@@ -220,7 +214,6 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateDeviceDependentR
 			NAME_D3D12_OBJECT(m_cbvHeap);
 		}
 
-
 		{
 			D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
 			heapDesc.NumDescriptors = 1;
@@ -231,7 +224,6 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateDeviceDependentR
 
 			NAME_D3D12_OBJECT(m_imguiHeap);
 		}
-
 
 		// Wait for the command list to finish executing; the vertex/index buffers need to be uploaded to the GPU before the upload resources go out of scope.
 		m_deviceResources->WaitForGpu();
@@ -440,8 +432,8 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateAccelerationStru
 		);
 	AccelerationStructureBuffers planeBottomLevelBuffers =
 		CreateBottomLevelAS<V>(
-			{ 
-				{m_quadVertexBuffer.Get(), m_tetrahedronVertexBufferView.SizeInBytes / sizeof(V)} 
+			{
+				{m_quadVertexBuffer.Get(), m_tetrahedronVertexBufferView.SizeInBytes / sizeof(V)}
 			},
 			{
 				{m_quadIndexBuffer.Get(), m_quadIndexBufferView.SizeInBytes / sizeof(UINT)}
@@ -645,11 +637,11 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateRaytracingPipeli
 	pipeline.AddRootSignatureAssociation(m_shadowSignature.Get(), { L"ShadowHitGroup" });
 	pipeline.AddRootSignatureAssociation(m_reflectionSignature.Get(), { L"ReflectionHitGroup" });
 
-	pipeline.SetMaxPayloadSize(4 * sizeof(float)); // RGB + distance
+	pipeline.SetMaxPayloadSize(m_dxrConfig.m_maxPayloadSize); // RGB + distance
 
-	pipeline.SetMaxAttributeSize(2 * sizeof(float)); // barycentric coordinates
+	pipeline.SetMaxAttributeSize(m_dxrConfig.m_maxAttributeSize); // barycentric coordinates
 
-	pipeline.SetMaxRecursionDepth(2);
+	pipeline.SetMaxRecursionDepth(m_dxrConfig.m_recursionDepth);
 
 	// Compile the pipeline for execution on the GPU
 	m_rtStateObject = pipeline.Generate();
@@ -848,11 +840,11 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::Update(DX::StepTimer c
 		return;
 	}
 
-	UpdateInstanceTransforms();
+	if (m_animate) {
+		UpdateInstanceTransforms();
+	}
 
 	m_cameraController.ProcessCameraUpdate(timer);
-
-
 }
 
 bool SonarPropagation::Graphics::DXR::RayTracingRenderer::Render() {
@@ -861,6 +853,18 @@ bool SonarPropagation::Graphics::DXR::RayTracingRenderer::Render() {
 	{
 		return false;
 	}
+
+	if (m_pipelineDirty) {
+		CreateRaytracingPipeline();
+		m_sbtDirty = true;
+		m_pipelineDirty = false;
+	}
+
+	if (m_sbtDirty) {
+		CreateShaderBindingTable();
+		m_sbtDirty = false;
+	}
+
 	PopulateCommandListWithPIX();
 
 	ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
@@ -869,7 +873,6 @@ bool SonarPropagation::Graphics::DXR::RayTracingRenderer::Render() {
 	m_deviceResources->Present();
 
 	m_deviceResources->WaitForGpu();
-
 
 	return true;
 }
@@ -1019,18 +1022,37 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::RenderImGui() {
 	m_imguiManager.BeginImGui(m_commandList.Get());
 
 	{
-		ImGui::Begin("Main Window");
+		if (ImGui::Begin("Main Window"))
+		{
+			ImGuiTabBarFlags tabBarFlags = ImGuiTabBarFlags_None;
+			if (ImGui::BeginTabBar("Windows",tabBarFlags))
+			{
+				if (ImGui::BeginTabItem("Controls"))
+				{
+					ImGui::Checkbox("Show Demo Window", &m_showDemoWindow);
+					ImGui::Checkbox("Show Raytracing Controls", &m_showRaytracingWindow);
+					ImGui::Checkbox("Show Camera Controls", &m_cameraWindow);
+					ImGui::EndTabItem();
 
-		ImGui::Checkbox("Show Demo Window", &m_showDemoWindow);
-		ImGui::Checkbox("Show Raytracing Controls", &m_showRaytracingWindow);
-		ImGui::Checkbox("Show Camera Controls", &m_cameraWindow);
+				}
 
-		ImGui::End();
+				if (ImGui::BeginTabItem("Animation"))
+				{
+					ImGui::Checkbox("Animate", &m_animate);
+					ImGui::EndTabItem();
+
+				}
+				ImGui::EndTabBar();
+			}
+			ImGui::End();
+		}
 	}
 
 	{
-		if (m_showDemoWindow)
+		if (m_showDemoWindow) 
+		{
 			ImGui::ShowDemoWindow(&m_showDemoWindow);
+		}
 	}
 
 	{
@@ -1043,19 +1065,55 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::RenderImGui() {
 	{
 		if (m_showRaytracingWindow)
 		{
-			ImGui::Begin("Raytracing Controls");
-
-			if (ImGui::Checkbox("Use reflective materials?", &m_useReflections))
+			if (ImGui::Begin("Raytracing"))
 			{
-				CreateShaderBindingTable();
+				static bool showDXRInfo = false;
+				static bool showDXRControls = false;
+				ImGui::Checkbox("Show raytracing information", &showDXRInfo);
+				ImGui::Checkbox("Show raytracing controls", &showDXRControls);
+
+				if (showDXRInfo) {
+					if (ImGui::BeginChild("Information", ImVec2(400, 200)))
+					{
+						int maxPayloadSize = m_dxrConfig.m_maxPayloadSize;
+						int maxAttributeSize = m_dxrConfig.m_maxAttributeSize;
+						int recursionDepth = m_dxrConfig.m_recursionDepth;
+
+						ImGui::InputInt("Max Payload Size", &maxPayloadSize, 0, 0, ImGuiInputTextFlags_ReadOnly);
+						ImGui::InputInt("Max Attribute Size", &maxAttributeSize, 0, 0, ImGuiInputTextFlags_ReadOnly);
+						ImGui::InputInt("Max Recursion Depth", &recursionDepth, 0, 0, ImGuiInputTextFlags_ReadOnly);
+
+						ImGui::EndChild();
+					}
+				}
+				
+				if (showDXRControls)
+				{
+					if (ImGui::BeginChild("Controls"))
+					{
+						if (ImGui::Checkbox("Use reflective materials?", &m_useReflections))
+						{
+							m_sbtDirty = true;
+						}
+
+						int recursionDepth = m_dxrConfig.m_recursionDepth;
+
+						if (ImGui::InputInt("Ray Recursion Depth", &recursionDepth, 1, 1))
+						{
+							m_dxrConfig.m_recursionDepth = recursionDepth;
+							m_pipelineDirty = true;
+						}
+						ImGui::EndChild();
+					}
+				}
+				
+				ImGui::End();
+
 			}
 
-			ImGui::End();
+
 		}
 	}
-
-
-
 	m_imguiManager.EndImGui(m_commandList.Get());
 
 }

@@ -213,6 +213,9 @@
     <ClInclude Include="Common\thirdparty\imgui_impl_uwp.h">
       <Filter>DXR\AceRaytracing\Graphics\Common\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="DXR\RayTracingConfig.h">
+      <Filter>DXR\AceRaytracing\Graphics\DXR\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest" />
