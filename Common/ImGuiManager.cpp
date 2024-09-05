@@ -1,7 +1,6 @@
 #include "ImGuiManager.h"
 #include "pch.h"
 
-
 SonarPropagation::Graphics::Utils::ImGuiManager::ImGuiManager()
 {
 	// Setup Dear ImGui context
@@ -15,6 +14,8 @@ SonarPropagation::Graphics::Utils::ImGuiManager::ImGuiManager()
 
 	ImGui::StyleColorsDark();
 }
+
+
 
 SonarPropagation::Graphics::Utils::ImGuiManager::~ImGuiManager()
 {

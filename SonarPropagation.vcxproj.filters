@@ -145,6 +145,15 @@
     <ClCompile Include="Common\thirdparty\imgui_impl_uwp.cpp">
       <Filter>DXR\AceRaytracing\Graphics\Common\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="DXR\SoundReciever.cpp">
+      <Filter>DXR\AceRaytracing\Graphics\DXR\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DXR\SoundSource.cpp">
+      <Filter>DXR\AceRaytracing\Graphics\DXR\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DXR\DetectableObject.cpp">
+      <Filter>DXR\AceRaytracing\Graphics\DXR\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h" />
@@ -214,6 +223,15 @@
       <Filter>DXR\AceRaytracing\Graphics\Common\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DXR\RayTracingConfig.h">
+      <Filter>DXR\AceRaytracing\Graphics\DXR\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DXR\SoundReceiver.h">
+      <Filter>DXR\AceRaytracing\Graphics\DXR\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DXR\SoundSource.h">
+      <Filter>DXR\AceRaytracing\Graphics\DXR\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DXR\DetectableObject.h">
       <Filter>DXR\AceRaytracing\Graphics\DXR\Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -14,43 +14,100 @@ namespace SonarPropagation {
 				friend class CameraController;
 
 			public:
+				/// <summary>
+				/// Default constructor.
+				/// </summary>
 				Camera();
+
+				/// <summary>
+				/// Default destructor.
+				/// </summary>
 				~Camera();
 
+				/// <summary>
+				/// Sets the camera position.
+				/// </summary>
+				/// <param name="x"></param>
+				/// <param name="y"></param>
+				/// <param name="z"></param>
 				inline void SetPosition(float x, float y, float z) {
 					m_eye = XMVectorSet(x, y, z, 0.0f);
 					m_isViewDirty = true;
 				}
+
+				/// <summary>
+				/// Sets the camera look at position.
+				/// </summary>
+				/// <param name="x"></param>
+				/// <param name="y"></param>
+				/// <param name="z"></param>
 				inline void SetLookAt(float x, float y, float z) {
 					m_at = XMVectorSet(x, y, z, 0.0f);
 					m_isViewDirty = true;
 				}
+
+				/// <summary>
+				/// Sets the camera up vector.
+				/// </summary>
+				/// <param name="aspectRatio"></param>
 				inline void SetAspectRatio(float aspectRatio) {
 					m_aspectRatio = aspectRatio;
 					m_isProjectionDirty = true;
 				}
+
+				/// <summary>
+				/// Sets the camera field of view.
+				/// </summary>
+				/// <param name="fovAngleY"></param>
 				inline void SetFOV(float fovAngleY) {
 					m_fovAngleY = fovAngleY;
 					m_isProjectionDirty = true;
 				}
 
+				/// <summary>
+				/// Creates the camera buffer.
+				/// </summary>
+				/// <param name="device"></param>
 				void CreateCameraBuffer(ComPtr<ID3D12Device> device);
+
+				/// <summary>
+				/// Updates the camera buffer.
+				/// </summary>
 				void UpdateCameraBuffer();
+
+				/// <summary>
+				/// Renders the ImGui components for the camera.
+				/// </summary>
 				void RenderCameraImGui();
 
-
+				/// <summary>
+				/// Getter for the camera buffer.
+				/// </summary>
+				/// <returns></returns>
 				inline ComPtr<ID3D12Resource> GetCameraBuffer() const {
 					return m_cameraBuffer;
 				}
+
+				/// <summary>
+				/// Getter for the camera heap.
+				/// </summary>
+				/// <returns></returns>
 				inline ComPtr<ID3D12DescriptorHeap> GetCameraHeap() const {
 					return m_cameraHeap;
 				}
 
+				/// <summary>
+				/// Getter for the camera buffer size.
+				/// </summary>
+				/// <returns></returns>
 				inline uint32_t GetCameraBufferSize() const {
 					return m_cameraBufferSize;
 				}
 
-
+				/// <summary>
+				/// Get for the current camera speed.
+				/// </summary>
+				/// <returns></returns>
 				inline float GetSpeed() const {
 					return m_speed;
 				}
@@ -58,10 +115,32 @@ namespace SonarPropagation {
 
 			private:
 
+				/// <summary>
+				/// Updates the camera parameters.
+				/// </summary>
 				void UpdateParameters();
+
+				/// <summary>
+				/// Updates the camera UV values
+				/// </summary>
+				/// <param name="du"></param>
+				/// <param name="dv"></param>
 				void UpdateUV(float du, float dv);
+
+				/// <summary>
+				/// Updates the camera distance.
+				/// </summary>
+				/// <param name="dDistance"></param>
 				void UpdateDistance(float dDistance);
+
+				/// <summary>
+				/// Updates the view matrix.
+				/// </summary>
 				void UpdateViewMatrix();
+
+				/// <summary>
+				/// Updates the projection matrix.
+				/// </summary>
 				void UpdateProjectionMatrix();
 
 				bool m_isViewDirty = true;

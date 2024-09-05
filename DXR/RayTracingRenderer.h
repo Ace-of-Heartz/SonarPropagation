@@ -24,71 +24,205 @@ namespace SonarPropagation{
 				ComPtr<ID3D12Resource> pInstanceDesc; // Used only for top-level AS
 			};
 
-
-
-
 			/// <summary>
 			/// Main class for the RayTracingRenderer. Responsible for creating the RayTracing Pipeline.
 			/// </summary>
 			class RayTracingRenderer {
 			public:
 
-				// Constructor and Destructor:
+			// Constructor and Destructor:
+				
+				/// <summary>
+				/// Parameterized constructor for the RayTracingRenderer.
+				/// </summary>
+				/// <param name="deviceResources"></param>
 				RayTracingRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources);
+				
+				/// <summary>
+				/// Destructor for the RayTracingRenderer.
+				/// </summary>
 				~RayTracingRenderer();
 
-				// Graphics Initialization:
+			// Graphics Initialization:
+
+				/// <summary>
+				/// Creates the necessary resources.
+				/// </summary>
 				void CreateDeviceDependentResources();
+
+				/// <summary>
+				/// Creates the window size dependent resources.
+				/// </summary>
 				void CreateWindowSizeDependentResources();
 
-				// Raytracing Render Loop:
+			// Raytracing Render Loop:
+
+				/// <summary>
+				/// Main update function for updating different components used in the main loop.
+				/// </summary>
+				/// <param name="timer"></param>
 				void Update(DX::StepTimer const& timer);
+
+				/// <summary>
+				/// Main render function for rendering the scene used in the main loop.
+				/// </summary>
+				/// <returns></returns>
 				bool Render();
+
+				/// <summary>
+				/// Saves the current state of the renderer.
+				/// </summary>
 				void SaveState();
 				
+				/// <summary>
+				/// Handles the press of different keys.
+				/// </summary>
+				/// <param name="args"></param>
 				void KeyPressed(Windows::UI::Core::KeyEventArgs^ args);
+
+				/// <summary>
+				/// Handles the release of different keys.
+				/// </summary>
+				/// <param name="args"></param>
 				void KeyReleased(Windows::UI::Core::KeyEventArgs^ args);
+
+				/// <summary>
+				/// Handles the movement of the mouse.
+				/// </summary>
+				/// <param name="args"></param>
 				void MouseMoved(Windows::UI::Core::PointerEventArgs^ args);
+
+				/// <summary>
+				/// Handles the movement of the mouse wheel.
+				/// </summary>
+				/// <param name="args"></param>
 				void MouseWheelMoved(Windows::UI::Core::PointerEventArgs^ args);
 
-				// Raytracing Utils.:
+			// Raytracing Utils.:
+
+				/// <summary>
+				/// Checks if the current device supports raytracing.
+				/// </summary>
 				void CheckRayTracingSupport();
 
 			private:
 
-				// Raytracing Initialization:
+			// Raytracing Initialization:
+
+				/// <summary>
+				/// Creates the signature for the ray generation shader.
+				/// </summary>
+				/// <returns></returns>
 				ComPtr<ID3D12RootSignature> CreateRayGenSignature();
+
+				/// <summary>
+				/// Creates the signature for the hit shader.
+				/// </summary>
+				/// <returns></returns>
 				ComPtr<ID3D12RootSignature> CreateHitSignature();
+
+				/// <summary>
+				/// Creates the signature for the miss shader.
+				/// </summary>
+				/// <returns></returns>
 				ComPtr<ID3D12RootSignature> CreateMissSignature();
 
+				/// <summary>
+				/// Creates the necessary resources and interfaces for raytracing.
+				/// At the moment it only creates the DXR compatible device.
+				/// </summary>
 				void CreateRaytracingInterfaces();
 
+				/// <summary>
+				/// Creates the acceleration structures for raytracing.
+				/// </summary>
+				/// <typeparam name="V">
+				///	Vertex type
+				/// </typeparam>
 				template <typename V>
 				void CreateAccelerationStructures();
 
+				/// <summary>
+				/// Creates the raytracing pipeline.
+				/// </summary>
 				void CreateRaytracingPipeline();
+
+				/// <summary>
+				/// Creates the raytracing output buffer.
+				/// </summary>
 				void CreateRaytracingOutputBuffer();
+
+				/// <summary>
+				/// Creates the shader resource heap.
+				/// </summary>
 				void CreateShaderResourceHeap();
+
+				/// <summary>
+				/// Creates the shader binding table.
+				/// </summary>
 				void CreateShaderBindingTable();
+
+				/// <summary>
+				/// Creates the per instance constant buffers.
+				/// </summary>
 				void CreatePerInstanceConstantBuffers();
+
+				/// <summary>
+				///   Creates the rendered instances.
+				/// </summary>
+				/// <param name="asBuffers"></param>
 				void CreateInstances(std::vector<std::pair<AccelerationStructureBuffers, uint32_t>> asBuffers);
 
+				/// <summary>
+				/// Initializes the vertex buffers.
+				/// </summary>
+				/// <typeparam name="V">Vertex type</typeparam>
 				template <typename V>
 				void CreateVertexBuffers();
 
+				/// <summary>
+				/// Initializes the index buffers.
+				/// </summary>
 				void CreateIndexBuffers();
 
-				// Raytracing Render Loop:
+			// Raytracing Render Loop:
+				
+				/// <summary>
+				/// Populates the command list. Utilizes PIX for additional debugging.
+				/// </summary>
 				void PopulateCommandListWithPIX();
+
+				/// <summary>
+				/// Updates the transforms found in the instance constant buffers.
+				/// </summary>
 				void UpdateInstanceTransforms();
 				
+				/// <summary>
+				/// Renders the ImGui windows.
+				/// </summary>
 				void RenderImGui();
 				
-				// Raytracing Initialization:
+			// Raytracing Initialization:
+
+				/// <summary>
+				/// Loads the state of the renderer.
+				/// </summary>
 				void LoadState();
 				
+				/// <summary>
+				/// Creates the top level acceleration structure.
+				/// </summary>
+				/// <param name="instances"></param>
+				/// <param name="updateOnly"></param>
 				void CreateTopLevelAS(const std::vector < std::pair < ComPtr<ID3D12Resource>, DirectX::XMMATRIX>>& instances, bool updateOnly);
 				
+				/// <summary>
+				/// Creates the bottom level acceleration structure.
+				/// </summary>
+				/// <typeparam name="V">Vertex type</typeparam>
+				/// <param name="vVertexBuffers"></param>
+				/// <param name="vIndexBuffers"></param>
+				/// <returns></returns>
 				template <typename V>
 				AccelerationStructureBuffers CreateBottomLevelAS(std::vector<std::pair<ComPtr<ID3D12Resource>, uint32_t>> vVertexBuffers,
 					std::vector<std::pair<ComPtr<ID3D12Resource>, uint32_t>> vIndexBuffers

@@ -1,6 +1,9 @@
 #pragma once
 #include "pch.h"
 
+/// <summary>
+/// Holds the configuration for the raytracing.
+/// </summary>
 struct RayTracingConfig {
 	UINT m_recursionDepth = 1;
 	UINT m_maxPayloadSize;
