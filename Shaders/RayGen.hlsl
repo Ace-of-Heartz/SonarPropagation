@@ -1,4 +1,6 @@
 #include "Common.hlsl"
+#include "./SonarShaders/SonarEq.hlsl"
+#include "./SonarShaders/SonarUtils.hlsl"
 
 cbuffer CameraParams : register(b0)
 {
@@ -8,11 +10,18 @@ cbuffer CameraParams : register(b0)
   float4x4 projectionI;
 }
 
+
+
+
+
 // Raytracing output texture, accessed as a UAV
 RWTexture2D< float4 > gOutput : register(u0);
 
 // Raytracing acceleration structure, accessed as a SRV
 RaytracingAccelerationStructure SceneBVH : register(t0);
+
+
+
 
 [shader("raygeneration")] 
 void RayGen() {
