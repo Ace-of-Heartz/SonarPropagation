@@ -101,8 +101,11 @@
     <Filter Include="Shaders">
       <UniqueIdentifier>{ab6c5955-8a4e-447a-9bc5-95d4fa5458dc}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Shaders\SonarShaders">
+    <Filter Include="Shaders\SonarRayMarch">
       <UniqueIdentifier>{4e76ab50-d41e-4421-973e-b070f14efe9f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\SonarRTX">
+      <UniqueIdentifier>{e5818060-e30d-46e8-8f36-54b0cf5b4b43}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -264,13 +267,28 @@
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="Shaders\SonarShaders\SonarEq.hlsl">
-      <Filter>Shaders\SonarShaders</Filter>
+      <Filter>Shaders\SonarRayMarch</Filter>
     </FxCompile>
     <FxCompile Include="Shaders\SonarShaders\SonarUtils.hlsl">
-      <Filter>Shaders\SonarShaders</Filter>
+      <Filter>Shaders\SonarRayMarch</Filter>
     </FxCompile>
     <FxCompile Include="Shaders\SonarShaders\RayMarch.hlsl">
-      <Filter>Shaders\SonarShaders</Filter>
+      <Filter>Shaders\SonarRayMarch</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\SonarShaders\BoundaryHit.hlsl">
+      <Filter>Shaders\SonarRTX</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\SonarShaders\BoundaryMiss.hlsl">
+      <Filter>Shaders\SonarRTX</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\SonarShaders\ObjectHit.hlsl">
+      <Filter>Shaders\SonarRTX</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\SonarShaders\ObjectMiss.hlsl">
+      <Filter>Shaders\SonarRTX</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\SonarShaders\SonarCommon.hlsl">
+      <Filter>Shaders\SonarRTX</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>

@@ -1,23 +1,5 @@
 #include "SonarUtils.hlsl"
 
-struct RayData
-{
-    float r;
-    float z;
-    float xi;
-    float zeta;
-};
-
-struct EnvData
-{
-    float depth;
-    float temperature;
-    float salinity;
-};
-
-
-
-
 //-------------------------------------------------------
 // Mackenzie Formulas:
 float MackenzieFormula(EnvData data)
@@ -78,7 +60,7 @@ float CMFPartialOfZ(EnvData data)
 
 RayData InitRay(float r, float z, float theta)
 {
-    EnvData envData = { 2.0, 34.7, ray.z };
+    EnvData envData = { 2.0, 34.7, z };
     
     float c = MackenzieFormula(envData);
     
@@ -88,7 +70,6 @@ RayData InitRay(float r, float z, float theta)
     RayData ray = { r, z, xi, zeta };
     return ray;
 }
-
 
 // Differential Equation used for computing the path of a ray
 RayData SonarDiffEq(RayData ray)
@@ -109,4 +90,25 @@ RayData SonarDiffEq(RayData ray)
     RayData newRay = { newR, newZ, newXi, newZeta };
     
     return newRay;
+}
+
+RayData CartesianToCylinder(RayMarchInput coord)
+{
+    float3 p = coord.rayOrigin + coord.rayDirection * coord.distance;
+    
+    float r = sqrt(pow(p.x, 2) + pow(p.y, 2));
+    float z = p.z;
+    
+    float theta = atan2(p.y, p.x);
+
+    return InitRay(r, z, theta);
+}
+
+float3 CylinderToCartesian(RayData coord)
+{
+    return float3(
+        cos(coord.r),
+        sin(coord.r),
+        coord.z
+    );
 }
