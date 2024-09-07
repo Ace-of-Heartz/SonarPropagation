@@ -1,5 +1,5 @@
 #include "Common.hlsl"
-#include "./SonarShaders/RayMarch.hlsl"
+//#include "./SonarFunctions/RayMarch.hlsl"
 
 cbuffer CameraParams : register(b0)
 {
@@ -31,21 +31,19 @@ void RayGen() {
     float4 target = mul(projectionI,float4(d.x,-d.y,1,1)); 
 
     
-    float4 ro = mul(viewI, float4(0, 0, 0, 1));
-    float4 rd = mul(viewI, float4(target.xyz, 0));
+    //float4 ro = mul(viewI, float4(0, 0, 0, 1));
+    //float4 rd = mul(viewI, float4(target.xyz, 0));
     
-    RayMarchInput input = {ro.xyz,rd.xyz,0.0};
+    //RayMarchInput input = {ro.xyz,rd.xyz,0.0};
     
-    RayMarchOutput output = RayMarch(input);
-    
-    
+    //RayMarchOutput output = RayMarch(input);
     
     
     RayDesc ray;
-    //ray.Origin = mul(viewI, float4(0,0,0,1));
-    //ray.Direction = mul(viewI,float4(target.xyz,0));
-    ray.Origin = output.rayOrigin;
-    ray.Direction = output.rayDirection;
+    ray.Origin = mul(viewI, float4(0, 0, 0, 1));
+    ray.Direction = mul(viewI, float4(target.xyz, 0));
+    //ray.Origin = output.rayOrigin;
+    //ray.Direction = output.rayDirection;
     
     
     ray.TMin = 0;

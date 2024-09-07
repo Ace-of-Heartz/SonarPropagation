@@ -1,5 +1,8 @@
+#include "../Common.hlsl"
+#include "SonarCommon.hlsl"
+
 [shader("closesthit")]
-void ObjectClosestHit(inout SonarHitInfo, Attributesattrib)
+void ObjectClosestHit(inout SoundHitInfo hit,Attributes attrib)
 {
     
 }

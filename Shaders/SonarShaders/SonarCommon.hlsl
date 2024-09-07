@@ -1,4 +1,4 @@
-struct SonarHitInfo
+struct SoundHitInfo
 {
     bool isBoundaryHit;
     bool isObjectHit;

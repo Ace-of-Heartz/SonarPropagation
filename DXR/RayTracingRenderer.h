@@ -3,6 +3,7 @@
 #include <memory.h>
 #include <pch.h>
 #include "pix3.h"
+#include "Common/ObjLoader.h"
 #include "Common/ImGuiManager.h"
 #include "DXR/RayTracingConfig.h"
 #include <map>
@@ -260,6 +261,9 @@ namespace SonarPropagation{
 
 
 				Microsoft::WRL::ComPtr<ID3D12Resource>				m_constantBuffer;
+
+
+
 
 				D3D12_VERTEX_BUFFER_VIEW							m_tetrahedronVertexBufferView;
 				D3D12_INDEX_BUFFER_VIEW								m_tetrahedronIndexBufferView;

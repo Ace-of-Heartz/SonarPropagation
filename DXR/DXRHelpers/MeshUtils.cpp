@@ -108,6 +108,8 @@ std::vector<VertexPositionColor> SonarPropagation::Graphics::Utils::GetQuadVerti
 	return vertices;
 }
 
+
+
 std::vector<UINT> SonarPropagation::Graphics::Utils::GetQuadIndices() {
 	std::vector<UINT> indices = { 
 		0, 1, 2,
