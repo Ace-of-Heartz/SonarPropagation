@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "Model.h"
 
 namespace SonarPropagation {
 	namespace Graphics {
@@ -33,6 +34,8 @@ namespace SonarPropagation {
 					Object();
 					~Object();
 
+					virtual void ProcessObject() = 0;
+
 					Transform m_transform;
 				};
 
@@ -41,7 +44,15 @@ namespace SonarPropagation {
 				public:
 					SoundRecevier();
 					~SoundRecevier();
+
+
+					void ProcessObject() override {
+						m_sonarCollection->AddSoundReceiver(m_transform.LocalToWorld());
+					};
+
 				private:
+					SonarCollection* m_sonarCollection;
+
 				};
 
 				class SoundSource : public Object
@@ -49,40 +60,37 @@ namespace SonarPropagation {
 				public:
 					SoundSource();
 					~SoundSource();
+
+					void ProcessObject() override {
+						m_sonarCollection->AddSoundSource(m_transform.LocalToWorld(), m_rayProjection);
+					};
 				private:
+					SonarCollection* m_sonarCollection;
 					XMMATRIX m_rayProjection;
 
 				};
 
-				struct Model {
-					std::vector<VertexPositionNormalUV> vertices;
-					std::vector<tinyobj::index_t> indices;
-				};
+
 
 				class SoundReflector : public Object
 				{
 				public:
 					SoundReflector();
 					~SoundReflector();
+
+					void ProcessObject() override {
+						m_model->AddInstance(m_transform.LocalToWorld(),m_hitGroup);
+					};
+
 				private:
 					Model* m_model;
+					UINT m_hitGroup;
 				};
 
-				std::vector<BufferData> GetBufferData() const;
+				void GetInstanceInformation() const;
 
 				std::vector<Object*> m_objects;
 
-			};
-
-			struct BufferData {
-				Microsoft::WRL::ComPtr<ID3D12Resource> vertexBuffer;
-				Microsoft::WRL::ComPtr<ID3D12Resource> indexBuffer;
-
-				UINT vertexCount;
-				UINT indexCount;
-
-				D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
-				D3D12_INDEX_BUFFER_VIEW indexBufferView;
 			};
 		}
 	}

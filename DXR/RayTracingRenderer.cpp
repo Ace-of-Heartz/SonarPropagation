@@ -46,68 +46,68 @@ SonarPropagation::Graphics::DXR::RayTracingRenderer::~RayTracingRenderer() {
 
 #pragma region Graphics Init.: 
 
-void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreatePerInstanceConstantBuffers() {
-
-	// Due to HLSL packing rules, we create the CB with 9 float4 (each needs to start on a 16-byte
-// boundary)
-	XMVECTOR bufferData[] = {
-		// A
-		XMVECTOR{1.0f, 0.0f, 0.0f, 1.0f},
-		XMVECTOR{1.0f, 0.4f, 0.0f, 1.0f},
-		XMVECTOR{1.f, 0.7f, 0.0f, 1.0f},
-		XMVECTOR{0.0f, 0.0f, 1.0, 1.0f},
-
-		// B
-		XMVECTOR{0.0f, 1.0f, 0.0f, 1.0f},
-		XMVECTOR{0.0f, 1.0f, 0.4f, 1.0f},
-		XMVECTOR{0.0f, 1.0f, 0.7f, 1.0f},
-		XMVECTOR{0.0f, 0.0f, 1.0, 1.0f},
-
-		// C
-		XMVECTOR{0.0f, 0.0f, 1.0f, 1.0f},
-		XMVECTOR{0.4f, 0.0f, 1.0f, 1.0f},
-		XMVECTOR{0.7f, 0.0f, 1.0f, 1.0f},
-		XMVECTOR{0.0f, 0.0f, 1.0, 1.0f},
-
-		XMVECTOR{0.0f, 0.0f, 1.0f, 1.0f},
-		XMVECTOR{0.0f, 0.0f, 0.2f, 1.0f},
-		XMVECTOR{0.0f, 0.0f, 0.5f, 1.0f},
-		XMVECTOR{0.0f, 0.0f, 1.0, 1.0f},
-
-		XMVECTOR{0.0f, 0.2f, 0.0f, 1.0f},
-		XMVECTOR{0.4f, 0.3f, 0.0f, 1.0f},
-		XMVECTOR{0.7f, 0.5f, 0.0f, 1.0f},
-		XMVECTOR{0.0f, 1.0f, 0.0, 1.0f},
-
-		XMVECTOR{0.0f, 0.8f, 0.5f, 1.0f},
-		XMVECTOR{0.7f, 0.9f, 0.0f, 1.0f},
-		XMVECTOR{0.7f, 0.8f, 0.6f, 1.0f},
-		XMVECTOR{0.2f, 0.9f, 1.0, 1.0f},
-
-		XMVECTOR{0.949f, 0.843f, 0.561, 1.0f},
-		XMVECTOR{0.949f, 0.843f, 0.561, 1.0f},
-		XMVECTOR{0.949f, 0.843f, 0.561, 1.0f},
-		XMVECTOR{0.949f, 0.843f, 0.561, 1.0f},
-	};
-
-	m_perInstanceConstantBuffers.resize(7);
-
-	auto vertexCountPerInstance = 4;
-
-	int i(0);
-	for (auto& cb : m_perInstanceConstantBuffers)
-	{
-		const uint32_t bufferSize = sizeof(XMVECTOR) * vertexCountPerInstance;
-		cb = nv_helpers_dx12::CreateBuffer(m_dxrDevice.Get(), bufferSize, D3D12_RESOURCE_FLAG_NONE,
-			D3D12_RESOURCE_STATE_GENERIC_READ,
-			nv_helpers_dx12::kUploadHeapProps);
-		uint8_t* pData;
-		ThrowIfFailed(cb->Map(0, nullptr, (void**)&pData));
-		memcpy(pData, &bufferData[i * 4], bufferSize);
-		cb->Unmap(0, nullptr);
-		++i;
-	}
-}
+//void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreatePerInstanceConstantBuffers() {
+//
+//	// Due to HLSL packing rules, we create the CB with 9 float4 (each needs to start on a 16-byte
+//// boundary)
+//	XMVECTOR bufferData[] = {
+//		// A
+//		XMVECTOR{1.0f, 0.0f, 0.0f, 1.0f},
+//		XMVECTOR{1.0f, 0.4f, 0.0f, 1.0f},
+//		XMVECTOR{1.f, 0.7f, 0.0f, 1.0f},
+//		XMVECTOR{0.0f, 0.0f, 1.0, 1.0f},
+//
+//		// B
+//		XMVECTOR{0.0f, 1.0f, 0.0f, 1.0f},
+//		XMVECTOR{0.0f, 1.0f, 0.4f, 1.0f},
+//		XMVECTOR{0.0f, 1.0f, 0.7f, 1.0f},
+//		XMVECTOR{0.0f, 0.0f, 1.0, 1.0f},
+//
+//		// C
+//		XMVECTOR{0.0f, 0.0f, 1.0f, 1.0f},
+//		XMVECTOR{0.4f, 0.0f, 1.0f, 1.0f},
+//		XMVECTOR{0.7f, 0.0f, 1.0f, 1.0f},
+//		XMVECTOR{0.0f, 0.0f, 1.0, 1.0f},
+//
+//		XMVECTOR{0.0f, 0.0f, 1.0f, 1.0f},
+//		XMVECTOR{0.0f, 0.0f, 0.2f, 1.0f},
+//		XMVECTOR{0.0f, 0.0f, 0.5f, 1.0f},
+//		XMVECTOR{0.0f, 0.0f, 1.0, 1.0f},
+//
+//		XMVECTOR{0.0f, 0.2f, 0.0f, 1.0f},
+//		XMVECTOR{0.4f, 0.3f, 0.0f, 1.0f},
+//		XMVECTOR{0.7f, 0.5f, 0.0f, 1.0f},
+//		XMVECTOR{0.0f, 1.0f, 0.0, 1.0f},
+//
+//		XMVECTOR{0.0f, 0.8f, 0.5f, 1.0f},
+//		XMVECTOR{0.7f, 0.9f, 0.0f, 1.0f},
+//		XMVECTOR{0.7f, 0.8f, 0.6f, 1.0f},
+//		XMVECTOR{0.2f, 0.9f, 1.0, 1.0f},
+//
+//		XMVECTOR{0.949f, 0.843f, 0.561, 1.0f},
+//		XMVECTOR{0.949f, 0.843f, 0.561, 1.0f},
+//		XMVECTOR{0.949f, 0.843f, 0.561, 1.0f},
+//		XMVECTOR{0.949f, 0.843f, 0.561, 1.0f},
+//	};
+//
+//	//m_perInstanceConstantBuffers.resize(7);
+//
+//	auto vertexCountPerInstance = 4;
+//
+//	int i(0);
+//	for (auto& cb : m_perInstanceConstantBuffers)
+//	{
+//		const uint32_t bufferSize = sizeof(XMVECTOR) * vertexCountPerInstance;
+//		cb = nv_helpers_dx12::CreateBuffer(m_dxrDevice.Get(), bufferSize, D3D12_RESOURCE_FLAG_NONE,
+//			D3D12_RESOURCE_STATE_GENERIC_READ,
+//			nv_helpers_dx12::kUploadHeapProps);
+//		uint8_t* pData;
+//		ThrowIfFailed(cb->Map(0, nullptr, (void**)&pData));
+//		memcpy(pData, &bufferData[i * 4], bufferSize);
+//		cb->Unmap(0, nullptr);
+//		++i;
+//	}
+//}
 
 void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateDeviceDependentResources() {
 
@@ -262,6 +262,23 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateDeviceDependentR
 
 }
 
+void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateScene() {
+
+}
+
+void SonarPropagation::Graphics::DXR::RayTracingRenderer::InitializeObjects() {
+	{
+		std::vector<VertexPositionNormalUV> suzanneVertices = ObjLoader::LoadObj("suzanne.obj");
+
+		const UINT suzanneVertexBufferSize = sizeof(suzanneVertices) * sizeof(VertexPositionNormalUV);
+		ThrowIfFailed(m_dxrDevice->CreateCommittedResource(
+			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), D3D12_HEAP_FLAG_NONE,
+			&CD3DX12_RESOURCE_DESC::Buffer(suzanneVertices),
+			D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
+			IID_PPV_ARGS(&m_tetrahedronVertexBuffer)));
+	}
+}
+
 template <typename V>
 void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateVertexBuffers() {
 
@@ -301,7 +318,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateVertexBuffers() 
 			&CD3DX12_RESOURCE_DESC::Buffer(suzanneVertices),
 			D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
 			IID_PPV_ARGS(&m_tetrahedronVertexBuffer)));
-		ú
+		
 	}
 
 	//{
@@ -331,38 +348,38 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateVertexBuffers() 
 	//}
 }
 
-void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateIndexBuffers()
-{
-	CD3DX12_HEAP_PROPERTIES heapProperty =
-		CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-	CD3DX12_RANGE readRange(
-		0, 0); // We do not intend to read from this resource on the CPU.
-	{
-		std::vector<UINT> indices = GetTetrahedronIndices();
-		const UINT indexBufferSize =
-			static_cast<UINT>(indices.size()) * sizeof(UINT);
-
-		CD3DX12_RESOURCE_DESC bufferResource =
-			CD3DX12_RESOURCE_DESC::Buffer(indexBufferSize);
-		ThrowIfFailed(m_dxrDevice->CreateCommittedResource(
-			&heapProperty, D3D12_HEAP_FLAG_NONE, &bufferResource, //
-			D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
-			IID_PPV_ARGS(&m_tetrahedronIndexBuffer)));
-
-		// Copy the triangle data to the index buffer.
-		UINT8* pIndexDataBegin;
-		ThrowIfFailed(m_tetrahedronIndexBuffer->Map(
-			0, &readRange, reinterpret_cast<void**>(&pIndexDataBegin)));
-		memcpy(pIndexDataBegin, indices.data(), indexBufferSize);
-		m_tetrahedronIndexBuffer->Unmap(0, nullptr);
-
-		// Initialize the index buffer view.
-		m_tetrahedronIndexBufferView.BufferLocation = m_tetrahedronIndexBuffer->GetGPUVirtualAddress();
-		m_tetrahedronIndexBufferView.Format = DXGI_FORMAT_R32_UINT;
-		m_tetrahedronIndexBufferView.SizeInBytes = indexBufferSize;
-
-		NAME_D3D12_OBJECT(m_tetrahedronIndexBuffer);
-	}
+//void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateIndexBuffers()
+//{
+//	CD3DX12_HEAP_PROPERTIES heapProperty =
+//		CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+//	CD3DX12_RANGE readRange(
+//		0, 0); // We do not intend to read from this resource on the CPU.
+//	{
+//		std::vector<UINT> indices = GetTetrahedronIndices();
+//		const UINT indexBufferSize =
+//			static_cast<UINT>(indices.size()) * sizeof(UINT);
+//
+//		CD3DX12_RESOURCE_DESC bufferResource =
+//			CD3DX12_RESOURCE_DESC::Buffer(indexBufferSize);
+//		ThrowIfFailed(m_dxrDevice->CreateCommittedResource(
+//			&heapProperty, D3D12_HEAP_FLAG_NONE, &bufferResource, //
+//			D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
+//			IID_PPV_ARGS(&m_tetrahedronIndexBuffer)));
+//
+//		// Copy the triangle data to the index buffer.
+//		UINT8* pIndexDataBegin;
+//		ThrowIfFailed(m_tetrahedronIndexBuffer->Map(
+//			0, &readRange, reinterpret_cast<void**>(&pIndexDataBegin)));
+//		memcpy(pIndexDataBegin, indices.data(), indexBufferSize);
+//		m_tetrahedronIndexBuffer->Unmap(0, nullptr);
+//
+//		// Initialize the index buffer view.
+//		m_tetrahedronIndexBufferView.BufferLocation = m_tetrahedronIndexBuffer->GetGPUVirtualAddress();
+//		m_tetrahedronIndexBufferView.Format = DXGI_FORMAT_R32_UINT;
+//		m_tetrahedronIndexBufferView.SizeInBytes = indexBufferSize;
+//
+//		NAME_D3D12_OBJECT(m_tetrahedronIndexBuffer);
+//	}
 
 	//{
 	//	std::vector<UINT> indices = GetQuadIndices();
@@ -391,7 +408,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateIndexBuffers()
 
 	//	NAME_D3D12_OBJECT(m_quadIndexBuffer);
 	//}
-}
+//}
 
 void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateWindowSizeDependentResources() {
 	Size outputSize = m_deviceResources->GetOutputSize();
@@ -742,7 +759,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateShaderBindingTab
 		m_sbtHelper.AddMissProgram(L"ShadowMiss", {});
 	}
 
-	auto constNum = m_perInstanceConstantBuffers.size();
+	/*auto constNum = m_perInstanceConstantBuffers.size();
 
 	for (int i = 0; i < constNum - 1; ++i) {
 		m_sbtHelper.AddHitGroup(
@@ -780,7 +797,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateShaderBindingTab
 				(void*)(m_perInstanceConstantBuffers[constNum - 1]->GetGPUVirtualAddress()),
 				heapPointer,
 			});
-	}
+	}*/
 	// Shadow hit group is added after each addition of the original hitgroup, 
 	// so that all geometry can be hit!
 	uint32_t sbtSize = m_sbtHelper.ComputeSBTSize();
@@ -798,25 +815,25 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateShaderBindingTab
 /// <summary>
 /// Creates the transform matrices for the instances and populates the associated metadata.
 /// </summary>
-void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateInstances(
-	std::vector<std::pair<AccelerationStructureBuffers, uint32_t>> asBuffers
-) {
-
-
-	for (int i = 0; i < asBuffers.size(); ++i) {
-
-		float amount = asBuffers[i].second;
-
-
-		for (int j = 0; j < amount; ++j) {
-			m_instances.push_back({ asBuffers[i].first.pResult, (
-				XMMatrixTranslation(1.75f,.0f,.0f) *
-				XMMatrixRotationAxis(XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f), (360.f / amount) * j)
-				) });
-		}
-
-	}
-}
+//void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateInstances(
+//	std::vector<std::pair<AccelerationStructureBuffers, uint32_t>> asBuffers
+//) {
+//
+//
+//	for (int i = 0; i < asBuffers.size(); ++i) {
+//
+//		float amount = asBuffers[i].second;
+//
+//
+//		for (int j = 0; j < amount; ++j) {
+//			m_instances.push_back({ asBuffers[i].first.pResult, (
+//				XMMatrixTranslation(1.75f,.0f,.0f) *
+//				XMMatrixRotationAxis(XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f), (360.f / amount) * j)
+//				) });
+//		}
+//
+//	}
+//}
 
 
 #pragma endregion

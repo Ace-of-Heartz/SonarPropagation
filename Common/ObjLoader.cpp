@@ -70,5 +70,8 @@ static std::tuple<std::vector<VertexPositionNormalUV>,std::vector<tinyobj::index
 			shapes[s].mesh.material_ids[f];
 		}
 	}
+
+
+
 	return { objVertices, objIndices };
 }

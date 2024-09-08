@@ -154,15 +154,16 @@ void SonarPropagation::Graphics::Utils::Scene::Transform::DEBUGAssertValidPointe
 	assert(lastChild == nullptr || lastChild->parent == this);
 }
 
-std::vector<BufferData> SonarPropagation::Graphics::Utils::Scene::GetBufferData() const {
+void SonarPropagation::Graphics::Utils::Scene::GetInstanceInformation() const {
 	CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_UPLOAD);
 	
 	for (auto& object : m_objects) {
+		if (object )
+
 		if ( object->m_transform.isChanged) {
 			object->m_transform.isChanged = false;
-			object->m_transform.LocalToWorld();
-
-
+			
+			object->ProcessObject();
 		}
 	}
 }

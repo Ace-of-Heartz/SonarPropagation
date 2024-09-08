@@ -11,9 +11,8 @@ namespace SonarPropagation
 		{
 			class ObjLoader
 			{
-				ObjLoader();
-
-				static std::vector<VertexPositionNormalUV> LoadObj(const std::string& filename);
+			public:
+				static std::tuple<std::vector<VertexPositionNormalUV>,std::vector<tinyobj::index_t>> LoadObj(const std::string& filename);
 			};
 		}
 	}

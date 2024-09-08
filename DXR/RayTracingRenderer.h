@@ -5,8 +5,10 @@
 #include "pix3.h"
 #include "Common/ObjLoader.h"
 #include "Common/ImGuiManager.h"
+#include "Common/ObjectLibrary.h"
 #include "DXR/RayTracingConfig.h"
 #include <map>
+
 
 using namespace Microsoft::WRL;
 using namespace DirectX;
@@ -186,6 +188,13 @@ namespace SonarPropagation{
 				/// </summary>
 				void CreateIndexBuffers();
 
+				void InitializeObjects();
+				
+				void CreateScene();
+
+				
+
+
 			// Raytracing Render Loop:
 				
 				/// <summary>
@@ -250,26 +259,25 @@ namespace SonarPropagation{
 				UINT												m_cbvDescriptorSize;
 				D3D12_RECT											m_scissorRect;
 
-				// Generic Direct3D Buffers:
-				Microsoft::WRL::ComPtr<ID3D12Resource>				m_tetrahedronVertexBuffer;
-				Microsoft::WRL::ComPtr<ID3D12Resource>				m_tetrahedronIndexBuffer;
-				UINT 												m_tetrahedronInstanceCount;
+				//// Generic Direct3D Buffers:
+				//Microsoft::WRL::ComPtr<ID3D12Resource>				m_tetrahedronVertexBuffer;
+				//Microsoft::WRL::ComPtr<ID3D12Resource>				m_tetrahedronIndexBuffer;
+				//UINT 												m_tetrahedronInstanceCount;
 
-				Microsoft::WRL::ComPtr<ID3D12Resource>				m_quadVertexBuffer;
-				Microsoft::WRL::ComPtr<ID3D12Resource>				m_quadIndexBuffer;
-				UINT												m_quadInstanceCount;
-
+				//Microsoft::WRL::ComPtr<ID3D12Resource>				m_quadVertexBuffer;
+				//Microsoft::WRL::ComPtr<ID3D12Resource>				m_quadIndexBuffer;
+				//UINT												m_quadInstanceCount;
 
 				Microsoft::WRL::ComPtr<ID3D12Resource>				m_constantBuffer;
 
+				Scene												m_scene;
+				ObjectLibrary										m_objectLibrary;
 
+				//D3D12_VERTEX_BUFFER_VIEW							m_tetrahedronVertexBufferView;
+				//D3D12_INDEX_BUFFER_VIEW								m_tetrahedronIndexBufferView;
 
-
-				D3D12_VERTEX_BUFFER_VIEW							m_tetrahedronVertexBufferView;
-				D3D12_INDEX_BUFFER_VIEW								m_tetrahedronIndexBufferView;
-
-				D3D12_VERTEX_BUFFER_VIEW 							m_quadVertexBufferView;
-				D3D12_INDEX_BUFFER_VIEW 							m_quadIndexBufferView;
+				//D3D12_VERTEX_BUFFER_VIEW 							m_quadVertexBufferView;
+				//D3D12_INDEX_BUFFER_VIEW 							m_quadIndexBufferView;
 
 				//ModelViewProjectionConstantBuffer					m_constantBufferData;
 				//UINT8*												m_mappedConstantBuffer;
@@ -307,8 +315,8 @@ namespace SonarPropagation{
 				ComPtr<ID3D12RootSignature>							m_reflectionSignature;	
 
 				// Instances: 
-				std::vector<std::pair<ComPtr<ID3D12Resource>, XMMATRIX>>	m_instances;
-				std::vector<ComPtr<ID3D12Resource>> 					m_perInstanceConstantBuffers;
+				//std::vector<std::pair<ComPtr<ID3D12Resource>, XMMATRIX>>	m_instances;
+				//std::vector<ComPtr<ID3D12Resource>> 					m_perInstanceConstantBuffers;
 
 				// Camera: 
 
@@ -325,20 +333,20 @@ namespace SonarPropagation{
 
 				// Variables used with the rendering loop:
 				bool												m_loadingComplete;
-				bool m_showDemoWindow = false;
-				bool m_showRaytracingWindow = true;
-				bool m_cameraWindow = false;
+				bool												m_showDemoWindow = false;
+				bool												m_showRaytracingWindow = true;
+				bool												m_cameraWindow = false;
 
-				bool m_useReflections = true;
+				bool												m_useReflections = true;
 
-				bool m_pipelineDirty;
-				bool m_sbtDirty;
-				bool m_ASDirty;
+				bool												m_pipelineDirty;
+				bool												m_sbtDirty;
+				bool												m_ASDirty;
 
-				bool m_animate = true;
+				bool												m_animate = true;
 
 
-				uint32_t m_time = 0;
+				uint32_t											m_time = 0;
 
 			};
 		}
