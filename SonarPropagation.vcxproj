@@ -259,12 +259,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h" />
+    <ClInclude Include="Common\BufferData.h" />
     <ClInclude Include="Common\Camera.h" />
     <ClInclude Include="Common\CameraController.h" />
     <ClInclude Include="Common\d3dx12.h" />
     <ClInclude Include="Common\DeviceResources.h" />
     <ClInclude Include="Common\DirectXHelper.h" />
     <ClInclude Include="Common\ImGuiManager.h" />
+    <ClInclude Include="Common\Model.h" />
+    <ClInclude Include="Common\ObjectLibrary.h" />
     <ClInclude Include="Common\ObjLoader.h" />
     <ClInclude Include="Common\Scene.h" />
     <ClInclude Include="Common\thirdparty\imgui_impl_uwp.h" />
@@ -296,6 +299,7 @@
     <ClCompile Include="Common\CameraController.cpp" />
     <ClCompile Include="Common\DeviceResources.cpp" />
     <ClCompile Include="Common\ImGuiManager.cpp" />
+    <ClCompile Include="Common\ObjectLibrary.cpp" />
     <ClCompile Include="Common\ObjLoader.cpp" />
     <ClCompile Include="Common\Scene.cpp" />
     <ClCompile Include="Common\thirdparty\imgui_impl_uwp.cpp" />

@@ -157,6 +157,9 @@
     <ClCompile Include="Common\Scene.cpp">
       <Filter>DXR\AceRaytracing\Graphics\Common\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Common\ObjectLibrary.cpp">
+      <Filter>DXR\AceRaytracing\Graphics\Common\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h" />
@@ -232,6 +235,15 @@
       <Filter>DXR\AceRaytracing\Graphics\Common\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Common\Scene.h">
+      <Filter>DXR\AceRaytracing\Graphics\Common\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\ObjectLibrary.h">
+      <Filter>DXR\AceRaytracing\Graphics\Common\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\BufferData.h">
+      <Filter>DXR\AceRaytracing\Graphics\Common\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\Model.h">
       <Filter>DXR\AceRaytracing\Graphics\Common\Header Files</Filter>
     </ClInclude>
   </ItemGroup>

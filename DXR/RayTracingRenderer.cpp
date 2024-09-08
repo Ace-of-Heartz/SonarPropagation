@@ -268,14 +268,39 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateScene() {
 
 void SonarPropagation::Graphics::DXR::RayTracingRenderer::InitializeObjects() {
 	{
-		std::vector<VertexPositionNormalUV> suzanneVertices = ObjLoader::LoadObj("suzanne.obj");
+		std::tuple<std::vector<VertexPositionNormalUV,std::vector<tinyobj::index_t>>> suzanneVertices = ObjLoader::LoadObj("suzanne.obj");
 
 		const UINT suzanneVertexBufferSize = sizeof(suzanneVertices) * sizeof(VertexPositionNormalUV);
 		ThrowIfFailed(m_dxrDevice->CreateCommittedResource(
 			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), D3D12_HEAP_FLAG_NONE,
-			&CD3DX12_RESOURCE_DESC::Buffer(suzanneVertices),
+			&CD3DX12_RESOURCE_DESC::Buffer(suzanneVertices[0]),
 			D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
-			IID_PPV_ARGS(&m_tetrahedronVertexBuffer)));
+			IID_PPV_ARGS(&suzanneVertices[0])));
+
+
+
+		const UINT indexBufferSize = static_cast<UINT>(suzanneVertices[1].size()) * sizeof(UINT);
+		CD3DX12_RESOURCE_DESC bufferResource =
+			CD3DX12_RESOURCE_DESC::Buffer(quadIndexBufferSize);
+		ThrowIfFailed(m_dxrDevice->CreateCommittedResource(
+			&heapProperty, D3D12_HEAP_FLAG_NONE, &bufferResource, //
+			D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
+			IID_PPV_ARGS(&m_quadIndexBuffer)));
+
+		// Copy the triangle data to the index buffer.
+		UINT8* pIndexDataBegin;
+		ThrowIfFailed(m_quadIndexBuffer->Map(
+			0, &readRange, reinterpret_cast<void**>(&pIndexDataBegin)));
+		memcpy(pIndexDataBegin, indices.data(), quadIndexBufferSize);
+		m_quadIndexBuffer->Unmap(0, nullptr);
+
+		// Initialize the index buffer view.
+		m_quadIndexBufferView.BufferLocation = m_tetrahedronIndexBuffer->GetGPUVirtualAddress();
+		m_quadIndexBufferView.Format = DXGI_FORMAT_R32_UINT;
+		m_quadIndexBufferView.SizeInBytes = quadIndexBufferSize;
+
+
+		NAME_D3D12_OBJECT(m_quadIndexBuffer);
 	}
 }
 
@@ -312,13 +337,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateVertexBuffers() 
 	{
 		std::vector<VertexPositionNormalUV> suzanneVertices = ObjLoader::LoadObj("suzanne.obj");
 
-		const UINT suzanneVertexBufferSize = sizeof(suzanneVertices) * sizeof(VertexPositionNormalUV);
-		ThrowIfFailed(m_dxrDevice->CreateCommittedResource(
-			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), D3D12_HEAP_FLAG_NONE,
-			&CD3DX12_RESOURCE_DESC::Buffer(suzanneVertices),
-			D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
-			IID_PPV_ARGS(&m_tetrahedronVertexBuffer)));
-		
+
 	}
 
 	//{
