@@ -7,7 +7,8 @@ namespace SonarPropagation {
 			struct Scene {
 				struct Transform {
 					Transform() = default;
-					Transform(const Transform&) = delete;
+					Transform(XMFLOAT3 position, XMFLOAT4 rotation, XMFLOAT4 scale) : position(position), rotation(rotation), scale(scale) {}
+					Transform(const Transform&);
 
 					bool isChanged = true;
 					XMMATRIX LocalToWorld() const;
@@ -31,12 +32,26 @@ namespace SonarPropagation {
 				class Object
 				{
 				public:
-					Object();
+					
+					Object(Transform transform) : m_transform(transform) {};
 					~Object();
 
 					virtual void ProcessObject() = 0;
 
 					Transform m_transform;
+				};
+
+				struct Model {
+					BufferData bufferData;
+					std::vector<Object*> m_objects;
+
+					void AddInstance(Object* object) {
+						m_objects.push_back(object);
+					}
+
+
+
+					Model(BufferData bufferData) : bufferData(bufferData) {}
 				};
 
 				class SoundRecevier : public Object
@@ -58,7 +73,8 @@ namespace SonarPropagation {
 				class SoundSource : public Object
 				{
 				public:
-					SoundSource();
+					SoundSource(Transform transform,SonarCollection* sonarCollection, XMMATRIX rayProject) 
+						: Object(transform), m_sonarCollection(sonarCollection) {};
 					~SoundSource();
 
 					void ProcessObject() override {
@@ -70,28 +86,36 @@ namespace SonarPropagation {
 
 				};
 
-
-
 				class SoundReflector : public Object
 				{
 				public:
-					SoundReflector();
+					SoundReflector(
+						Transform transform,
+						Model* model,
+						ObjectType type
+					) : Object(transform), m_model(model), m_type(type) {};
 					~SoundReflector();
 
 					void ProcessObject() override {
-						m_model->AddInstance(m_transform.LocalToWorld(),m_hitGroup);
+						m_model->AddInstance(this);
 					};
 
 				private:
 					Model* m_model;
-					UINT m_hitGroup;
+					ObjectType m_type; 
 				};
 
+				void AddObject(Object* object) {
+					m_objects.push_back(object);
+				}
+				
 				void GetInstanceInformation() const;
 
 				std::vector<Object*> m_objects;
 
 			};
+
+
 		}
 	}
 }

@@ -27,7 +27,8 @@ SonarPropagation::Graphics::DXR::RayTracingRenderer::RayTracingRenderer(
 	const std::shared_ptr<DX::DeviceResources>& deviceResources) :
 	m_loadingComplete(false),
 	m_deviceResources(deviceResources),
-	m_dxrConfig({ 1, 4 * sizeof(float), 2 * sizeof(float) })
+	m_dxrConfig({ 1, 4 * sizeof(float), 2 * sizeof(float) }),
+	m_objectLibrary({ deviceResources->GetD3DDevice() })
 {
 	LoadState();
 
@@ -268,54 +269,37 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateScene() {
 
 void SonarPropagation::Graphics::DXR::RayTracingRenderer::InitializeObjects() {
 	{
-		std::tuple<std::vector<VertexPositionNormalUV,std::vector<tinyobj::index_t>>> suzanneVertices = ObjLoader::LoadObj("suzanne.obj");
+		std::vector<std::tuple<XMMATRIX,ObjectType>> objects;
 
-		const UINT suzanneVertexBufferSize = sizeof(suzanneVertices) * sizeof(VertexPositionNormalUV);
-		ThrowIfFailed(m_dxrDevice->CreateCommittedResource(
-			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), D3D12_HEAP_FLAG_NONE,
-			&CD3DX12_RESOURCE_DESC::Buffer(suzanneVertices[0]),
-			D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
-			IID_PPV_ARGS(&suzanneVertices[0])));
+		auto suzanneData = m_objectLibrary.LoadObject("suzanne.obj");
 
-
-
-		const UINT indexBufferSize = static_cast<UINT>(suzanneVertices[1].size()) * sizeof(UINT);
-		CD3DX12_RESOURCE_DESC bufferResource =
-			CD3DX12_RESOURCE_DESC::Buffer(quadIndexBufferSize);
-		ThrowIfFailed(m_dxrDevice->CreateCommittedResource(
-			&heapProperty, D3D12_HEAP_FLAG_NONE, &bufferResource, //
-			D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
-			IID_PPV_ARGS(&m_quadIndexBuffer)));
-
-		// Copy the triangle data to the index buffer.
-		UINT8* pIndexDataBegin;
-		ThrowIfFailed(m_quadIndexBuffer->Map(
-			0, &readRange, reinterpret_cast<void**>(&pIndexDataBegin)));
-		memcpy(pIndexDataBegin, indices.data(), quadIndexBufferSize);
-		m_quadIndexBuffer->Unmap(0, nullptr);
-
-		// Initialize the index buffer view.
-		m_quadIndexBufferView.BufferLocation = m_tetrahedronIndexBuffer->GetGPUVirtualAddress();
-		m_quadIndexBufferView.Format = DXGI_FORMAT_R32_UINT;
-		m_quadIndexBufferView.SizeInBytes = quadIndexBufferSize;
+		XMFLOAT3 position = { 0.f, 0.f, -5.f };
+		XMFLOAT4 scale = { 1.f, 1.f, 1.f , 1.f};
+		XMFLOAT4 rotation = { 0.f, 0.f, 0.f, 1.f };
+		
+		Scene::Transform transform = {position,rotation,scale};
+		transform.SetParent(NULL);
+		Scene::SoundReflector reflection = {transform,suzanneData,ObjectType::Object};
+		
+		m_scene.AddObject(&reflection);
+		
 
 
-		NAME_D3D12_OBJECT(m_quadIndexBuffer);
 	}
 }
 
 template <typename V>
 void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateVertexBuffers() {
 
-	//{
-	//	std::vector<V> tetrahedronVertices = GetTetrahedronVertices<V>();
+	{
+		std::vector<V> tetrahedronVertices = GetTetrahedronVertices<V>();
 
-	//	const UINT tetrahedronVertexBufferSize = sizeof(tetrahedronVertices) * sizeof(V);
-	//	ThrowIfFailed(m_dxrDevice->CreateCommittedResource(
-	//		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), D3D12_HEAP_FLAG_NONE,
-	//		&CD3DX12_RESOURCE_DESC::Buffer(tetrahedronVertexBufferSize),
-	//		D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
-	//		IID_PPV_ARGS(&m_tetrahedronVertexBuffer)));
+		const UINT tetrahedronVertexBufferSize = sizeof(tetrahedronVertices) * sizeof(V);
+		ThrowIfFailed(m_dxrDevice->CreateCommittedResource(
+			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), D3D12_HEAP_FLAG_NONE,
+			&CD3DX12_RESOURCE_DESC::Buffer(tetrahedronVertexBufferSize),
+			D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
+			IID_PPV_ARGS(&m_tetrahedronVertexBuffer)));
 
 	//	UINT8* pVertexDataBegin;
 	//	CD3DX12_RANGE readRange(

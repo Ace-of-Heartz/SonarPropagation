@@ -1,14 +1,7 @@
 #include "pch.h"
 #include "BufferData.h"
 
-struct Model {
-	BufferData bufferData;
-	std::vector<std::tuple<XMMATRIX, UINT>> transforms;
 
-	void AddInstance(XMMATRIX transform, UINT instanceID) {
-		transforms.push_back(std::make_tuple(transform, instanceID));
-	}
-};
 
 struct SonarCollection {
 	std::vector<std::tuple<XMMATRIX,XMMATRIX>> m_soundSources;

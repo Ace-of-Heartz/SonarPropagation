@@ -1,23 +1,14 @@
 ﻿#include "pch.h"
 #include "Scene.h"
 
-SonarPropagation::Graphics::Utils::Scene::Object::Object()
-{
-}
+
 
 SonarPropagation::Graphics::Utils::Scene::Object::~Object()
 {
 }
 
-SonarPropagation::Graphics::Utils::Scene::SoundRecevier::SoundRecevier()
-{
-}
 
 SonarPropagation::Graphics::Utils::Scene::SoundRecevier::~SoundRecevier()
-{
-}
-
-SonarPropagation::Graphics::Utils::Scene::SoundSource::SoundSource()
 {
 }
 
@@ -25,19 +16,7 @@ SonarPropagation::Graphics::Utils::Scene::SoundSource::~SoundSource()
 {
 }
 
-SonarPropagation::Graphics::Utils::Scene::SoundReflector::SoundReflector()
-{
-}
-
 SonarPropagation::Graphics::Utils::Scene::SoundReflector::~SoundReflector()
-{
-}
-
-SonarPropagation::Graphics::Utils::Scene::Model::Model()
-{
-}
-
-SonarPropagation::Graphics::Utils::Scene::Model::~Model()
 {
 }
 

@@ -6,6 +6,7 @@
 #include "Common/ObjLoader.h"
 #include "Common/ImGuiManager.h"
 #include "Common/ObjectLibrary.h"
+#include "Common/ObjectType.h"
 #include "DXR/RayTracingConfig.h"
 #include <map>
 

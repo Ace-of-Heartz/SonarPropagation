@@ -246,6 +246,9 @@
     <ClInclude Include="Common\Model.h">
       <Filter>DXR\AceRaytracing\Graphics\Common\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Common\ObjectType.h">
+      <Filter>DXR\AceRaytracing\Graphics\Common\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest" />
