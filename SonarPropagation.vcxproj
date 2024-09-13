@@ -269,7 +269,6 @@
     <ClInclude Include="Common\Model.h" />
     <ClInclude Include="Common\ObjectLibrary.h" />
     <ClInclude Include="Common\ObjectType.h" />
-    <ClInclude Include="Common\ObjLoader.h" />
     <ClInclude Include="Common\Scene.h" />
     <ClInclude Include="Common\thirdparty\imgui_impl_uwp.h" />
     <ClInclude Include="DXR\DXRHelpers\Common.h" />
@@ -301,7 +300,6 @@
     <ClCompile Include="Common\DeviceResources.cpp" />
     <ClCompile Include="Common\ImGuiManager.cpp" />
     <ClCompile Include="Common\ObjectLibrary.cpp" />
-    <ClCompile Include="Common\ObjLoader.cpp" />
     <ClCompile Include="Common\Scene.cpp" />
     <ClCompile Include="Common\thirdparty\imgui_impl_uwp.cpp" />
     <ClCompile Include="DXR\DXRHelpers\MeshUtils.cpp" />

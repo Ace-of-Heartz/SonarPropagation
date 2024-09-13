@@ -151,9 +151,6 @@
     <ClCompile Include="Common\thirdparty\imgui_impl_uwp.cpp">
       <Filter>DXR\AceRaytracing\Graphics\Common\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Common\ObjLoader.cpp">
-      <Filter>DXR\AceRaytracing\Graphics\Common\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Common\Scene.cpp">
       <Filter>DXR\AceRaytracing\Graphics\Common\Source Files</Filter>
     </ClCompile>
@@ -230,9 +227,6 @@
     </ClInclude>
     <ClInclude Include="DXR\RayTracingConfig.h">
       <Filter>DXR\AceRaytracing\Graphics\DXR\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Common\ObjLoader.h">
-      <Filter>DXR\AceRaytracing\Graphics\Common\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Common\Scene.h">
       <Filter>DXR\AceRaytracing\Graphics\Common\Header Files</Filter>

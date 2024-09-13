@@ -1,19 +1,18 @@
 #pragma once
 
 #include <memory.h>
-#include <pch.h>
-#include "pix3.h"
-#include "Common/ObjLoader.h"
-#include "Common/ImGuiManager.h"
-#include "Common/ObjectLibrary.h"
-#include "Common/ObjectType.h"
-#include "DXR/RayTracingConfig.h"
 #include <map>
+
+
+#include "pch.h"
+#include "pix3.h"
+
+#include "Common/ImGuiManager.h"
+#include "DXR/RayTracingConfig.h"
 
 
 using namespace Microsoft::WRL;
 using namespace DirectX;
-
 
 
 namespace SonarPropagation{
@@ -169,25 +168,25 @@ namespace SonarPropagation{
 				/// <summary>
 				/// Creates the per instance constant buffers.
 				/// </summary>
-				void CreatePerInstanceConstantBuffers();
+				//void CreatePerInstanceConstantBuffers();
 
 				/// <summary>
 				///   Creates the rendered instances.
 				/// </summary>
 				/// <param name="asBuffers"></param>
-				void CreateInstances(std::vector<std::pair<AccelerationStructureBuffers, uint32_t>> asBuffers);
+				//void CreateInstances(std::vector<std::pair<AccelerationStructureBuffers, uint32_t>> asBuffers);
 
 				/// <summary>
 				/// Initializes the vertex buffers.
 				/// </summary>
 				/// <typeparam name="V">Vertex type</typeparam>
-				template <typename V>
-				void CreateVertexBuffers();
+				//template <typename V>
+				//void CreateVertexBuffers();
 
 				/// <summary>
 				/// Initializes the index buffers.
 				/// </summary>
-				void CreateIndexBuffers();
+				//void CreateIndexBuffers();
 
 				void InitializeObjects();
 				
@@ -271,8 +270,8 @@ namespace SonarPropagation{
 
 				Microsoft::WRL::ComPtr<ID3D12Resource>				m_constantBuffer;
 
-				Scene												m_scene;
-				ObjectLibrary										m_objectLibrary;
+				SonarPropagation::Graphics::Utils::Scene			m_scene;
+				SonarPropagation::Graphics::Utils::ObjectLibrary    m_objectLibrary;
 
 				//D3D12_VERTEX_BUFFER_VIEW							m_tetrahedronVertexBufferView;
 				//D3D12_INDEX_BUFFER_VIEW								m_tetrahedronIndexBufferView;

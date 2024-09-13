@@ -1,7 +1,6 @@
 #include "pch.h"
 
 #include "ObjectLibrary.h"
-
 #include <iostream>
 
 Scene::Model* SonarPropagation::Graphics::Utils::ObjectLibrary::LoadObject(const std::string& filename) {

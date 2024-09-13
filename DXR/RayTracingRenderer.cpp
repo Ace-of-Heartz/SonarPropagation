@@ -199,9 +199,11 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateDeviceDependentR
 		CD3DX12_HEAP_PROPERTIES heapProperty =
 			CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 
-		CreateVertexBuffers<VertexPositionNormalUV>();
+		//CreateVertexBuffers<VertexPositionNormalUV>();
 
-		CreateIndexBuffers();
+		//CreateIndexBuffers();
+		InitializeObjects();
+		CreateScene();
 
 		// Create a descriptor heap for the constant buffers.
 		{
@@ -241,7 +243,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateDeviceDependentR
 
 		CreateRaytracingPipeline();
 
-		CreatePerInstanceConstantBuffers();
+		//CreatePerInstanceConstantBuffers();
 
 		CreateRaytracingOutputBuffer();
 
@@ -288,18 +290,18 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::InitializeObjects() {
 	}
 }
 
-template <typename V>
-void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateVertexBuffers() {
+//template <typename V>
+//void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateVertexBuffers() {
 
-	{
-		std::vector<V> tetrahedronVertices = GetTetrahedronVertices<V>();
+	//{
+	//	std::vector<V> tetrahedronVertices = GetTetrahedronVertices<V>();
 
-		const UINT tetrahedronVertexBufferSize = sizeof(tetrahedronVertices) * sizeof(V);
-		ThrowIfFailed(m_dxrDevice->CreateCommittedResource(
-			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), D3D12_HEAP_FLAG_NONE,
-			&CD3DX12_RESOURCE_DESC::Buffer(tetrahedronVertexBufferSize),
-			D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
-			IID_PPV_ARGS(&m_tetrahedronVertexBuffer)));
+	//	const UINT tetrahedronVertexBufferSize = sizeof(tetrahedronVertices) * sizeof(V);
+	//	ThrowIfFailed(m_dxrDevice->CreateCommittedResource(
+	//		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), D3D12_HEAP_FLAG_NONE,
+	//		&CD3DX12_RESOURCE_DESC::Buffer(tetrahedronVertexBufferSize),
+	//		D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
+	//		IID_PPV_ARGS(&m_tetrahedronVertexBuffer)));
 
 	//	UINT8* pVertexDataBegin;
 	//	CD3DX12_RANGE readRange(
@@ -318,11 +320,11 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateVertexBuffers() 
 
 	//}
 
-	{
-		std::vector<VertexPositionNormalUV> suzanneVertices = ObjLoader::LoadObj("suzanne.obj");
+	//{
+	//	std::vector<VertexPositionNormalUV> suzanneVertices = ObjLoader::LoadObj("suzanne.obj");
 
 
-	}
+	//}
 
 	//{
 	//	std::vector<V> quadVertices = GetQuadVertices<V>(6, 6);
@@ -349,7 +351,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateVertexBuffers() 
 	//	NAME_D3D12_OBJECT(m_quadVertexBuffer);
 
 	//}
-}
+//}
 
 //void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateIndexBuffers()
 //{
@@ -949,7 +951,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::PopulateCommandListWit
 		// Refit the top-level acceleration structure to account for the new
 		// transform matrix of the triangle. Note that the build contains a barrier,
 		// hence we can do the rendering in the same command list
-		CreateTopLevelAS(m_instances, true);
+		//CreateTopLevelAS(m_instances, true);
 		// #DXR
 		// Bind the descriptor heap giving access to the top-level acceleration
 		// structure, as well as the raytracing output
@@ -1148,17 +1150,17 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::RenderImGui() {
 void SonarPropagation::Graphics::DXR::RayTracingRenderer::UpdateInstanceTransforms() {
 	m_time++;
 
-	auto tetrahedronAmount = m_instances.size() - 1;
+	//auto tetrahedronAmount = m_instances.size() - 1;
 
-	auto sinT = sinf(m_time);
+	//auto sinT = sinf(m_time);
 
-	for (size_t i = 0; i < tetrahedronAmount; i++) {
-		m_instances[i].second =
+	//for (size_t i = 0; i < tetrahedronAmount; i++) {
+	//	m_instances[i].second =
 
-			XMMatrixTranslation(1.75f, .0f, .0f) *
-			XMMatrixRotationAxis(XMVector4Normalize(XMVectorSet(0.0f, 0.8f, 0.2f, 0.0f)), (360.f / tetrahedronAmount) * i + (m_time) / 600.f);
+	//		XMMatrixTranslation(1.75f, .0f, .0f) *
+	//		XMMatrixRotationAxis(XMVector4Normalize(XMVectorSet(0.0f, 0.8f, 0.2f, 0.0f)), (360.f / tetrahedronAmount) * i + (m_time) / 600.f);
 
-	}
+	//}
 }
 
 

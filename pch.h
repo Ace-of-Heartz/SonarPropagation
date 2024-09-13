@@ -21,6 +21,11 @@
 #include "Common\DeviceResources.h"
 #include "Content\ShaderStructures.h"
 #include "Common\StepTimer.h"
+#include "Common\BufferData.h"
+#include "Common\Model.h"
+#include "Common\ObjectType.h"
+#include "Common\Scene.h"
+#include "Common\ObjectLibrary.h"
 
 #include "DXR\Nvidia\nvidia_include.h"
 #include "DXR\DXRHelpers\ShaderUtils.h"

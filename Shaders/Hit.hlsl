@@ -9,7 +9,8 @@ struct STriVertex
     float3 vertex;
     float3 normal;
     float2 uv;
-};
+}; 
+
 
 struct ShadowHitInfo
 {

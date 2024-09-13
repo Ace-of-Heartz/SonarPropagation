@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "Model.h"
+
 
 namespace SonarPropagation {
 	namespace Graphics {
@@ -42,7 +42,7 @@ namespace SonarPropagation {
 				};
 
 				struct Model {
-					BufferData bufferData;
+					BufferData m_bufferData;
 					std::vector<Object*> m_objects;
 
 					void AddInstance(Object* object) {
@@ -51,7 +51,7 @@ namespace SonarPropagation {
 
 
 
-					Model(BufferData bufferData) : bufferData(bufferData) {}
+					Model(BufferData bufferData) : m_bufferData(bufferData) {}
 				};
 
 				class SoundRecevier : public Object
@@ -93,7 +93,9 @@ namespace SonarPropagation {
 						Transform transform,
 						Model* model,
 						ObjectType type
-					) : Object(transform), m_model(model), m_type(type) {};
+					) : Object(transform), m_model(model) {
+						m_type = type;
+					};
 					~SoundReflector();
 
 					void ProcessObject() override {

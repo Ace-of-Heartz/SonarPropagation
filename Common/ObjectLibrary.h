@@ -1,5 +1,6 @@
-#include "pch.h"
-#include "Scene.h"
+//#include "pch.h"
+#include <string>
+#include "thirdparty/tiny_obj_loader.h"
 
 namespace SonarPropagation
 {
@@ -13,10 +14,10 @@ namespace SonarPropagation
 				~ObjectLibrary() {};
 
 				
-				Model* LoadObject(const std::string& filename);
+				ComPtr<Scene::Model> LoadObject(const std::string& filename) {};
 
 			private:
-				std::vector<Model> m_objects;
+				std::vector<Scene::Model*> m_objects;
 
 				ID3D12Device* m_device;
 			};

@@ -1,3 +1,4 @@
+#include "pch.h"
 struct BufferData {
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexBuffer;
 	Microsoft::WRL::ComPtr<ID3D12Resource> indexBuffer;

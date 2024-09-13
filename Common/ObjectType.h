@@ -1,6 +1,6 @@
 #include "pch.h"
 
-public enum ObjectType {
+enum ObjectType {
 	Boundary,
 	Object,
 };
