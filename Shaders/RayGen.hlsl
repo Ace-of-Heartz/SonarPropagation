@@ -16,7 +16,7 @@ RWTexture2D< float4 > gOutput : register(u0);
 RaytracingAccelerationStructure SceneBVH : register(t0);
 
 [shader("raygeneration")] 
-void RayGen() {
+void CameraRayGen() {
     // Initialize the ray payload
     HitInfo payload;
     payload.colorAndDistance = float4(0, 0, 0, 0);
@@ -29,16 +29,7 @@ void RayGen() {
   
     float aspectRatio = dims.x / dims.y;
     float4 target = mul(projectionI,float4(d.x,-d.y,1,1)); 
-
-    
-    //float4 ro = mul(viewI, float4(0, 0, 0, 1));
-    //float4 rd = mul(viewI, float4(target.xyz, 0));
-    
-    //RayMarchInput input = {ro.xyz,rd.xyz,0.0};
-    
-    //RayMarchOutput output = RayMarch(input);
-    
-    
+        
     RayDesc ray;
     ray.Origin = mul(viewI, float4(0, 0, 0, 1));
     ray.Direction = mul(viewI, float4(target.xyz, 0));

@@ -1,5 +1,8 @@
-#include "pch.h"
+#pragma once
 
+#include "Model.h"
+#include "BufferData.h"
+#include "ObjectType.h"
 
 namespace SonarPropagation {
 	namespace Graphics {
@@ -7,33 +10,34 @@ namespace SonarPropagation {
 			struct Scene {
 				struct Transform {
 					Transform() = default;
-					Transform(XMFLOAT3 position, XMFLOAT4 rotation, XMFLOAT4 scale) : position(position), rotation(rotation), scale(scale) {}
-					Transform(const Transform&);
+					Transform(const XMFLOAT3& position, const XMFLOAT4& rotation, const XMFLOAT4& scale);
+					//Transform(const Transform&);
+					~Transform();
 
 					bool isChanged = true;
 					XMMATRIX LocalToWorld() const;
 					XMMATRIX LocalToParent() const;
 					XMMATRIX WorldToLocal() const;
 					XMMATRIX ParentToLocal() const;
-					void SetParent(Transform* newParent, Transform* before = nullptr);
+					void SetParent(Transform* newParent, Transform* before);
 					
 					void DEBUGAssertValidPointers() const;
 
-					XMFLOAT3 position = { 0., 0., 0. };
-					XMFLOAT4 rotation = { 0., 0., 0., 1. };
-					XMFLOAT4 scale = { 1, 1, 1, 0 };
+					XMFLOAT3 m_position = { 0., 0., 0. };
+					XMFLOAT4 m_rotation = { 0., 0., 0., 1. };
+					XMFLOAT4 m_scale = { 1, 1, 1, 0 };
 
-					Transform* parent = nullptr;
-					Transform* lastChild = nullptr;
-					Transform* prevSibling = nullptr;
-					Transform* nextSibling = nullptr;
+					Transform* m_parent = nullptr;
+					Transform* m_lastChild = nullptr;
+					Transform* m_prevSibling = nullptr;
+					Transform* m_nextSibling = nullptr;
 				};
 
 				class Object
 				{
 				public:
 					
-					Object(Transform transform) : m_transform(transform) {};
+					Object(Transform transform);
 					~Object();
 
 					virtual void ProcessObject() = 0;
@@ -42,28 +46,26 @@ namespace SonarPropagation {
 				};
 
 				struct Model {
+					
+					Model();
+					Model(BufferData bufferData);
+					~Model();
+
+					void AddInstance(Object* object);
+
 					BufferData m_bufferData;
 					std::vector<Object*> m_objects;
 
-					void AddInstance(Object* object) {
-						m_objects.push_back(object);
-					}
-
-
-
-					Model(BufferData bufferData) : m_bufferData(bufferData) {}
 				};
 
 				class SoundRecevier : public Object
 				{
 				public:
-					SoundRecevier();
+					SoundRecevier(Transform transform, SonarCollection* sonarCollection);
 					~SoundRecevier();
 
 
-					void ProcessObject() override {
-						m_sonarCollection->AddSoundReceiver(m_transform.LocalToWorld());
-					};
+					void ProcessObject() override;
 
 				private:
 					SonarCollection* m_sonarCollection;
@@ -73,13 +75,10 @@ namespace SonarPropagation {
 				class SoundSource : public Object
 				{
 				public:
-					SoundSource(Transform transform,SonarCollection* sonarCollection, XMMATRIX rayProject) 
-						: Object(transform), m_sonarCollection(sonarCollection) {};
+					SoundSource(Transform transform, SonarCollection* sonarCollection, XMMATRIX rayProject);
 					~SoundSource();
 
-					void ProcessObject() override {
-						m_sonarCollection->AddSoundSource(m_transform.LocalToWorld(), m_rayProjection);
-					};
+					void ProcessObject() override;
 				private:
 					SonarCollection* m_sonarCollection;
 					XMMATRIX m_rayProjection;
@@ -93,22 +92,22 @@ namespace SonarPropagation {
 						Transform transform,
 						Model* model,
 						ObjectType type
-					) : Object(transform), m_model(model) {
-						m_type = type;
-					};
+					);
 					~SoundReflector();
 
-					void ProcessObject() override {
-						m_model->AddInstance(this);
-					};
+					void ProcessObject() override;
 
 				private:
 					Model* m_model;
 					ObjectType m_type; 
 				};
 
+				Scene();
+				~Scene();
+
 				void AddObject(Object* object) {
 					m_objects.push_back(object);
+					object->m_transform.SetParent(nullptr, nullptr);
 				}
 				
 				void GetInstanceInformation() const;

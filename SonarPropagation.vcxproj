@@ -271,6 +271,7 @@
     <ClInclude Include="Common\ObjectType.h" />
     <ClInclude Include="Common\Scene.h" />
     <ClInclude Include="Common\thirdparty\imgui_impl_uwp.h" />
+    <ClInclude Include="Common\thirdparty\tiny_obj_loader.h" />
     <ClInclude Include="DXR\DXRHelpers\Common.h" />
     <ClInclude Include="DXR\DXRHelpers\MeshUtils.h" />
     <ClInclude Include="DXR\DXRHelpers\ShaderUtils.h" />
@@ -345,12 +346,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Shaders\RayGen.hlsl">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-    </FxCompile>
-    <FxCompile Include="Shaders\Reflection.hlsl">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-    </FxCompile>
-    <FxCompile Include="Shaders\Shadow.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Shaders\SonarShaders\BoundaryHit.hlsl">

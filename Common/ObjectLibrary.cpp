@@ -1,11 +1,11 @@
 #include "pch.h"
-
 #include "ObjectLibrary.h"
 #include <iostream>
+#include "thirdparty/tiny_obj_loader.h"
 
-Scene::Model* SonarPropagation::Graphics::Utils::ObjectLibrary::LoadObject(const std::string& filename) {
+
+Scene::Model* SonarPropagation::Graphics::Utils::ObjectLibrary::LoadWavefront(const std::string& filename) {
 	tinyobj::ObjReaderConfig readerConfig;
-	readerConfig.mtl_search_path = "./Assets"; // Path to material files
 
 	tinyobj::ObjReader reader;
 
@@ -66,43 +66,53 @@ Scene::Model* SonarPropagation::Graphics::Utils::ObjectLibrary::LoadObject(const
 			index_offset += fv;
 
 			// per-face material
-			shapes[s].mesh.material_ids[f];
+			//shapes[s].mesh.material_ids[f];
 		}
 	}
 
-	UINT bufferSize = sizeof(objVertices) * sizeof(VertexPositionNormalUV); 
+	return LoadPredefined<VertexPositionNormalUV>(objVertices, objIndices);
+}
 
-	BufferData bufferData;
+
+template<typename V>
+Scene::Model* SonarPropagation::Graphics::Utils::ObjectLibrary::LoadPredefined(
+	const std::vector<V> vertices,
+	const std::vector<UINT> indices
+) 
+{
+	UINT bufferSize = vertices.size() * sizeof(V);
+
+	auto model = new Scene::Model();
 	{
 		ThrowIfFailed(
 			m_device->CreateCommittedResource(
-				&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+				&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
 				D3D12_HEAP_FLAG_NONE,
 				&CD3DX12_RESOURCE_DESC::Buffer(bufferSize),
 				D3D12_RESOURCE_STATE_GENERIC_READ,
 				nullptr,
-				IID_PPV_ARGS(&bufferData.vertexBuffer)
+				IID_PPV_ARGS(&(model->m_bufferData).vertexBuffer)
 			)
 		);
 
 		UINT8* pVertexDataBegin;
 		CD3DX12_RANGE readRange(0, 0);
-		
-		ThrowIfFailed(bufferData.vertexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin)));
-		memcpy(pVertexDataBegin, objVertices.data(), bufferSize);
-		bufferData.vertexBuffer->Unmap(0, nullptr);
 
-		bufferData.vertexBufferView.BufferLocation = bufferData.vertexBuffer->GetGPUVirtualAddress();
-		bufferData.vertexBufferView.StrideInBytes = sizeof(VertexPositionNormalUV);
-		bufferData.vertexBufferView.SizeInBytes = bufferSize;
+		ThrowIfFailed(model->m_bufferData.vertexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin)));
+		memcpy(pVertexDataBegin, vertices.data(), bufferSize);
+		model->m_bufferData.vertexBuffer->Unmap(0, nullptr);
 
-		NAME_D3D12_OBJECT(bufferData.vertexBuffer);
+		model->m_bufferData.vertexBufferView.BufferLocation = model->m_bufferData.vertexBuffer->GetGPUVirtualAddress();
+		model->m_bufferData.vertexBufferView.StrideInBytes = sizeof(V);
+		model->m_bufferData.vertexBufferView.SizeInBytes = bufferSize;
+
+		NAME_D3D12_OBJECT(model->m_bufferData.vertexBuffer);
 	}
 
 	{
 		CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_UPLOAD);
 		CD3DX12_RANGE readRangeUp(0, 0);
-		const UINT indexBufferSize = static_cast<UINT>(objIndices.size()) * sizeof(UINT);
+		const UINT indexBufferSize = static_cast<UINT>(indices.size()) * sizeof(UINT);
 
 		CD3DX12_RESOURCE_DESC bufferResourceDesc = CD3DX12_RESOURCE_DESC::Buffer(indexBufferSize);
 		ThrowIfFailed(m_device->CreateCommittedResource(
@@ -111,22 +121,22 @@ Scene::Model* SonarPropagation::Graphics::Utils::ObjectLibrary::LoadObject(const
 			&bufferResourceDesc,
 			D3D12_RESOURCE_STATE_GENERIC_READ,
 			nullptr,
-			IID_PPV_ARGS(&bufferData.indexBuffer)
+			IID_PPV_ARGS(&(model->m_bufferData).indexBuffer)
 		));
 
 		UINT8* pIndexDataBegin;
-		ThrowIfFailed(bufferData.indexBuffer->Map(0, &readRangeUp, reinterpret_cast<void**>(&pIndexDataBegin)));
-		memcpy(pIndexDataBegin, objIndices.data(), indexBufferSize);
-		bufferData.indexBuffer->Unmap(0, nullptr);
+		ThrowIfFailed(model->m_bufferData.indexBuffer->Map(0, &readRangeUp, reinterpret_cast<void**>(&pIndexDataBegin)));
+		memcpy(pIndexDataBegin, indices.data(), indexBufferSize);
+		model->m_bufferData.indexBuffer->Unmap(0, nullptr);
 
-		bufferData.indexBufferView.BufferLocation = bufferData.indexBuffer->GetGPUVirtualAddress();
-		bufferData.indexBufferView.Format = DXGI_FORMAT_R32_UINT;
-		bufferData.indexBufferView.SizeInBytes = indexBufferSize;
+		model->m_bufferData.indexBufferView.BufferLocation = model->m_bufferData.indexBuffer->GetGPUVirtualAddress();
+		model->m_bufferData.indexBufferView.Format = DXGI_FORMAT_R32_UINT;
+		model->m_bufferData.indexBufferView.SizeInBytes = indexBufferSize;
 
-		NAME_D3D12_OBJECT(bufferData.indexBuffer);
+		NAME_D3D12_OBJECT(model->m_bufferData.indexBuffer);
 	}
 
-	auto model = new Scene::Model( bufferData );
+
 	m_objects.push_back(model);
 
 	return model;

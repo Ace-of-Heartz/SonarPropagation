@@ -9,10 +9,12 @@
 
 #include "Common/ImGuiManager.h"
 #include "DXR/RayTracingConfig.h"
+#include "Common/ObjectLibrary.h"
 
 
 using namespace Microsoft::WRL;
 using namespace DirectX;
+using namespace SonarPropagation::Graphics::Utils;
 
 
 namespace SonarPropagation{
@@ -165,35 +167,9 @@ namespace SonarPropagation{
 				/// </summary>
 				void CreateShaderBindingTable();
 
-				/// <summary>
-				/// Creates the per instance constant buffers.
-				/// </summary>
-				//void CreatePerInstanceConstantBuffers();
-
-				/// <summary>
-				///   Creates the rendered instances.
-				/// </summary>
-				/// <param name="asBuffers"></param>
-				//void CreateInstances(std::vector<std::pair<AccelerationStructureBuffers, uint32_t>> asBuffers);
-
-				/// <summary>
-				/// Initializes the vertex buffers.
-				/// </summary>
-				/// <typeparam name="V">Vertex type</typeparam>
-				//template <typename V>
-				//void CreateVertexBuffers();
-
-				/// <summary>
-				/// Initializes the index buffers.
-				/// </summary>
-				//void CreateIndexBuffers();
-
 				void InitializeObjects();
 				
 				void CreateScene();
-
-				
-
 
 			// Raytracing Render Loop:
 				
@@ -213,6 +189,7 @@ namespace SonarPropagation{
 				void RenderImGui();
 				
 			// Raytracing Initialization:
+
 
 				/// <summary>
 				/// Loads the state of the renderer.
@@ -259,28 +236,12 @@ namespace SonarPropagation{
 				UINT												m_cbvDescriptorSize;
 				D3D12_RECT											m_scissorRect;
 
-				//// Generic Direct3D Buffers:
-				//Microsoft::WRL::ComPtr<ID3D12Resource>				m_tetrahedronVertexBuffer;
-				//Microsoft::WRL::ComPtr<ID3D12Resource>				m_tetrahedronIndexBuffer;
-				//UINT 												m_tetrahedronInstanceCount;
-
-				//Microsoft::WRL::ComPtr<ID3D12Resource>				m_quadVertexBuffer;
-				//Microsoft::WRL::ComPtr<ID3D12Resource>				m_quadIndexBuffer;
-				//UINT												m_quadInstanceCount;
-
 				Microsoft::WRL::ComPtr<ID3D12Resource>				m_constantBuffer;
 
-				SonarPropagation::Graphics::Utils::Scene			m_scene;
-				SonarPropagation::Graphics::Utils::ObjectLibrary    m_objectLibrary;
+				Scene			m_scene;
+				ObjectLibrary    m_objectLibrary;
 
-				//D3D12_VERTEX_BUFFER_VIEW							m_tetrahedronVertexBufferView;
-				//D3D12_INDEX_BUFFER_VIEW								m_tetrahedronIndexBufferView;
-
-				//D3D12_VERTEX_BUFFER_VIEW 							m_quadVertexBufferView;
-				//D3D12_INDEX_BUFFER_VIEW 							m_quadIndexBufferView;
-
-				//ModelViewProjectionConstantBuffer					m_constantBufferData;
-				//UINT8*												m_mappedConstantBuffer;
+				std::vector<std::pair<ComPtr<ID3D12Resource>, XMMATRIX>> m_instances;
 
 				// DXR Specific Attributes:
 				ComPtr<ID3D12Device5>								m_dxrDevice;
@@ -315,8 +276,6 @@ namespace SonarPropagation{
 				ComPtr<ID3D12RootSignature>							m_reflectionSignature;	
 
 				// Instances: 
-				//std::vector<std::pair<ComPtr<ID3D12Resource>, XMMATRIX>>	m_instances;
-				//std::vector<ComPtr<ID3D12Resource>> 					m_perInstanceConstantBuffers;
 
 				// Camera: 
 

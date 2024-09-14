@@ -64,6 +64,7 @@ THE SOFTWARE.
 #ifndef TINY_OBJ_LOADER_H_
 #define TINY_OBJ_LOADER_H_
 
+
 #include <map>
 #include <string>
 #include <vector>

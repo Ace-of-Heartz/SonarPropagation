@@ -27,6 +27,14 @@ namespace SonarPropagation {
 
 			std::vector<UINT> GetQuadIndices(
 			);
+
+			template <typename V>
+			std::vector<V> GetCubeVertices(
+				float width, float height, float depth
+			);
+
+			std::vector<UINT> GetCubeIndices(
+			);
 		}
 	}
 }

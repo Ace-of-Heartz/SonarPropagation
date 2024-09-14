@@ -122,7 +122,6 @@ void ShaderBindingTableGenerator::Generate(ID3D12Resource* sbtBuffer,
   pData += offset;
 
   offset = CopyShaderData(raytracingPipeline, pData, m_miss, m_missEntrySize);
- // offset = ROUND_UP(offset, 64); //TODO: Check if this is necessary
   pData += offset;
 
   offset = CopyShaderData(raytracingPipeline, pData, m_hitGroup, m_hitGroupEntrySize);

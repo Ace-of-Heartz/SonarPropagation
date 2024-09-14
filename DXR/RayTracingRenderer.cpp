@@ -47,69 +47,6 @@ SonarPropagation::Graphics::DXR::RayTracingRenderer::~RayTracingRenderer() {
 
 #pragma region Graphics Init.: 
 
-//void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreatePerInstanceConstantBuffers() {
-//
-//	// Due to HLSL packing rules, we create the CB with 9 float4 (each needs to start on a 16-byte
-//// boundary)
-//	XMVECTOR bufferData[] = {
-//		// A
-//		XMVECTOR{1.0f, 0.0f, 0.0f, 1.0f},
-//		XMVECTOR{1.0f, 0.4f, 0.0f, 1.0f},
-//		XMVECTOR{1.f, 0.7f, 0.0f, 1.0f},
-//		XMVECTOR{0.0f, 0.0f, 1.0, 1.0f},
-//
-//		// B
-//		XMVECTOR{0.0f, 1.0f, 0.0f, 1.0f},
-//		XMVECTOR{0.0f, 1.0f, 0.4f, 1.0f},
-//		XMVECTOR{0.0f, 1.0f, 0.7f, 1.0f},
-//		XMVECTOR{0.0f, 0.0f, 1.0, 1.0f},
-//
-//		// C
-//		XMVECTOR{0.0f, 0.0f, 1.0f, 1.0f},
-//		XMVECTOR{0.4f, 0.0f, 1.0f, 1.0f},
-//		XMVECTOR{0.7f, 0.0f, 1.0f, 1.0f},
-//		XMVECTOR{0.0f, 0.0f, 1.0, 1.0f},
-//
-//		XMVECTOR{0.0f, 0.0f, 1.0f, 1.0f},
-//		XMVECTOR{0.0f, 0.0f, 0.2f, 1.0f},
-//		XMVECTOR{0.0f, 0.0f, 0.5f, 1.0f},
-//		XMVECTOR{0.0f, 0.0f, 1.0, 1.0f},
-//
-//		XMVECTOR{0.0f, 0.2f, 0.0f, 1.0f},
-//		XMVECTOR{0.4f, 0.3f, 0.0f, 1.0f},
-//		XMVECTOR{0.7f, 0.5f, 0.0f, 1.0f},
-//		XMVECTOR{0.0f, 1.0f, 0.0, 1.0f},
-//
-//		XMVECTOR{0.0f, 0.8f, 0.5f, 1.0f},
-//		XMVECTOR{0.7f, 0.9f, 0.0f, 1.0f},
-//		XMVECTOR{0.7f, 0.8f, 0.6f, 1.0f},
-//		XMVECTOR{0.2f, 0.9f, 1.0, 1.0f},
-//
-//		XMVECTOR{0.949f, 0.843f, 0.561, 1.0f},
-//		XMVECTOR{0.949f, 0.843f, 0.561, 1.0f},
-//		XMVECTOR{0.949f, 0.843f, 0.561, 1.0f},
-//		XMVECTOR{0.949f, 0.843f, 0.561, 1.0f},
-//	};
-//
-//	//m_perInstanceConstantBuffers.resize(7);
-//
-//	auto vertexCountPerInstance = 4;
-//
-//	int i(0);
-//	for (auto& cb : m_perInstanceConstantBuffers)
-//	{
-//		const uint32_t bufferSize = sizeof(XMVECTOR) * vertexCountPerInstance;
-//		cb = nv_helpers_dx12::CreateBuffer(m_dxrDevice.Get(), bufferSize, D3D12_RESOURCE_FLAG_NONE,
-//			D3D12_RESOURCE_STATE_GENERIC_READ,
-//			nv_helpers_dx12::kUploadHeapProps);
-//		uint8_t* pData;
-//		ThrowIfFailed(cb->Map(0, nullptr, (void**)&pData));
-//		memcpy(pData, &bufferData[i * 4], bufferSize);
-//		cb->Unmap(0, nullptr);
-//		++i;
-//	}
-//}
-
 void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateDeviceDependentResources() {
 
 	CreateRaytracingInterfaces();
@@ -158,7 +95,8 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateDeviceDependentR
 		static const D3D12_INPUT_ELEMENT_DESC inputLayout[] =
 		{
 			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-			{ "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+			{ "COLOR",    0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+			{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
 		};
 
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC state = {};
@@ -199,9 +137,6 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateDeviceDependentR
 		CD3DX12_HEAP_PROPERTIES heapProperty =
 			CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 
-		//CreateVertexBuffers<VertexPositionNormalUV>();
-
-		//CreateIndexBuffers();
 		InitializeObjects();
 		CreateScene();
 
@@ -243,8 +178,6 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateDeviceDependentR
 
 		CreateRaytracingPipeline();
 
-		//CreatePerInstanceConstantBuffers();
-
 		CreateRaytracingOutputBuffer();
 
 		m_camera.CreateCameraBuffer(m_dxrDevice);
@@ -273,147 +206,46 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::InitializeObjects() {
 	{
 		std::vector<std::tuple<XMMATRIX,ObjectType>> objects;
 
-		auto suzanneData = m_objectLibrary.LoadObject("suzanne.obj");
+		//auto suzanneData = m_objectLibrary.LoadObject("./Assets/suzanne.obj");
 
-		XMFLOAT3 position = { 0.f, 0.f, -5.f };
-		XMFLOAT4 scale = { 1.f, 1.f, 1.f , 1.f};
-		XMFLOAT4 rotation = { 0.f, 0.f, 0.f, 1.f };
-		
-		Scene::Transform transform = {position,rotation,scale};
-		transform.SetParent(NULL);
-		Scene::SoundReflector reflection = {transform,suzanneData,ObjectType::Object};
-		
-		m_scene.AddObject(&reflection);
-		
+		auto cubeData = m_objectLibrary.LoadPredefined<VertexPositionNormalUV>(GetCubeVertices<VertexPositionNormalUV>(1,1,1), GetQuadIndices());
+		{
+			XMFLOAT3 position = { 2.f, 0.f, 0.f };
+			XMFLOAT4 scale = { 1.f, 1.f, 1.f , 1.f };
+			XMFLOAT4 rotation = { 0.f, 0.f, 0.f, 1.f };
 
+			Scene::Transform transform = { position,rotation,scale };
+			transform.SetParent(nullptr, nullptr);
+			auto reflection = new Scene::SoundReflector(transform, cubeData, ObjectType::Object);
+
+			m_scene.AddObject(reflection);
+
+		}
+		{
+			XMFLOAT3 position = { -2.f, 0.f, 0.f };
+			XMFLOAT4 scale = { 2.f, 2.f, 2.f , 1.f };
+			XMFLOAT4 rotation = { 0.f, 0.f, 0.f, 1.f };
+
+			Scene::Transform transform = { position,rotation,scale };
+			transform.SetParent(nullptr, nullptr);
+			auto reflection = new Scene::SoundReflector(transform, cubeData, ObjectType::Object);
+
+			m_scene.AddObject(reflection);
+		}
+		{
+			XMFLOAT3 position = { 0.f, 0.f, 5.f };
+			XMFLOAT4 scale = { 1.f, 1.f, 1.f , 1.f };
+			XMFLOAT4 rotation = { 0.f, g_XMHalfPi[0], 0.f, 1.f};
+
+			Scene::Transform transform = { position,rotation,scale };
+			transform.SetParent(nullptr, nullptr);
+			auto reflection = new Scene::SoundReflector(transform, cubeData, ObjectType::Object);
+
+			m_scene.AddObject(reflection);
+		}
 
 	}
 }
-
-//template <typename V>
-//void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateVertexBuffers() {
-
-	//{
-	//	std::vector<V> tetrahedronVertices = GetTetrahedronVertices<V>();
-
-	//	const UINT tetrahedronVertexBufferSize = sizeof(tetrahedronVertices) * sizeof(V);
-	//	ThrowIfFailed(m_dxrDevice->CreateCommittedResource(
-	//		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), D3D12_HEAP_FLAG_NONE,
-	//		&CD3DX12_RESOURCE_DESC::Buffer(tetrahedronVertexBufferSize),
-	//		D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
-	//		IID_PPV_ARGS(&m_tetrahedronVertexBuffer)));
-
-	//	UINT8* pVertexDataBegin;
-	//	CD3DX12_RANGE readRange(
-	//		0, 0); // We do not intend to read from this resource on the CPU.
-	//	ThrowIfFailed(m_tetrahedronVertexBuffer->Map(
-	//		0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin)));
-	//	memcpy(pVertexDataBegin, tetrahedronVertices.data(), tetrahedronVertexBufferSize);
-	//	m_tetrahedronVertexBuffer->Unmap(0, nullptr);
-
-	//	m_tetrahedronVertexBufferView.BufferLocation = m_tetrahedronVertexBuffer->GetGPUVirtualAddress();
-	//	m_tetrahedronVertexBufferView.StrideInBytes = sizeof(V);
-	//	m_tetrahedronVertexBufferView.SizeInBytes = tetrahedronVertexBufferSize;
-
-	//	NAME_D3D12_OBJECT(m_tetrahedronVertexBuffer);
-
-
-	//}
-
-	//{
-	//	std::vector<VertexPositionNormalUV> suzanneVertices = ObjLoader::LoadObj("suzanne.obj");
-
-
-	//}
-
-	//{
-	//	std::vector<V> quadVertices = GetQuadVertices<V>(6, 6);
-	//	const UINT quadVertexBufferSize = sizeof(quadVertices) * sizeof(V);
-
-	//	ThrowIfFailed(m_dxrDevice->CreateCommittedResource(
-	//		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), D3D12_HEAP_FLAG_NONE,
-	//		&CD3DX12_RESOURCE_DESC::Buffer(quadVertexBufferSize),
-	//		D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
-	//		IID_PPV_ARGS(&m_quadVertexBuffer)));
-
-	//	UINT8* pVertexDataBegin;
-	//	CD3DX12_RANGE readRange(
-	//		0, 0); // We do not intend to read from this resource on the CPU.
-	//	ThrowIfFailed(m_quadVertexBuffer->Map(
-	//		0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin)));
-	//	memcpy(pVertexDataBegin, quadVertices.data(), quadVertexBufferSize);
-	//	m_quadVertexBuffer->Unmap(0, nullptr);
-
-	//	m_quadVertexBufferView.BufferLocation = m_quadVertexBuffer->GetGPUVirtualAddress();
-	//	m_quadVertexBufferView.StrideInBytes = sizeof(V);
-	//	m_quadVertexBufferView.SizeInBytes = quadVertexBufferSize;
-
-	//	NAME_D3D12_OBJECT(m_quadVertexBuffer);
-
-	//}
-//}
-
-//void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateIndexBuffers()
-//{
-//	CD3DX12_HEAP_PROPERTIES heapProperty =
-//		CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-//	CD3DX12_RANGE readRange(
-//		0, 0); // We do not intend to read from this resource on the CPU.
-//	{
-//		std::vector<UINT> indices = GetTetrahedronIndices();
-//		const UINT indexBufferSize =
-//			static_cast<UINT>(indices.size()) * sizeof(UINT);
-//
-//		CD3DX12_RESOURCE_DESC bufferResource =
-//			CD3DX12_RESOURCE_DESC::Buffer(indexBufferSize);
-//		ThrowIfFailed(m_dxrDevice->CreateCommittedResource(
-//			&heapProperty, D3D12_HEAP_FLAG_NONE, &bufferResource, //
-//			D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
-//			IID_PPV_ARGS(&m_tetrahedronIndexBuffer)));
-//
-//		// Copy the triangle data to the index buffer.
-//		UINT8* pIndexDataBegin;
-//		ThrowIfFailed(m_tetrahedronIndexBuffer->Map(
-//			0, &readRange, reinterpret_cast<void**>(&pIndexDataBegin)));
-//		memcpy(pIndexDataBegin, indices.data(), indexBufferSize);
-//		m_tetrahedronIndexBuffer->Unmap(0, nullptr);
-//
-//		// Initialize the index buffer view.
-//		m_tetrahedronIndexBufferView.BufferLocation = m_tetrahedronIndexBuffer->GetGPUVirtualAddress();
-//		m_tetrahedronIndexBufferView.Format = DXGI_FORMAT_R32_UINT;
-//		m_tetrahedronIndexBufferView.SizeInBytes = indexBufferSize;
-//
-//		NAME_D3D12_OBJECT(m_tetrahedronIndexBuffer);
-//	}
-
-	//{
-	//	std::vector<UINT> indices = GetQuadIndices();
-	//	const UINT quadIndexBufferSize =
-	//		static_cast<UINT>(indices.size()) * sizeof(UINT);
-
-	//	CD3DX12_RESOURCE_DESC bufferResource =
-	//		CD3DX12_RESOURCE_DESC::Buffer(quadIndexBufferSize);
-	//	ThrowIfFailed(m_dxrDevice->CreateCommittedResource(
-	//		&heapProperty, D3D12_HEAP_FLAG_NONE, &bufferResource, //
-	//		D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
-	//		IID_PPV_ARGS(&m_quadIndexBuffer)));
-
-	//	// Copy the triangle data to the index buffer.
-	//	UINT8* pIndexDataBegin;
-	//	ThrowIfFailed(m_quadIndexBuffer->Map(
-	//		0, &readRange, reinterpret_cast<void**>(&pIndexDataBegin)));
-	//	memcpy(pIndexDataBegin, indices.data(), quadIndexBufferSize);
-	//	m_quadIndexBuffer->Unmap(0, nullptr);
-
-	//	// Initialize the index buffer view.
-	//	m_quadIndexBufferView.BufferLocation = m_tetrahedronIndexBuffer->GetGPUVirtualAddress();
-	//	m_quadIndexBufferView.Format = DXGI_FORMAT_R32_UINT;
-	//	m_quadIndexBufferView.SizeInBytes = quadIndexBufferSize;
-
-
-	//	NAME_D3D12_OBJECT(m_quadIndexBuffer);
-	//}
-//}
 
 void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateWindowSizeDependentResources() {
 	Size outputSize = m_deviceResources->GetOutputSize();
@@ -449,38 +281,34 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateWindowSizeDepend
 
 #pragma region Raytracing Init.:
 
+
 /// <summary>
 /// Create the acceleration structures from the pre-initialized vertex and index buffers.
 /// </summary>
 
 template <typename V>
 void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateAccelerationStructures() {
-	AccelerationStructureBuffers bottomLevelBuffers =
-		CreateBottomLevelAS<V>(
-			{
-				{m_tetrahedronVertexBuffer.Get(), m_tetrahedronVertexBufferView.SizeInBytes / sizeof(V)}
-			},
-			{
-				{m_tetrahedronIndexBuffer.Get(), m_tetrahedronIndexBufferView.SizeInBytes / sizeof(UINT)}
-			}
-		);
-	AccelerationStructureBuffers planeBottomLevelBuffers =
-		CreateBottomLevelAS<V>(
-			{
-				{m_quadVertexBuffer.Get(), m_tetrahedronVertexBufferView.SizeInBytes / sizeof(V)}
-			},
-			{
-				{m_quadIndexBuffer.Get(), m_quadIndexBufferView.SizeInBytes / sizeof(UINT)}
-			}
+	for (auto& instance : m_scene.m_objects) {
+		instance->ProcessObject();
+	}
+
+	for (auto& model : m_objectLibrary.m_objects) {
+
+		AccelerationStructureBuffers blBuffer = CreateBottomLevelAS<V>(
+			{ {
+				model->m_bufferData.vertexBuffer.Get(),
+				model->m_bufferData.vertexBufferView.SizeInBytes / sizeof(V),
+			} },
+			{ {
+				model->m_bufferData.indexBuffer.Get(),
+				model->m_bufferData.indexBufferView.SizeInBytes / sizeof(UINT)
+			} }
 		);
 
-	CreateInstances(
-		{
-			{bottomLevelBuffers,6},
+		for (auto& instance : model->m_objects) {
+			m_instances.push_back({ blBuffer.pResult, instance->m_transform.LocalToWorld() });
 		}
-		);
-
-	m_instances.push_back({ planeBottomLevelBuffers.pResult, XMMatrixTranslation(0.f,-2.5f,0.f) });
+	}
 
 	CreateTopLevelAS(m_instances, false);
 
@@ -490,11 +318,10 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateAccelerationStru
 	m_deviceResources->WaitForGpu();
 
 	ThrowIfFailed(
-		m_commandList->Reset(m_deviceResources->GetCommandAllocator(), m_pipelineState.Get()));
+		m_commandList->Reset(m_deviceResources->GetCommandAllocator(), m_pipelineState.Get())
+	);
 
-	m_bottomLevelAS = bottomLevelBuffers.pResult;
 
-	NAME_D3D12_OBJECT(m_bottomLevelAS);
 }
 
 /// <summary>
@@ -515,7 +342,8 @@ SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateBottomLevelAS(
 
 	for (size_t i = 0; i < vVertexBuffers.size(); i++) {
 		if (i < vIndexBuffers.size() && vIndexBuffers[i].second > 0)
-			bottomLevelAS.AddVertexBuffer(vVertexBuffers[i].first.Get(), 0,
+			bottomLevelAS.AddVertexBuffer(
+				vVertexBuffers[i].first.Get(), 0,
 				vVertexBuffers[i].second, sizeof(V),
 				vIndexBuffers[i].first.Get(), 0,
 				vIndexBuffers[i].second, nullptr, 0, true);
@@ -556,7 +384,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateTopLevelAS(const
 		for (size_t i = 0; i < instances.size(); i++) {
 			m_topLevelASGenerator.AddInstance(
 				instances[i].first.Get(), instances[i].second, static_cast<UINT>(i),
-				static_cast<UINT>(i * 2));
+				static_cast<UINT>(i));
 		}
 
 		UINT64 scratchSize, resultSize, instanceDescsSize;
@@ -598,7 +426,7 @@ ComPtr<ID3D12RootSignature> SonarPropagation::Graphics::DXR::RayTracingRenderer:
 		 {0 /*t0*/, 1, 0,
 		  D3D12_DESCRIPTOR_RANGE_TYPE_SRV /*Top-level acceleration structure*/,
 		  1},
-		 {0, 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 2}
+		 {0 /*b0*/, 1 /*1 descriptor*/, 0, D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 2} // Camera Buffer
 		});
 
 	return rsc.Generate(m_dxrDevice.Get(), true);
@@ -613,13 +441,6 @@ ComPtr<ID3D12RootSignature> SonarPropagation::Graphics::DXR::RayTracingRenderer:
 
 	rsc.AddRootParameter(D3D12_ROOT_PARAMETER_TYPE_SRV, 0);
 	rsc.AddRootParameter(D3D12_ROOT_PARAMETER_TYPE_SRV, 1);
-	rsc.AddRootParameter(D3D12_ROOT_PARAMETER_TYPE_CBV, 0);
-
-	rsc.AddHeapRangesParameter(
-		{
-			{2,1,0,D3D12_DESCRIPTOR_RANGE_TYPE_SRV,1},
-		}
-		);
 
 	return rsc.Generate(m_dxrDevice.Get(), true);
 }
@@ -644,32 +465,21 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateRaytracingPipeli
 	m_rayGenLibrary = CompileShader(L"RayGen.hlsl");
 	m_missLibrary = CompileShader(L"Miss.hlsl");
 	m_hitLibrary = CompileShader(L"Hit.hlsl");
-	m_shadowLibrary = CompileShader(L"Shadow.hlsl");
-	m_reflectionLibrary = CompileShader(L"Reflection.hlsl");
 
-	pipeline.AddLibrary(m_rayGenLibrary.Get(), { L"RayGen" });
-	pipeline.AddLibrary(m_missLibrary.Get(), { L"Miss" });
-	pipeline.AddLibrary(m_hitLibrary.Get(), { L"ClosestHit",L"QuadClosestHit",L"QuadReflectionClosestHit" });
-	pipeline.AddLibrary(m_shadowLibrary.Get(), { L"ShadowClosestHit",L"ShadowMiss" });
-	pipeline.AddLibrary(m_reflectionLibrary.Get(), { L"ReflectionClosestHit", L"ReflectionMiss" });
+	pipeline.AddLibrary(m_rayGenLibrary.Get(), { L"CameraRayGen" });
+	pipeline.AddLibrary(m_missLibrary.Get(), { L"MeshMiss" });
+	pipeline.AddLibrary(m_hitLibrary.Get(), { L"MeshClosestHit"});
 
 	m_rayGenSignature = CreateRayGenSignature();
 	m_missSignature = CreateMissSignature();
 	m_hitSignature = CreateHitSignature();
-	//m_shadowSignature = CreateHitSignature();
-	//m_reflectionSignature = CreateHitSignature();
 
-	pipeline.AddHitGroup(L"HitGroup", L"ClosestHit");
-	pipeline.AddHitGroup(L"QuadHitGroup", L"QuadClosestHit");
-	pipeline.AddHitGroup(L"QuadReflectionHitGroup", L"QuadReflectionClosestHit");
-	pipeline.AddHitGroup(L"ShadowHitGroup", L"ShadowClosestHit");
-	pipeline.AddHitGroup(L"ReflectionHitGroup", L"ReflectionClosestHit");
+	pipeline.AddHitGroup(L"MeshHitGroup", L"MeshClosestHit");
 
-	pipeline.AddRootSignatureAssociation(m_rayGenSignature.Get(), { L"RayGen" });
-	pipeline.AddRootSignatureAssociation(m_missSignature.Get(), { L"Miss",L"ShadowMiss", L"ReflectionMiss" });
-	pipeline.AddRootSignatureAssociation(m_hitSignature.Get(), { L"HitGroup",	L"QuadHitGroup", L"QuadReflectionHitGroup" });
-	pipeline.AddRootSignatureAssociation(m_shadowSignature.Get(), { L"ShadowHitGroup" });
-	pipeline.AddRootSignatureAssociation(m_reflectionSignature.Get(), { L"ReflectionHitGroup" });
+	pipeline.AddRootSignatureAssociation(m_rayGenSignature.Get(), { L"CameraRayGen" });
+	pipeline.AddRootSignatureAssociation(m_missSignature.Get(), { L"MeshMiss" });
+	pipeline.AddRootSignatureAssociation(m_hitSignature.Get(), { L"MeshHitGroup"});
+
 
 	pipeline.SetMaxPayloadSize(m_dxrConfig.m_maxPayloadSize); // RGB + distance
 
@@ -705,7 +515,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateRaytracingOutput
 void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateShaderResourceHeap() {
 
 	m_srvUavHeap = CreateDescriptorHeap(
-		m_dxrDevice.Get(), 4, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, true);
+		m_dxrDevice.Get(), 3, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, true);
 
 	NAME_D3D12_OBJECT(m_srvUavHeap);
 
@@ -753,56 +563,20 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateShaderBindingTab
 	auto heapPointer = reinterpret_cast<UINT64*>(srvUavHeapHandle.ptr);
 
 
-	m_sbtHelper.AddRayGenerationProgram(L"RayGen", { heapPointer });
-	m_sbtHelper.AddMissProgram(L"Miss", {});
+	m_sbtHelper.AddRayGenerationProgram(L"CameraRayGen", { heapPointer });
+	m_sbtHelper.AddMissProgram(L"MeshMiss", {});
 
-
-	if (m_useReflections) {
-		m_sbtHelper.AddMissProgram(L"ReflectionMiss", {});
-	}
-	else {
-		m_sbtHelper.AddMissProgram(L"ShadowMiss", {});
-	}
-
-	/*auto constNum = m_perInstanceConstantBuffers.size();
-
-	for (int i = 0; i < constNum - 1; ++i) {
+	for (auto& model : m_objectLibrary.m_objects) {
 		m_sbtHelper.AddHitGroup(
-			L"HitGroup",
+			L"MeshHitGroup",
 			{
-				(void*)(m_tetrahedronVertexBuffer->GetGPUVirtualAddress()),
-				(void*)(m_tetrahedronIndexBuffer->GetGPUVirtualAddress()),
-				(void*)(m_perInstanceConstantBuffers[i]->GetGPUVirtualAddress()),
-				heapPointer,
-			});
-		if (m_useReflections) {
-			m_sbtHelper.AddHitGroup(L"ReflectionHitGroup", {});
-		}
-		else {
-			m_sbtHelper.AddHitGroup(L"ShadowHitGroup", {});
-		}
-	}
-
-	if (m_useReflections) {
-		m_sbtHelper.AddHitGroup(
-			L"QuadReflectionHitGroup",
-			{
-				(void*)(m_quadVertexBuffer->GetGPUVirtualAddress()),
-				(void*)(m_quadIndexBuffer->GetGPUVirtualAddress()),
-				(void*)(m_perInstanceConstantBuffers[constNum - 1]->GetGPUVirtualAddress()),
-				heapPointer,
+				(void*)(model->m_bufferData.vertexBuffer->GetGPUVirtualAddress()),
+				(void*)(model->m_bufferData.indexBuffer->GetGPUVirtualAddress()),
+				heapPointer
 			});
 	}
-	else {
-		m_sbtHelper.AddHitGroup(
-			L"QuadHitGroup",
-			{
-				(void*)(m_quadVertexBuffer->GetGPUVirtualAddress()),
-				(void*)(m_quadIndexBuffer->GetGPUVirtualAddress()),
-				(void*)(m_perInstanceConstantBuffers[constNum - 1]->GetGPUVirtualAddress()),
-				heapPointer,
-			});
-	}*/
+
+	
 	// Shadow hit group is added after each addition of the original hitgroup, 
 	// so that all geometry can be hit!
 	uint32_t sbtSize = m_sbtHelper.ComputeSBTSize();
@@ -816,30 +590,6 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateShaderBindingTab
 
 	m_sbtHelper.Generate(m_sbtStorage.Get(), m_rtStateObjectProps.Get());
 }
-
-/// <summary>
-/// Creates the transform matrices for the instances and populates the associated metadata.
-/// </summary>
-//void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateInstances(
-//	std::vector<std::pair<AccelerationStructureBuffers, uint32_t>> asBuffers
-//) {
-//
-//
-//	for (int i = 0; i < asBuffers.size(); ++i) {
-//
-//		float amount = asBuffers[i].second;
-//
-//
-//		for (int j = 0; j < amount; ++j) {
-//			m_instances.push_back({ asBuffers[i].first.pResult, (
-//				XMMatrixTranslation(1.75f,.0f,.0f) *
-//				XMMatrixRotationAxis(XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f), (360.f / amount) * j)
-//				) });
-//		}
-//
-//	}
-//}
-
 
 #pragma endregion
 
@@ -947,21 +697,10 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::PopulateCommandListWit
 
 		m_commandList->OMSetRenderTargets(1, &renderTargetView, false, &depthStencilView);
 
-		// #DXR Extra - Refitting
-		// Refit the top-level acceleration structure to account for the new
-		// transform matrix of the triangle. Note that the build contains a barrier,
-		// hence we can do the rendering in the same command list
-		//CreateTopLevelAS(m_instances, true);
-		// #DXR
-		// Bind the descriptor heap giving access to the top-level acceleration
-		// structure, as well as the raytracing output
 		std::vector<ID3D12DescriptorHeap*> heaps = { m_srvUavHeap.Get() };
 		m_commandList->SetDescriptorHeaps(static_cast<UINT>(heaps.size()),
 			heaps.data());
 
-		// On the last frame, the raytracing output was used as a copy source, to
-		// copy its contents into the render target. Now we need to transition it to
-		// a UAV so that the shaders can write in it.
 		CD3DX12_RESOURCE_BARRIER transition = CD3DX12_RESOURCE_BARRIER::Transition(
 			m_outputResource.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE,
 			D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
@@ -969,28 +708,16 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::PopulateCommandListWit
 
 		// Setup the raytracing task
 		D3D12_DISPATCH_RAYS_DESC desc = {};
-		// The layout of the SBT is as follows: ray generation shader, miss
-		// shaders, hit groups. As described in the CreateShaderBindingTable method,
-		// all SBT entries of a given type have the same size to allow a fixed
-		// stride.
 
-		// The ray generation shaders are always at the beginning of the SBT.
 		uint32_t rayGenerationSectionSizeInBytes = m_sbtHelper.GetRayGenSectionSize();
 		desc.RayGenerationShaderRecord.StartAddress = m_sbtStorage->GetGPUVirtualAddress();
 		desc.RayGenerationShaderRecord.SizeInBytes = rayGenerationSectionSizeInBytes;
 
-		// The miss shaders are in the second SBT section, right after the ray
-		// generation shader. We have one miss shader for the camera rays and one
-		// for the shadow rays, so this section has a size of 2*m_sbtEntrySize. We
-		// also indicate the stride between the two miss shaders, which is the size
-		// of a SBT entry
 		uint32_t missSectionSizeInBytes = m_sbtHelper.GetMissSectionSize();
 		desc.MissShaderTable.StartAddress = m_sbtStorage->GetGPUVirtualAddress() + rayGenerationSectionSizeInBytes;
 		desc.MissShaderTable.SizeInBytes = missSectionSizeInBytes;
 		desc.MissShaderTable.StrideInBytes = m_sbtHelper.GetMissEntrySize();
 
-		// The hit groups section start after the miss shaders. In this sample we
-		// have one 1 hit group for the triangle
 		uint32_t hitGroupsSectionSize = m_sbtHelper.GetHitGroupSectionSize();
 		desc.HitGroupTable.StartAddress = m_sbtStorage->GetGPUVirtualAddress() + rayGenerationSectionSizeInBytes + missSectionSizeInBytes;
 		desc.HitGroupTable.SizeInBytes = hitGroupsSectionSize;
@@ -1006,11 +733,6 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::PopulateCommandListWit
 		// Dispatch the rays and write to the raytracing output
 		m_commandList->DispatchRays(&desc);
 
-		// The raytracing output needs to be copied to the actual render target used
-		// for display. For this, we need to transition the raytracing output from a
-		// UAV to a copy source, and the render target buffer to a copy destination.
-		// We can then do the actual copy, before transitioning the render target
-		// buffer into a render target, that will be then used to display the image
 		{
 			auto transitionOutputResource = CD3DX12_RESOURCE_BARRIER::Transition(
 				m_outputResource.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS,

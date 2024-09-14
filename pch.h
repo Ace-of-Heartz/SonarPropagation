@@ -14,7 +14,11 @@
 #include <concrt.h>
 #include <dxcapi.h>
 
-// 
+#ifndef TINYOBJLOADER_IMPLEMENTATION
+#define TINYOBJLOADER_IMPLEMENTATION
+#endif
+
+//#include "Common\thirdparty\tiny_obj_loader.h"
 #include "Common\StepTimer.h"
 #include "Common\Camera.h"
 #include "Common\CameraController.h"

@@ -1,6 +1,10 @@
 #include "pch.h"
 #include "MeshUtils.h"
 
+
+
+
+
 template <typename V>
 std::vector<V> SonarPropagation::Graphics::Utils::GetTetrahedronVertices<V>() {
 	throw std::exception("GetTetrahedronVertices not implemented for this type");
@@ -115,5 +119,81 @@ std::vector<UINT> SonarPropagation::Graphics::Utils::GetQuadIndices() {
 		0, 1, 2,
 		2, 3, 0 
 	};
+	return indices;
+}
+
+template <>
+std::vector<VertexPositionNormalUV>  SonarPropagation::Graphics::Utils::GetCubeVertices<VertexPositionNormalUV>(
+	float width, float height, float depth
+)
+{
+	std::vector<VertexPositionNormalUV> vertices = {
+		// Front Face
+		{ { -0.5f * width, -0.5f * height, -0.5f * depth }, { 0.f, 0.f, -1.f }, { 0.f, 1.f } },
+		{ { -0.5f * width,  0.5f * height, -0.5f * depth }, { 0.f, 0.f, -1.f }, { 0.f, 0.f } },
+		{ {  0.5f * width,  0.5f * height, -0.5f * depth }, { 0.f, 0.f, -1.f }, { 1.f, 0.f } },
+		{ {  0.5f * width, -0.5f * height, -0.5f * depth }, { 0.f, 0.f, -1.f }, { 1.f, 1.f } },
+		
+		// Back Face
+		{ { -0.5f * width, -0.5f * height,  0.5f * depth }, { 0.f, 0.f, 1.f }, { 1.f, 1.f } },
+		{ {  0.5f * width, -0.5f * height,  0.5f * depth }, { 0.f, 0.f, 1.f }, { 0.f, 1.f } },
+		{ {  0.5f * width,  0.5f * height,  0.5f * depth }, { 0.f, 0.f, 1.f }, { 0.f, 0.f } },
+		{ { -0.5f * width,  0.5f * height,  0.5f * depth }, { 0.f, 0.f, 1.f }, { 1.f, 0.f } },
+		
+		// Top Face
+		{ { -0.5f * width,  0.5f * height, -0.5f * depth }, { 0.f, 1.f, 0.f }, { 0.f, 1.f } },
+		{ { -0.5f * width,  0.5f * height,  0.5f * depth }, { 0.f, 1.f, 0.f }, { 0.f, 0.f } },
+		{ {  0.5f * width,  0.5f * height,  0.5f * depth }, { 0.f, 1.f, 0.f }, { 1.f, 0.f } },
+		{ {  0.5f * width,  0.5f * height, -0.5f * depth }, { 0.f, 1.f, 0.f }, { 1.f, 1.f } },
+		
+		// Bottom Face
+		{ { -0.5f * width, -0.5f * height, -0.5f * depth }, { 0.f, -1.f, 0.f }, { 1.f, 1.f } },
+		{ {  0.5f * width, -0.5f * height, -0.5f * depth }, { 0.f, -1.f, 0.f }, { 0.f, 1.f } },
+		{ {  0.5f * width, -0.5f * height,  0.5f * depth }, { 0.f, -1.f, 0.f }, { 0.f, 0.f } },
+		{ { -0.5f * width, -0.5f * height,  0.5f * depth }, { 0.f, -1.f, 0.f }, { 1.f, 0.f } },
+		
+		// Left Face
+		{ { -0.5f * width, -0.5f * height,  0.5f * depth }, { -1.f, 0.f, 0.f }, { 0.f, 1.f } },
+		{ { -0.5f * width,  0.5f * height,  0.5f * depth }, { -1.f, 0.f, 0.f }, { 0.f, 0.f } },
+		{ { -0.5f * width,  0.5f * height, -0.5f * depth }, { -1.f, 0.f, 0.f }, { 1.f, 0.f } },
+		{ { -0.5f * width, -0.5f * height, -0.5f * depth }, { -1.f, 0.f, 0.f }, { 1.f, 1.f } },
+		
+		// Right Face
+		{ {  0.5f * width, -0.5f * height, -0.5f * depth }, { 1.f, 0.f, 0.f }, { 0.f, 1.f } },
+		{ {  0.5f * width,  0.5f * height, -0.5f * depth }, { 1.f, 0.f, 0.f }, { 0.f, 0.f } },
+		{ {  0.5f * width,  0.5f * height,  0.5f * depth }, { 1.f, 0.f, 0.f }, { 1.f, 0.f } },
+		{ {  0.5f * width, -0.5f * height,  0.5f * depth }, { 1.f, 0.f, 0.f }, { 1.f, 1.f } } 
+	};
+
+	return vertices;
+}
+
+std::vector<UINT> SonarPropagation::Graphics::Utils::GetCubeIndices() {
+	std::vector<UINT> indices = {
+		// Front Face
+		0, 1, 2,
+		2, 3, 0,
+
+		// Back Face
+		4, 5, 6,
+		6, 7, 4,
+
+		// Top Face
+		8, 9, 10,
+		10, 11, 8,
+
+		// Bottom Face
+		12, 13, 14,
+		14, 15, 12,
+
+		// Left Face
+		16, 17, 18,
+		18, 19, 16,
+
+		// Right Face
+		20, 21, 22,
+		22, 23, 20
+	};
+
 	return indices;
 }

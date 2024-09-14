@@ -243,6 +243,9 @@
     <ClInclude Include="Common\ObjectType.h">
       <Filter>DXR\AceRaytracing\Graphics\Common\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Common\thirdparty\tiny_obj_loader.h">
+      <Filter>DXR\AceRaytracing\Graphics\Common\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest" />
@@ -261,12 +264,6 @@
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="Shaders\RayGen.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\Reflection.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\Shadow.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="Shaders\SonarShaders\SonarEq.hlsl">
