@@ -129,40 +129,40 @@ std::vector<VertexPositionNormalUV>  SonarPropagation::Graphics::Utils::GetCubeV
 {
 	std::vector<VertexPositionNormalUV> vertices = {
 		// Front Face
-		{ { -0.5f * width, -0.5f * height, -0.5f * depth }, { 0.f, 0.f, -1.f }, { 0.f, 1.f } },
-		{ { -0.5f * width,  0.5f * height, -0.5f * depth }, { 0.f, 0.f, -1.f }, { 0.f, 0.f } },
-		{ {  0.5f * width,  0.5f * height, -0.5f * depth }, { 0.f, 0.f, -1.f }, { 1.f, 0.f } },
-		{ {  0.5f * width, -0.5f * height, -0.5f * depth }, { 0.f, 0.f, -1.f }, { 1.f, 1.f } },
-		
+		{{-width / 2.f, -height / 2.f, depth / 2.f}, {0.f, 0.f, 1.f}, {0.f, 0.f}},
+		{{width / 2.f, -height / 2.f, depth / 2.f}, {0.f, 0.f, 1.f}, {1.f, 0.f}},
+		{{width / 2.f, height / 2.f, depth / 2.f}, {0.f, 0.f, 1.f}, {1.f, 1.f}},
+		{{-width / 2.f, height / 2.f, depth / 2.f}, {0.f, 0.f, 1.f}, {0.f, 1.f}},
+
 		// Back Face
-		{ { -0.5f * width, -0.5f * height,  0.5f * depth }, { 0.f, 0.f, 1.f }, { 1.f, 1.f } },
-		{ {  0.5f * width, -0.5f * height,  0.5f * depth }, { 0.f, 0.f, 1.f }, { 0.f, 1.f } },
-		{ {  0.5f * width,  0.5f * height,  0.5f * depth }, { 0.f, 0.f, 1.f }, { 0.f, 0.f } },
-		{ { -0.5f * width,  0.5f * height,  0.5f * depth }, { 0.f, 0.f, 1.f }, { 1.f, 0.f } },
-		
+		{{width / 2.f, -height / 2.f, -depth / 2.f}, {0.f, 0.f, -1.f}, {0.f, 0.f}},
+		{{-width / 2.f, -height / 2.f, -depth / 2.f}, {0.f, 0.f, -1.f}, {1.f, 0.f}},
+		{{-width / 2.f, height / 2.f, -depth / 2.f}, {0.f, 0.f, -1.f}, {1.f, 1.f}},
+		{{width / 2.f, height / 2.f, -depth / 2.f}, {0.f, 0.f, -1.f}, {0.f, 1.f}},
+
 		// Top Face
-		{ { -0.5f * width,  0.5f * height, -0.5f * depth }, { 0.f, 1.f, 0.f }, { 0.f, 1.f } },
-		{ { -0.5f * width,  0.5f * height,  0.5f * depth }, { 0.f, 1.f, 0.f }, { 0.f, 0.f } },
-		{ {  0.5f * width,  0.5f * height,  0.5f * depth }, { 0.f, 1.f, 0.f }, { 1.f, 0.f } },
-		{ {  0.5f * width,  0.5f * height, -0.5f * depth }, { 0.f, 1.f, 0.f }, { 1.f, 1.f } },
-		
+		{{-width / 2.f, height / 2.f, depth / 2.f}, {0.f, 1.f, 0.f}, {0.f, 0.f}},
+		{{width / 2.f, height / 2.f, depth / 2.f}, {0.f, 1.f, 0.f}, {1.f, 0.f}},
+		{{width / 2.f, height / 2.f, -depth / 2.f}, {0.f, 1.f, 0.f}, {1.f, 1.f}},
+		{{-width / 2.f, height / 2.f, -depth / 2.f}, {0.f, 1.f, 0.f}, {0.f, 1.f}},
+
 		// Bottom Face
-		{ { -0.5f * width, -0.5f * height, -0.5f * depth }, { 0.f, -1.f, 0.f }, { 1.f, 1.f } },
-		{ {  0.5f * width, -0.5f * height, -0.5f * depth }, { 0.f, -1.f, 0.f }, { 0.f, 1.f } },
-		{ {  0.5f * width, -0.5f * height,  0.5f * depth }, { 0.f, -1.f, 0.f }, { 0.f, 0.f } },
-		{ { -0.5f * width, -0.5f * height,  0.5f * depth }, { 0.f, -1.f, 0.f }, { 1.f, 0.f } },
-		
+		{{-width / 2.f, -height / 2.f, -depth / 2.f}, {0.f, -1.f, 0.f}, {0.f, 0.f}},
+		{{width / 2.f, -height / 2.f, -depth / 2.f}, {0.f, -1.f, 0.f}, {1.f, 0.f}},
+		{{width / 2.f, -height / 2.f, depth / 2.f}, {0.f, -1.f, 0.f}, {1.f, 1.f}},
+		{{-width / 2.f, -height / 2.f, depth / 2.f}, {0.f, -1.f, 0.f}, {0.f, 1.f}},
+
 		// Left Face
-		{ { -0.5f * width, -0.5f * height,  0.5f * depth }, { -1.f, 0.f, 0.f }, { 0.f, 1.f } },
-		{ { -0.5f * width,  0.5f * height,  0.5f * depth }, { -1.f, 0.f, 0.f }, { 0.f, 0.f } },
-		{ { -0.5f * width,  0.5f * height, -0.5f * depth }, { -1.f, 0.f, 0.f }, { 1.f, 0.f } },
-		{ { -0.5f * width, -0.5f * height, -0.5f * depth }, { -1.f, 0.f, 0.f }, { 1.f, 1.f } },
-		
+		{{-width / 2.f, -height / 2.f, -depth / 2.f}, {-1.f, 0.f, 0.f}, {0.f, 0.f}},
+		{{-width / 2.f, -height / 2.f, depth / 2.f}, {-1.f, 0.f, 0.f}, {1.f, 0.f}},
+		{{-width / 2.f, height / 2.f, depth / 2.f}, {-1.f, 0.f, 0.f}, {1.f, 1.f}},
+		{{-width / 2.f, height / 2.f, -depth / 2.f}, {-1.f, 0.f, 0.f}, {0.f, 1.f}},
+
 		// Right Face
-		{ {  0.5f * width, -0.5f * height, -0.5f * depth }, { 1.f, 0.f, 0.f }, { 0.f, 1.f } },
-		{ {  0.5f * width,  0.5f * height, -0.5f * depth }, { 1.f, 0.f, 0.f }, { 0.f, 0.f } },
-		{ {  0.5f * width,  0.5f * height,  0.5f * depth }, { 1.f, 0.f, 0.f }, { 1.f, 0.f } },
-		{ {  0.5f * width, -0.5f * height,  0.5f * depth }, { 1.f, 0.f, 0.f }, { 1.f, 1.f } } 
+		{{width / 2.f, -height / 2.f, depth / 2.f}, {1.f, 0.f, 0.f}, {0.f, 0.f}},
+		{{width / 2.f, -height / 2.f, -depth / 2.f}, {1.f, 0.f, 0.f}, {1.f, 0.f}},
+		{{width / 2.f, height / 2.f, -depth / 2.f}, {1.f, 0.f, 0.f}, {1.f, 1.f}},
+		{{width / 2.f, height / 2.f, depth / 2.f}, {1.f, 0.f, 0.f}, {0.f, 1.f}}
 	};
 
 	return vertices;

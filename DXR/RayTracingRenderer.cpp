@@ -203,48 +203,61 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateScene() {
 }
 
 void SonarPropagation::Graphics::DXR::RayTracingRenderer::InitializeObjects() {
+
+	auto suzanneData = m_objectLibrary.LoadWavefront("./Assets/suzanne.obj");
+
+	auto cubeData = m_objectLibrary.LoadPredefined<VertexPositionNormalUV>(GetCubeVertices<VertexPositionNormalUV>(1,1,1), GetQuadIndices());
+		
+
 	{
-		std::vector<std::tuple<XMMATRIX,ObjectType>> objects;
+		XMFLOAT3 position = { 2.f, 0.f, 0.f };
+		XMFLOAT4 scale = { 1.f, 1.f, 1.f , 1.f };
+		XMFLOAT4 rotation = { 0.f, 0.f, 0.f, 1.f };
 
-		//auto suzanneData = m_objectLibrary.LoadObject("./Assets/suzanne.obj");
+		Scene::Transform transform = { position,rotation,scale };
+		transform.SetParent(nullptr, nullptr);
+		auto reflection = new Scene::SoundReflector(transform, cubeData, ObjectType::Object);
 
-		auto cubeData = m_objectLibrary.LoadPredefined<VertexPositionNormalUV>(GetCubeVertices<VertexPositionNormalUV>(1,1,1), GetQuadIndices());
-		{
-			XMFLOAT3 position = { 2.f, 0.f, 0.f };
-			XMFLOAT4 scale = { 1.f, 1.f, 1.f , 1.f };
-			XMFLOAT4 rotation = { 0.f, 0.f, 0.f, 1.f };
-
-			Scene::Transform transform = { position,rotation,scale };
-			transform.SetParent(nullptr, nullptr);
-			auto reflection = new Scene::SoundReflector(transform, cubeData, ObjectType::Object);
-
-			m_scene.AddObject(reflection);
-
-		}
-		{
-			XMFLOAT3 position = { -2.f, 0.f, 0.f };
-			XMFLOAT4 scale = { 2.f, 2.f, 2.f , 1.f };
-			XMFLOAT4 rotation = { 0.f, 0.f, 0.f, 1.f };
-
-			Scene::Transform transform = { position,rotation,scale };
-			transform.SetParent(nullptr, nullptr);
-			auto reflection = new Scene::SoundReflector(transform, cubeData, ObjectType::Object);
-
-			m_scene.AddObject(reflection);
-		}
-		{
-			XMFLOAT3 position = { 0.f, 0.f, 5.f };
-			XMFLOAT4 scale = { 1.f, 1.f, 1.f , 1.f };
-			XMFLOAT4 rotation = { 0.f, g_XMHalfPi[0], 0.f, 1.f};
-
-			Scene::Transform transform = { position,rotation,scale };
-			transform.SetParent(nullptr, nullptr);
-			auto reflection = new Scene::SoundReflector(transform, cubeData, ObjectType::Object);
-
-			m_scene.AddObject(reflection);
-		}
+		m_scene.AddObject(reflection);
 
 	}
+	{
+		XMFLOAT3 position = { -2.f, 0.f, 0.f };
+		XMFLOAT4 scale = { 2.f, 2.f, 2.f , 1.f };
+		XMFLOAT4 rotation = { 0.f, 0.f, 0.f, 1.f };
+
+		Scene::Transform transform = { position,rotation,scale };
+		transform.SetParent(nullptr, nullptr);
+		auto reflection = new Scene::SoundReflector(transform, cubeData, ObjectType::Object);
+
+		m_scene.AddObject(reflection);
+	}
+	{
+		XMFLOAT3 position = { 0.f, 0.f, 5.f };
+		XMFLOAT4 scale = { 1.f, 1.f, 1.f , 1.f };
+		XMFLOAT4 rotation = { 0.f, g_XMHalfPi[0], 0.f, 1.f};
+
+		Scene::Transform transform = { position,rotation,scale };
+		transform.SetParent(nullptr, nullptr);
+		auto reflection = new Scene::SoundReflector(transform, cubeData, ObjectType::Object);
+
+		m_scene.AddObject(reflection);
+	}
+	{
+		XMFLOAT3 position = { 5.f, 0.f, 5.f };
+		XMFLOAT4 scale = { 1.f, 1.f, 1.f , 1.f };
+		XMFLOAT4 rotation = { 0.f, g_XMHalfPi[0], 0.f, 1.f };
+
+		Scene::Transform transform = { position,rotation,scale };
+		transform.SetParent(nullptr, nullptr);
+		auto reflection = new Scene::SoundReflector(transform, suzanneData, ObjectType::Object);
+
+		m_scene.AddObject(reflection);
+	}
+
+	
+
+
 }
 
 void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateWindowSizeDependentResources() {
@@ -872,17 +885,6 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::RenderImGui() {
 void SonarPropagation::Graphics::DXR::RayTracingRenderer::UpdateInstanceTransforms() {
 	m_time++;
 
-	//auto tetrahedronAmount = m_instances.size() - 1;
-
-	//auto sinT = sinf(m_time);
-
-	//for (size_t i = 0; i < tetrahedronAmount; i++) {
-	//	m_instances[i].second =
-
-	//		XMMatrixTranslation(1.75f, .0f, .0f) *
-	//		XMMatrixRotationAxis(XMVector4Normalize(XMVectorSet(0.0f, 0.8f, 0.2f, 0.0f)), (360.f / tetrahedronAmount) * i + (m_time) / 600.f);
-
-	//}
 }
 
 

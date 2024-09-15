@@ -9,13 +9,9 @@ struct STriVertex
     float2 uv;
 }; 
 
-//tbuffer Textures : register(t0)
-//{
-//    Texture2D <float4> texture0;
-//};
-
 StructuredBuffer<STriVertex> BTriVertex : register(t0); // Vertex buffer
 StructuredBuffer<int> indices : register(t1); //Index buffer
+
 //RaytracingAccelerationStructure SceneBVH : register(t2);
 
 
