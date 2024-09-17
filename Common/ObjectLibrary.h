@@ -44,11 +44,11 @@ namespace SonarPropagation
 
 						ThrowIfFailed(model->m_bufferData.vertexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin)));
 						memcpy(pVertexDataBegin, vertices.data(), bufferSize);
-						model->m_bufferData.vertexBuffer->Unmap(0, nullptr);
+						m_bufferData.vertexBuffer->Unmap(0, nullptr);
 
-						model->m_bufferData.vertexBufferView.BufferLocation = model->m_bufferData.vertexBuffer->GetGPUVirtualAddress();
-						model->m_bufferData.vertexBufferView.StrideInBytes = sizeof(V);
-						model->m_bufferData.vertexBufferView.SizeInBytes = bufferSize;
+						m_bufferData.vertexBufferView.BufferLocation = m_bufferData.vertexBuffer->GetGPUVirtualAddress();
+						m_bufferData.vertexBufferView.StrideInBytes = sizeof(V);
+						m_bufferData.vertexBufferView.SizeInBytes = bufferSize;
 
 						//NAME_D3D12_OBJECT(model->m_bufferData.vertexBuffer);
 					}
@@ -69,13 +69,13 @@ namespace SonarPropagation
 						));
 
 						UINT8* pIndexDataBegin;
-						ThrowIfFailed(model->m_bufferData.indexBuffer->Map(0, &readRangeUp, reinterpret_cast<void**>(&pIndexDataBegin)));
+						ThrowIfFailed(m_bufferData.indexBuffer->Map(0, &readRangeUp, reinterpret_cast<void**>(&pIndexDataBegin)));
 						memcpy(pIndexDataBegin, indices.data(), indexBufferSize);
-						model->m_bufferData.indexBuffer->Unmap(0, nullptr);
+						m_bufferData.indexBuffer->Unmap(0, nullptr);
 
-						model->m_bufferData.indexBufferView.BufferLocation = model->m_bufferData.indexBuffer->GetGPUVirtualAddress();
-						model->m_bufferData.indexBufferView.Format = DXGI_FORMAT_R32_UINT;
-						model->m_bufferData.indexBufferView.SizeInBytes = indexBufferSize;
+						m_bufferData.indexBufferView.BufferLocation = m_bufferData.indexBuffer->GetGPUVirtualAddress();
+						m_bufferData.indexBufferView.Format = DXGI_FORMAT_R32_UINT;
+						m_bufferData.indexBufferView.SizeInBytes = indexBufferSize;
 
 						//NAME_D3D12_OBJECT(model->m_bufferData.indexBuffer);
 					}

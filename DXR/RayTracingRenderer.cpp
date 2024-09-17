@@ -221,39 +221,39 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::InitializeObjects() {
 		m_scene.AddObject(reflection);
 
 	}
-	{
-		XMFLOAT3 position = { -2.f, 0.f, 0.f };
-		XMFLOAT4 scale = { 2.f, 2.f, 2.f , 1.f };
-		XMFLOAT4 rotation = { 0.f, 0.f, 0.f, 1.f };
+	//{
+	//	XMFLOAT3 position = { -2.f, 0.f, 0.f };
+	//	XMFLOAT4 scale = { 2.f, 2.f, 2.f , 1.f };
+	//	XMFLOAT4 rotation = { 0.f, 0.f, 0.f, 1.f };
 
-		Scene::Transform transform = { position,rotation,scale };
-		transform.SetParent(nullptr, nullptr);
-		auto reflection = new Scene::SoundReflector(transform, cubeData, ObjectType::Object);
+	//	Scene::Transform transform = { position,rotation,scale };
+	//	transform.SetParent(nullptr, nullptr);
+	//	auto reflection = new Scene::SoundReflector(transform, cubeData, ObjectType::Object);
 
-		m_scene.AddObject(reflection);
-	}
-	{
-		XMFLOAT3 position = { 0.f, 0.f, 5.f };
-		XMFLOAT4 scale = { 1.f, 1.f, 1.f , 1.f };
-		XMFLOAT4 rotation = { 0.f, g_XMHalfPi[0], 0.f, 1.f};
+	//	m_scene.AddObject(reflection);
+	//}
+	//{
+	//	XMFLOAT3 position = { 0.f, 0.f, 5.f };
+	//	XMFLOAT4 scale = { 1.f, 1.f, 1.f , 1.f };
+	//	XMFLOAT4 rotation = { 0.f, g_XMHalfPi[0], 0.f, 1.f};
 
-		Scene::Transform transform = { position,rotation,scale };
-		transform.SetParent(nullptr, nullptr);
-		auto reflection = new Scene::SoundReflector(transform, cubeData, ObjectType::Object);
+	//	Scene::Transform transform = { position,rotation,scale };
+	//	transform.SetParent(nullptr, nullptr);
+	//	auto reflection = new Scene::SoundReflector(transform, cubeData, ObjectType::Object);
 
-		m_scene.AddObject(reflection);
-	}
-	{
-		XMFLOAT3 position = { 5.f, 0.f, 5.f };
-		XMFLOAT4 scale = { 1.f, 1.f, 1.f , 1.f };
-		XMFLOAT4 rotation = { 0.f, g_XMHalfPi[0], 0.f, 1.f };
+	//	m_scene.AddObject(reflection);
+	//}
+	//{
+	//	XMFLOAT3 position = { 5.f, 0.f, 5.f };
+	//	XMFLOAT4 scale = { 1.f, 1.f, 1.f , 1.f };
+	//	XMFLOAT4 rotation = { 0.f, g_XMHalfPi[0], 0.f, 1.f };
 
-		Scene::Transform transform = { position,rotation,scale };
-		transform.SetParent(nullptr, nullptr);
-		auto reflection = new Scene::SoundReflector(transform, suzanneData, ObjectType::Object);
+	//	Scene::Transform transform = { position,rotation,scale };
+	//	transform.SetParent(nullptr, nullptr);
+	//	auto reflection = new Scene::SoundReflector(transform, suzanneData, ObjectType::Object);
 
-		m_scene.AddObject(reflection);
-	}
+	//	m_scene.AddObject(reflection);
+	//}
 
 	
 
