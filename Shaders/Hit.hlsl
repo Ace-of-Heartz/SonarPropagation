@@ -6,7 +6,7 @@ struct STriVertex
 {
     float3 vertex;
     float3 normal;
-    float2 uv;
+    //float2 uv;
 }; 
 
 StructuredBuffer<STriVertex> BTriVertex : register(t0); // Vertex buffer
@@ -22,6 +22,5 @@ void MeshClosestHit(inout HitInfo payload, Attributes attrib)
 
     payload.colorAndDistance = float4(barycentrics, RayTCurrent());
 }
-
 
 

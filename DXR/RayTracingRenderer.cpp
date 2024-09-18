@@ -172,7 +172,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateDeviceDependentR
 	auto createDXRResources = createAssetsTask.then([this]() {
 
 		// Create the acceleration structures
-		CreateAccelerationStructures<VertexPositionNormalUV>();
+		CreateAccelerationStructures<VertexPositionColor>();
 
 		ThrowIfFailed(m_commandList->Close());
 
@@ -208,6 +208,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::InitializeObjects() {
 
 	auto cubeData = m_objectLibrary.LoadPredefined<VertexPositionNormalUV>(GetCubeVertices<VertexPositionNormalUV>(1,1,1), GetQuadIndices());
 		
+	auto tetData = m_objectLibrary.LoadPredefined<VertexPositionColor>(GetTetrahedronVertices<VertexPositionColor>(), GetTetrahedronIndices());
 
 	{
 		XMFLOAT3 position = { 2.f, 0.f, 0.f };
@@ -216,7 +217,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::InitializeObjects() {
 
 		Scene::Transform transform = { position,rotation,scale };
 		transform.SetParent(nullptr, nullptr);
-		auto reflection = new Scene::SoundReflector(transform, cubeData, ObjectType::Object);
+		auto reflection = new Scene::SoundReflector(transform, tetData, ObjectType::Object);
 
 		m_scene.AddObject(reflection);
 
@@ -309,16 +310,16 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateAccelerationStru
 
 		AccelerationStructureBuffers blBuffer = CreateBottomLevelAS<V>(
 			{ {
-				model->m_bufferData.vertexBuffer.Get(),
-				model->m_bufferData.vertexBufferView.SizeInBytes / sizeof(V),
+				model.m_bufferData.vertexBuffer.Get(),
+				model.m_bufferData.vertexBufferView.SizeInBytes / sizeof(V),
 			} },
 			{ {
-				model->m_bufferData.indexBuffer.Get(),
-				model->m_bufferData.indexBufferView.SizeInBytes / sizeof(UINT)
+				model.m_bufferData.indexBuffer.Get(),
+				model.m_bufferData.indexBufferView.SizeInBytes / sizeof(UINT)
 			} }
 		);
 
-		for (auto& instance : model->m_objects) {
+		for (auto& instance : model.m_objects) {
 			m_instances.push_back({ blBuffer.pResult, instance->m_transform.LocalToWorld() });
 		}
 	}
@@ -397,7 +398,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateTopLevelAS(const
 		for (size_t i = 0; i < instances.size(); i++) {
 			m_topLevelASGenerator.AddInstance(
 				instances[i].first.Get(), instances[i].second, static_cast<UINT>(i),
-				static_cast<UINT>(i));
+				static_cast<UINT>(i * 2));
 		}
 
 		UINT64 scratchSize, resultSize, instanceDescsSize;
@@ -478,20 +479,24 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateRaytracingPipeli
 	m_rayGenLibrary = CompileShader(L"RayGen.hlsl");
 	m_missLibrary = CompileShader(L"Miss.hlsl");
 	m_hitLibrary = CompileShader(L"Hit.hlsl");
+	m_shadowLibrary = CompileShader(L"Shadow.hlsl");
 
 	pipeline.AddLibrary(m_rayGenLibrary.Get(), { L"CameraRayGen" });
 	pipeline.AddLibrary(m_missLibrary.Get(), { L"MeshMiss" });
 	pipeline.AddLibrary(m_hitLibrary.Get(), { L"MeshClosestHit"});
+	pipeline.AddLibrary(m_shadowLibrary.Get(), { L"ShadowClosestHit" });
 
 	m_rayGenSignature = CreateRayGenSignature();
 	m_missSignature = CreateMissSignature();
 	m_hitSignature = CreateHitSignature();
 
 	pipeline.AddHitGroup(L"MeshHitGroup", L"MeshClosestHit");
+	pipeline.AddHitGroup(L"ShadowHitGroup", L"ShadowClosestHit");
 
 	pipeline.AddRootSignatureAssociation(m_rayGenSignature.Get(), { L"CameraRayGen" });
 	pipeline.AddRootSignatureAssociation(m_missSignature.Get(), { L"MeshMiss" });
 	pipeline.AddRootSignatureAssociation(m_hitSignature.Get(), { L"MeshHitGroup"});
+	pipeline.AddRootSignatureAssociation(m_missSignature.Get(), { L"ShadowHitGroup" });
 
 
 	pipeline.SetMaxPayloadSize(m_dxrConfig.m_maxPayloadSize); // RGB + distance
@@ -583,9 +588,13 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateShaderBindingTab
 		m_sbtHelper.AddHitGroup(
 			L"MeshHitGroup",
 			{
-				(void*)(model->m_bufferData.vertexBuffer->GetGPUVirtualAddress()),
-				(void*)(model->m_bufferData.indexBuffer->GetGPUVirtualAddress()),
-				heapPointer
+				(void*)(model.m_bufferData.vertexBuffer->GetGPUVirtualAddress()),
+				(void*)(model.m_bufferData.indexBuffer->GetGPUVirtualAddress()),
+			});
+		m_sbtHelper.AddHitGroup(
+			L"ShadowHitGroup",
+			{
+
 			});
 	}
 

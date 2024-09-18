@@ -26,7 +26,7 @@ namespace SonarPropagation
 				{
 					UINT bufferSize = vertices.size() * sizeof(V);
 
-					auto model = new Scene::Model();
+					BufferData bufferData;
 					{
 						ThrowIfFailed(
 							m_device->CreateCommittedResource(
@@ -35,20 +35,20 @@ namespace SonarPropagation
 								&CD3DX12_RESOURCE_DESC::Buffer(bufferSize),
 								D3D12_RESOURCE_STATE_GENERIC_READ,
 								nullptr,
-								IID_PPV_ARGS(&(model->m_bufferData).vertexBuffer)
+								IID_PPV_ARGS(&(bufferData.vertexBuffer))
 							)
 						);
 
 						UINT8* pVertexDataBegin;
 						CD3DX12_RANGE readRange(0, 0);
 
-						ThrowIfFailed(model->m_bufferData.vertexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin)));
+						ThrowIfFailed(bufferData.vertexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin)));
 						memcpy(pVertexDataBegin, vertices.data(), bufferSize);
-						m_bufferData.vertexBuffer->Unmap(0, nullptr);
+						bufferData.vertexBuffer->Unmap(0, nullptr);
 
-						m_bufferData.vertexBufferView.BufferLocation = m_bufferData.vertexBuffer->GetGPUVirtualAddress();
-						m_bufferData.vertexBufferView.StrideInBytes = sizeof(V);
-						m_bufferData.vertexBufferView.SizeInBytes = bufferSize;
+						bufferData.vertexBufferView.BufferLocation = bufferData.vertexBuffer->GetGPUVirtualAddress();
+						bufferData.vertexBufferView.StrideInBytes = sizeof(V);
+						bufferData.vertexBufferView.SizeInBytes = bufferSize;
 
 						//NAME_D3D12_OBJECT(model->m_bufferData.vertexBuffer);
 					}
@@ -65,27 +65,28 @@ namespace SonarPropagation
 							&bufferResourceDesc,
 							D3D12_RESOURCE_STATE_GENERIC_READ,
 							nullptr,
-							IID_PPV_ARGS(&(model->m_bufferData).indexBuffer)
+							IID_PPV_ARGS(&bufferData.indexBuffer)
 						));
 
 						UINT8* pIndexDataBegin;
-						ThrowIfFailed(m_bufferData.indexBuffer->Map(0, &readRangeUp, reinterpret_cast<void**>(&pIndexDataBegin)));
+						ThrowIfFailed(bufferData.indexBuffer->Map(0, &readRangeUp, reinterpret_cast<void**>(&pIndexDataBegin)));
 						memcpy(pIndexDataBegin, indices.data(), indexBufferSize);
-						m_bufferData.indexBuffer->Unmap(0, nullptr);
+						bufferData.indexBuffer->Unmap(0, nullptr);
 
-						m_bufferData.indexBufferView.BufferLocation = m_bufferData.indexBuffer->GetGPUVirtualAddress();
-						m_bufferData.indexBufferView.Format = DXGI_FORMAT_R32_UINT;
-						m_bufferData.indexBufferView.SizeInBytes = indexBufferSize;
+						bufferData.indexBufferView.BufferLocation = bufferData.indexBuffer->GetGPUVirtualAddress();
+						bufferData.indexBufferView.Format = DXGI_FORMAT_R32_UINT;
+						bufferData.indexBufferView.SizeInBytes = indexBufferSize;
 
 						//NAME_D3D12_OBJECT(model->m_bufferData.indexBuffer);
 					}
 
+					auto model = Scene::Model(bufferData);
 
 					m_objects.push_back(model);
 
-					return model;
+					return &m_objects[m_objects.size()-1];
 				}
-				std::vector<Scene::Model*> m_objects;
+				std::vector<Scene::Model> m_objects;
 
 				ID3D12Device* m_device;
 			};

@@ -107,6 +107,9 @@
     <Filter Include="Shaders\SonarRTX">
       <UniqueIdentifier>{e5818060-e30d-46e8-8f36-54b0cf5b4b43}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shaders\DebugShaders">
+      <UniqueIdentifier>{072067c5-433a-4262-a0ca-978e6fbc5d0a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="App.cpp" />
@@ -289,6 +292,12 @@
     </FxCompile>
     <FxCompile Include="Shaders\SonarShaders\SonarCommon.hlsl">
       <Filter>Shaders\SonarRTX</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\Reflection.hlsl">
+      <Filter>Shaders\DebugShaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\Shadow.hlsl">
+      <Filter>Shaders\DebugShaders</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>
