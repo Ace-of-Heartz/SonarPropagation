@@ -6,13 +6,12 @@ struct STriVertex
 {
     float3 vertex;
     float3 normal;
-    //float2 uv;
+    float2 uv;
 }; 
 
 StructuredBuffer<STriVertex> BTriVertex : register(t0); // Vertex buffer
 StructuredBuffer<int> indices : register(t1); //Index buffer
 
-//RaytracingAccelerationStructure SceneBVH : register(t2);
 
 
 [shader("closesthit")]

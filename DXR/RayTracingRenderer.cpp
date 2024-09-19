@@ -172,7 +172,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateDeviceDependentR
 	auto createDXRResources = createAssetsTask.then([this]() {
 
 		// Create the acceleration structures
-		CreateAccelerationStructures<VertexPositionColor>();
+		CreateAccelerationStructures<VertexPositionNormalUV>();
 
 		ThrowIfFailed(m_commandList->Close());
 
@@ -204,24 +204,24 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateScene() {
 
 void SonarPropagation::Graphics::DXR::RayTracingRenderer::InitializeObjects() {
 
-	auto suzanneData = m_objectLibrary.LoadWavefront("./Assets/suzanne.obj");
+	//auto suzanneData = m_objectLibrary.LoadWavefront("./Assets/suzanne.obj");
 
-	auto cubeData = m_objectLibrary.LoadPredefined<VertexPositionNormalUV>(GetCubeVertices<VertexPositionNormalUV>(1,1,1), GetQuadIndices());
+	//auto cubeData = m_objectLibrary.LoadPredefined<VertexPositionNormalUV>(GetCubeVertices<VertexPositionNormalUV>(1,1,1), GetQuadIndices());
 		
-	auto tetData = m_objectLibrary.LoadPredefined<VertexPositionColor>(GetTetrahedronVertices<VertexPositionColor>(), GetTetrahedronIndices());
+	//auto tetData = m_objectLibrary.LoadPredefined<VertexPositionColor>(GetTetrahedronVertices<VertexPositionColor>(), GetTetrahedronIndices());
 
-	{
-		XMFLOAT3 position = { 2.f, 0.f, 0.f };
-		XMFLOAT4 scale = { 1.f, 1.f, 1.f , 1.f };
-		XMFLOAT4 rotation = { 0.f, 0.f, 0.f, 1.f };
+	//{
+	//	XMFLOAT3 position = { 2.f, 0.f, 0.f };
+	//	XMFLOAT4 scale = { 1.f, 1.f, 1.f , 1.f };
+	//	XMFLOAT4 rotation = { 0.f, 0.f, 0.f, 1.f };
 
-		Scene::Transform transform = { position,rotation,scale };
-		transform.SetParent(nullptr, nullptr);
-		auto reflection = new Scene::SoundReflector(transform, tetData, ObjectType::Object);
+	//	Scene::Transform transform = { position,rotation,scale };
+	//	transform.SetParent(nullptr, nullptr);
+	//	auto reflection = new Scene::SoundReflector(transform, tetData, ObjectType::Object);
 
-		m_scene.AddObject(reflection);
+	//	m_scene.AddObject(reflection);
 
-	}
+	//}
 	//{
 	//	XMFLOAT3 position = { -2.f, 0.f, 0.f };
 	//	XMFLOAT4 scale = { 2.f, 2.f, 2.f , 1.f };
@@ -479,24 +479,20 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateRaytracingPipeli
 	m_rayGenLibrary = CompileShader(L"RayGen.hlsl");
 	m_missLibrary = CompileShader(L"Miss.hlsl");
 	m_hitLibrary = CompileShader(L"Hit.hlsl");
-	m_shadowLibrary = CompileShader(L"Shadow.hlsl");
 
 	pipeline.AddLibrary(m_rayGenLibrary.Get(), { L"CameraRayGen" });
 	pipeline.AddLibrary(m_missLibrary.Get(), { L"MeshMiss" });
 	pipeline.AddLibrary(m_hitLibrary.Get(), { L"MeshClosestHit"});
-	pipeline.AddLibrary(m_shadowLibrary.Get(), { L"ShadowClosestHit" });
 
 	m_rayGenSignature = CreateRayGenSignature();
 	m_missSignature = CreateMissSignature();
 	m_hitSignature = CreateHitSignature();
 
 	pipeline.AddHitGroup(L"MeshHitGroup", L"MeshClosestHit");
-	pipeline.AddHitGroup(L"ShadowHitGroup", L"ShadowClosestHit");
 
 	pipeline.AddRootSignatureAssociation(m_rayGenSignature.Get(), { L"CameraRayGen" });
 	pipeline.AddRootSignatureAssociation(m_missSignature.Get(), { L"MeshMiss" });
 	pipeline.AddRootSignatureAssociation(m_hitSignature.Get(), { L"MeshHitGroup"});
-	pipeline.AddRootSignatureAssociation(m_missSignature.Get(), { L"ShadowHitGroup" });
 
 
 	pipeline.SetMaxPayloadSize(m_dxrConfig.m_maxPayloadSize); // RGB + distance

@@ -265,15 +265,11 @@ namespace SonarPropagation{
 				ComPtr<IDxcBlob>									m_rayGenLibrary;
 				ComPtr<IDxcBlob>									m_hitLibrary;
 				ComPtr<IDxcBlob>									m_missLibrary;
-				ComPtr<IDxcBlob>									m_shadowLibrary;
-				ComPtr<IDxcBlob> 								    m_reflectionLibrary;
 
 				// Root Signatures for Shader:
 				ComPtr<ID3D12RootSignature>							m_rayGenSignature;
 				ComPtr<ID3D12RootSignature>							m_hitSignature;
 				ComPtr<ID3D12RootSignature>							m_missSignature;
-				ComPtr<ID3D12RootSignature>							m_shadowSignature;
-				ComPtr<ID3D12RootSignature>							m_reflectionSignature;	
 
 				// Instances: 
 
