@@ -266,7 +266,6 @@
     <ClInclude Include="Common\DirectXHelper.h" />
     <ClInclude Include="Common\ImGuiManager.h" />
     <ClInclude Include="Common\thirdparty\imgui_impl_uwp.h" />
-    <ClInclude Include="DXR\DetectableObject.h" />
     <ClInclude Include="DXR\DXRHelpers\Common.h" />
     <ClInclude Include="DXR\DXRHelpers\MeshUtils.h" />
     <ClInclude Include="DXR\DXRHelpers\ShaderUtils.h" />
@@ -284,8 +283,6 @@
     <ClInclude Include="DXR\Nvidia\nv_helpers_dx12\TopLevelASGenerator.h" />
     <ClInclude Include="DXR\RayTracingConfig.h" />
     <ClInclude Include="DXR\RayTracingRenderer.h" />
-    <ClInclude Include="DXR\SoundReceiver.h" />
-    <ClInclude Include="DXR\SoundSource.h" />
     <ClInclude Include="SonarPropagationMain.h" />
     <ClInclude Include="Common\StepTimer.h" />
     <ClInclude Include="Content\ShaderStructures.h" />
@@ -298,7 +295,6 @@
     <ClCompile Include="Common\DeviceResources.cpp" />
     <ClCompile Include="Common\ImGuiManager.cpp" />
     <ClCompile Include="Common\thirdparty\imgui_impl_uwp.cpp" />
-    <ClCompile Include="DXR\DetectableObject.cpp" />
     <ClCompile Include="DXR\DXRHelpers\MeshUtils.cpp" />
     <ClCompile Include="DXR\DXRHelpers\ShaderUtils.cpp" />
     <ClCompile Include="DXR\Nvidia\DXSample.cpp" />
@@ -308,8 +304,6 @@
     <ClCompile Include="DXR\Nvidia\nv_helpers_dx12\ShaderBindingTableGenerator.cpp" />
     <ClCompile Include="DXR\Nvidia\nv_helpers_dx12\TopLevelASGenerator.cpp" />
     <ClCompile Include="DXR\RayTracingRenderer.cpp" />
-    <ClCompile Include="DXR\SoundReciever.cpp" />
-    <ClCompile Include="DXR\SoundSource.cpp" />
     <ClCompile Include="SonarPropagationMain.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
