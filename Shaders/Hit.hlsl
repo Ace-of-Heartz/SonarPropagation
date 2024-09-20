@@ -53,28 +53,28 @@ void QuadClosestHit(inout HitInfo payload, Attributes attrib)
 
     float3 lightDir = normalize(lightPos - worldOrigin);
 
-    RayDesc shadowRay;
-    shadowRay.Origin = worldOrigin;
-    shadowRay.Direction = lightDir;
-    shadowRay.TMin = 0.01;
-    shadowRay.TMax = 10000;
+    //RayDesc shadowRay;
+    //shadowRay.Origin = worldOrigin;
+    //shadowRay.Direction = lightDir;
+    //shadowRay.TMin = 0.01;
+    //shadowRay.TMax = 10000;
 
-    ShadowHitInfo shadowPayload;
+    //ShadowHitInfo shadowPayload;
 
-    shadowPayload.isHit = false;
+    //shadowPayload.isHit = false;
 
-    TraceRay(
-    SceneBVH,
-    RAY_FLAG_NONE,
-    0xFF, // No mask
-    1,
-    0,
-    1,
-    shadowRay,
-    shadowPayload
-  );
+  //  TraceRay(
+  //  SceneBVH,
+  //  RAY_FLAG_NONE,
+  //  0xFF, // No mask
+  //  1,
+  //  0,
+  //  1,
+  //  shadowRay,
+  //  shadowPayload
+  //);
 
-    float factor = shadowPayload.isHit ? 0.3 : 1.0;
+    //float factor = shadowPayload.isHit ? 0.3 : 1.0;
   
     float3 barycentrics = float3(1.f - attrib.bary.x - attrib.bary.y, attrib.bary.x, attrib.bary.y);
 
@@ -83,44 +83,44 @@ void QuadClosestHit(inout HitInfo payload, Attributes attrib)
     float3 hitColor = float3(0., 1., 0.);
 
     
-    payload.colorAndDistance = float4(hitColor * factor, RayTCurrent());
+    payload.colorAndDistance = float4(hitColor, RayTCurrent());
 }
 
-[shader("closesthit")]
-void QuadReflectionClosestHit(inout HitInfo payload, Attributes attrib)
-{
-    float3 normal = float3(0.f, 1.0f, 0.f);
+//[shader("closesthit")]
+//void QuadReflectionClosestHit(inout HitInfo payload, Attributes attrib)
+//{
+//    float3 normal = float3(0.f, 1.0f, 0.f);
 
-    float3 reflectionDir = normalize(reflect(WorldRayDirection().xyz, normal));
+//    float3 reflectionDir = normalize(reflect(WorldRayDirection().xyz, normal));
 
-    float3 worldOrigin = WorldRayOrigin() + RayTCurrent() * WorldRayDirection();
+//    float3 worldOrigin = WorldRayOrigin() + RayTCurrent() * WorldRayDirection();
 
-    RayDesc reflectionRay;
-    reflectionRay.Origin = worldOrigin;
-    reflectionRay.Direction = reflectionDir;
-    reflectionRay.TMin = 0.01;
-    reflectionRay.TMax = 10000;
+//    RayDesc reflectionRay;
+//    reflectionRay.Origin = worldOrigin;
+//    reflectionRay.Direction = reflectionDir;
+//    reflectionRay.TMin = 0.01;
+//    reflectionRay.TMax = 10000;
 
-    ReflectionHitInfo reflectionPayload;
+//    ReflectionHitInfo reflectionPayload;
 
-    float3 barycentrics = float3(1.f - attrib.bary.x - attrib.bary.y, attrib.bary.x, attrib.bary.y);
-    //float3 hitColor = R * barycentrics.x + G * barycentrics.y + B * barycentrics.z;
-    float3 hitColor = float3(0., 0., 1.);
+//    float3 barycentrics = float3(1.f - attrib.bary.x - attrib.bary.y, attrib.bary.x, attrib.bary.y);
+//    //float3 hitColor = R * barycentrics.x + G * barycentrics.y + B * barycentrics.z;
+//    float3 hitColor = float3(0., 0., 1.);
     
-    reflectionPayload.color = float4(hitColor, 1.0f);
+//    reflectionPayload.color = float4(hitColor, 1.0f);
 
-    TraceRay(
-  SceneBVH,
-  RAY_FLAG_NONE,
-  0xFF,
-  0,
-  0,
-  1,
-  reflectionRay,
-  reflectionPayload
-  );
+//    TraceRay(
+//  SceneBVH,
+//  RAY_FLAG_NONE,
+//  0xFF,
+//  0,
+//  0,
+//  1,
+//  reflectionRay,
+//  reflectionPayload
+//  );
 
-    float3 refl = reflectionPayload.color.xyz;
+//    float3 refl = reflectionPayload.color.xyz;
 
-    payload.colorAndDistance = float4(refl, RayTCurrent());
-}
+//    payload.colorAndDistance = float4(refl, RayTCurrent());
+//}

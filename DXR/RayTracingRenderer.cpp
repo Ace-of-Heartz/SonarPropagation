@@ -430,15 +430,15 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateAccelerationStru
 				{m_tetrahedronIndexBuffer.Get(), m_tetrahedronIndexBufferView.SizeInBytes / sizeof(UINT)}
 			}
 		);
-	AccelerationStructureBuffers planeBottomLevelBuffers =
-		CreateBottomLevelAS<V>(
-			{
-				{m_quadVertexBuffer.Get(), m_tetrahedronVertexBufferView.SizeInBytes / sizeof(V)}
-			},
-			{
-				{m_quadIndexBuffer.Get(), m_quadIndexBufferView.SizeInBytes / sizeof(UINT)}
-			}
-		);
+	//AccelerationStructureBuffers planeBottomLevelBuffers =
+	//	CreateBottomLevelAS<V>(
+	//		{
+	//			{m_quadVertexBuffer.Get(), m_tetrahedronVertexBufferView.SizeInBytes / sizeof(V)}
+	//		},
+	//		{
+	//			{m_quadIndexBuffer.Get(), m_quadIndexBufferView.SizeInBytes / sizeof(UINT)}
+	//		}
+	//	);
 
 	CreateInstances(
 		{
@@ -446,7 +446,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateAccelerationStru
 		}
 		);
 
-	m_instances.push_back({ planeBottomLevelBuffers.pResult, XMMatrixTranslation(0.f,-2.5f,0.f) });
+	//m_instances.push_back({ planeBottomLevelBuffers.pResult, XMMatrixTranslation(0.f,-2.5f,0.f) });
 
 	CreateTopLevelAS(m_instances, false);
 
@@ -522,7 +522,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateTopLevelAS(const
 		for (size_t i = 0; i < instances.size(); i++) {
 			m_topLevelASGenerator.AddInstance(
 				instances[i].first.Get(), instances[i].second, static_cast<UINT>(i),
-				static_cast<UINT>(i * 2));
+				static_cast<UINT>(i));
 		}
 
 		UINT64 scratchSize, resultSize, instanceDescsSize;
@@ -610,14 +610,14 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateRaytracingPipeli
 	m_rayGenLibrary = CompileShader(L"RayGen.hlsl");
 	m_missLibrary = CompileShader(L"Miss.hlsl");
 	m_hitLibrary = CompileShader(L"Hit.hlsl");
-	m_shadowLibrary = CompileShader(L"Shadow.hlsl");
-	m_reflectionLibrary = CompileShader(L"Reflection.hlsl");
+	//m_shadowLibrary = CompileShader(L"Shadow.hlsl");
+	//m_reflectionLibrary = CompileShader(L"Reflection.hlsl");
 
 	pipeline.AddLibrary(m_rayGenLibrary.Get(), { L"RayGen" });
 	pipeline.AddLibrary(m_missLibrary.Get(), { L"Miss" });
-	pipeline.AddLibrary(m_hitLibrary.Get(), { L"ClosestHit",L"QuadClosestHit",L"QuadReflectionClosestHit" });
-	pipeline.AddLibrary(m_shadowLibrary.Get(), { L"ShadowClosestHit",L"ShadowMiss" });
-	pipeline.AddLibrary(m_reflectionLibrary.Get(), { L"ReflectionClosestHit", L"ReflectionMiss" });
+	pipeline.AddLibrary(m_hitLibrary.Get(), { L"ClosestHit",/*L"QuadClosestHit",*//*L"QuadReflectionClosestHit"*/ });
+	//pipeline.AddLibrary(m_shadowLibrary.Get(), { L"ShadowClosestHit",L"ShadowMiss" });
+	//pipeline.AddLibrary(m_reflectionLibrary.Get(), { L"ReflectionClosestHit", L"ReflectionMiss" });
 
 	m_rayGenSignature = CreateRayGenSignature();
 	m_missSignature = CreateMissSignature();
@@ -626,16 +626,16 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateRaytracingPipeli
 	//m_reflectionSignature = CreateHitSignature();
 
 	pipeline.AddHitGroup(L"HitGroup", L"ClosestHit");
-	pipeline.AddHitGroup(L"QuadHitGroup", L"QuadClosestHit");
-	pipeline.AddHitGroup(L"QuadReflectionHitGroup", L"QuadReflectionClosestHit");
-	pipeline.AddHitGroup(L"ShadowHitGroup", L"ShadowClosestHit");
-	pipeline.AddHitGroup(L"ReflectionHitGroup", L"ReflectionClosestHit");
+	//pipeline.AddHitGroup(L"QuadHitGroup", L"QuadClosestHit");
+	//pipeline.AddHitGroup(L"QuadReflectionHitGroup",L"QuadReflectionClosestHit");
+	//pipeline.AddHitGroup(L"ShadowHitGroup", L"ShadowClosestHit");
+	//pipeline.AddHitGroup(L"ReflectionHitGroup", L"ReflectionClosestHit");
 
 	pipeline.AddRootSignatureAssociation(m_rayGenSignature.Get(), { L"RayGen" });
-	pipeline.AddRootSignatureAssociation(m_missSignature.Get(), { L"Miss",L"ShadowMiss", L"ReflectionMiss" });
-	pipeline.AddRootSignatureAssociation(m_hitSignature.Get(), { L"HitGroup",	L"QuadHitGroup", L"QuadReflectionHitGroup" });
-	pipeline.AddRootSignatureAssociation(m_shadowSignature.Get(), { L"ShadowHitGroup" });
-	pipeline.AddRootSignatureAssociation(m_reflectionSignature.Get(), { L"ReflectionHitGroup" });
+	pipeline.AddRootSignatureAssociation(m_missSignature.Get(), { L"Miss",/*L"ShadowMiss",*/ /*L"ReflectionMiss" */ });
+	pipeline.AddRootSignatureAssociation(m_hitSignature.Get(), { L"HitGroup",	/*L"QuadHitGroup",*/ /*L"QuadReflectionHitGroup"*/ });
+	//pipeline.AddRootSignatureAssociation(m_shadowSignature.Get(), { L"ShadowHitGroup" });
+	//pipeline.AddRootSignatureAssociation(m_reflectionSignature.Get(), { L"ReflectionHitGroup" });
 
 	pipeline.SetMaxPayloadSize(m_dxrConfig.m_maxPayloadSize); // RGB + distance
 
@@ -723,16 +723,16 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateShaderBindingTab
 	m_sbtHelper.AddMissProgram(L"Miss", {});
 
 
-	if (m_useReflections) {
+	/*if (m_useReflections) {
 		m_sbtHelper.AddMissProgram(L"ReflectionMiss", {});
 	}
 	else {
 		m_sbtHelper.AddMissProgram(L"ShadowMiss", {});
-	}
+	}*/
 
 	auto constNum = m_instances.size();
 
-	for (int i = 0; i < constNum - 1; ++i) {
+	for (int i = 0; i < constNum ; ++i) {
 		m_sbtHelper.AddHitGroup(
 			L"HitGroup",
 			{
@@ -741,34 +741,34 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateShaderBindingTab
 				//(void*)(m_perInstanceConstantBuffers[i]->GetGPUVirtualAddress()),
 				heapPointer,
 			});
-		if (m_useReflections) {
-			m_sbtHelper.AddHitGroup(L"ReflectionHitGroup", {});
-		}
-		else {
-			m_sbtHelper.AddHitGroup(L"ShadowHitGroup", {});
-		}
+		//if (m_useReflections) {
+		//	m_sbtHelper.AddHitGroup(L"ReflectionHitGroup", {});
+		//}
+		//else {
+		//	m_sbtHelper.AddHitGroup(L"ShadowHitGroup", {});
+		//}
 	}
 
-	if (m_useReflections) {
-		m_sbtHelper.AddHitGroup(
-			L"QuadReflectionHitGroup",
-			{
-				(void*)(m_quadVertexBuffer->GetGPUVirtualAddress()),
-				(void*)(m_quadIndexBuffer->GetGPUVirtualAddress()),
-				//(void*)(m_perInstanceConstantBuffers[constNum - 1]->GetGPUVirtualAddress()),
-				heapPointer,
-			});
-	}
-	else {
-		m_sbtHelper.AddHitGroup(
-			L"QuadHitGroup",
-			{
-				(void*)(m_quadVertexBuffer->GetGPUVirtualAddress()),
-				(void*)(m_quadIndexBuffer->GetGPUVirtualAddress()),
-				//(void*)(m_perInstanceConstantBuffers[constNum - 1]->GetGPUVirtualAddress()),
-				heapPointer,
-			});
-	}
+	//if (m_useReflections) {
+	//	m_sbtHelper.AddHitGroup(
+	//		L"QuadReflectionHitGroup",
+	//		{
+	//			(void*)(m_quadVertexBuffer->GetGPUVirtualAddress()),
+	//			(void*)(m_quadIndexBuffer->GetGPUVirtualAddress()),
+	//			//(void*)(m_perInstanceConstantBuffers[constNum - 1]->GetGPUVirtualAddress()),
+	//			heapPointer,
+	//		});
+	//}
+	//else {
+		//m_sbtHelper.AddHitGroup(
+		//	L"QuadHitGroup",
+		//	{
+		//		(void*)(m_quadVertexBuffer->GetGPUVirtualAddress()),
+		//		(void*)(m_quadIndexBuffer->GetGPUVirtualAddress()),
+		//		//(void*)(m_perInstanceConstantBuffers[constNum - 1]->GetGPUVirtualAddress()),
+		//		heapPointer,
+		//	});
+	//}
 	// Shadow hit group is added after each addition of the original hitgroup, 
 	// so that all geometry can be hit!
 	uint32_t sbtSize = m_sbtHelper.ComputeSBTSize();
