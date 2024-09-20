@@ -14,13 +14,18 @@
 #include <concrt.h>
 #include <dxcapi.h>
 
-// 
+#ifndef TINYOBJLOADER_IMPLEMENTATION
+#define TINYOBJLOADER_IMPLEMENTATION
+#endif
+
 #include "Common\StepTimer.h"
 #include "Common\Camera.h"
 #include "Common\CameraController.h"
 #include "Common\DeviceResources.h"
 #include "Content\ShaderStructures.h"
 #include "Common\StepTimer.h"
+#include "Common\ObjectLibrary.h"
+#include "Common\Scene.h"
 
 #include "DXR\Nvidia\nvidia_include.h"
 #include "DXR\DXRHelpers\ShaderUtils.h"

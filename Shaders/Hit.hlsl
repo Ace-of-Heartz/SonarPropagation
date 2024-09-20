@@ -18,13 +18,13 @@ struct ReflectionHitInfo
     float4 color;
 };
 
-// Constant buffer for individual instance colors
-cbuffer Colors : register(b0)
-{
-    float3 R;
-    float3 G;
-    float3 B;
-}
+//// Constant buffer for individual instance colors
+//cbuffer Colors : register(b0)
+//{
+//    float3 R;
+//    float3 G;
+//    float3 B;
+//}
 
 StructuredBuffer<STriVertex> BTriVertex : register(t0); // Vertex buffer
 StructuredBuffer<int> indices : register(t1); //Index buffer
@@ -36,8 +36,11 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
 {
     float3 barycentrics = float3(1.f - attrib.bary.x - attrib.bary.y, attrib.bary.x, attrib.bary.y);
 
-    float3 hitColor = R * barycentrics.x + G * barycentrics.y + B * barycentrics.z;
-
+    
+    
+    //float3 hitColor = R * barycentrics.x + G * barycentrics.y + B * barycentrics.z;
+    float3 hitColor = float3(1.f, 0.f, 0.f);
+    
     payload.colorAndDistance = float4(hitColor, RayTCurrent());
 }
 
@@ -75,8 +78,11 @@ void QuadClosestHit(inout HitInfo payload, Attributes attrib)
   
     float3 barycentrics = float3(1.f - attrib.bary.x - attrib.bary.y, attrib.bary.x, attrib.bary.y);
 
-    float3 hitColor = R * barycentrics.x + G * barycentrics.y + B * barycentrics.z;
+    
+    //float3 hitColor = R * barycentrics.x + G * barycentrics.y + B * barycentrics.z;
+    float3 hitColor = float3(0., 1., 0.);
 
+    
     payload.colorAndDistance = float4(hitColor * factor, RayTCurrent());
 }
 
@@ -98,8 +104,9 @@ void QuadReflectionClosestHit(inout HitInfo payload, Attributes attrib)
     ReflectionHitInfo reflectionPayload;
 
     float3 barycentrics = float3(1.f - attrib.bary.x - attrib.bary.y, attrib.bary.x, attrib.bary.y);
-    float3 hitColor = R * barycentrics.x + G * barycentrics.y + B * barycentrics.z;
-
+    //float3 hitColor = R * barycentrics.x + G * barycentrics.y + B * barycentrics.z;
+    float3 hitColor = float3(0., 0., 1.);
+    
     reflectionPayload.color = float4(hitColor, 1.0f);
 
     TraceRay(

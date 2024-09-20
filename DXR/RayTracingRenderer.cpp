@@ -240,7 +240,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateDeviceDependentR
 
 		CreateRaytracingPipeline();
 
-		CreatePerInstanceConstantBuffers();
+		//CreatePerInstanceConstantBuffers();
 
 		CreateRaytracingOutputBuffer();
 
@@ -579,7 +579,7 @@ ComPtr<ID3D12RootSignature> SonarPropagation::Graphics::DXR::RayTracingRenderer:
 
 	rsc.AddRootParameter(D3D12_ROOT_PARAMETER_TYPE_SRV, 0);
 	rsc.AddRootParameter(D3D12_ROOT_PARAMETER_TYPE_SRV, 1);
-	rsc.AddRootParameter(D3D12_ROOT_PARAMETER_TYPE_CBV, 0);
+	//rsc.AddRootParameter(D3D12_ROOT_PARAMETER_TYPE_CBV, 0);
 
 	rsc.AddHeapRangesParameter(
 		{
@@ -730,7 +730,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateShaderBindingTab
 		m_sbtHelper.AddMissProgram(L"ShadowMiss", {});
 	}
 
-	auto constNum = m_perInstanceConstantBuffers.size();
+	auto constNum = m_instances.size();
 
 	for (int i = 0; i < constNum - 1; ++i) {
 		m_sbtHelper.AddHitGroup(
@@ -738,7 +738,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateShaderBindingTab
 			{
 				(void*)(m_tetrahedronVertexBuffer->GetGPUVirtualAddress()),
 				(void*)(m_tetrahedronIndexBuffer->GetGPUVirtualAddress()),
-				(void*)(m_perInstanceConstantBuffers[i]->GetGPUVirtualAddress()),
+				//(void*)(m_perInstanceConstantBuffers[i]->GetGPUVirtualAddress()),
 				heapPointer,
 			});
 		if (m_useReflections) {
@@ -755,7 +755,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateShaderBindingTab
 			{
 				(void*)(m_quadVertexBuffer->GetGPUVirtualAddress()),
 				(void*)(m_quadIndexBuffer->GetGPUVirtualAddress()),
-				(void*)(m_perInstanceConstantBuffers[constNum - 1]->GetGPUVirtualAddress()),
+				//(void*)(m_perInstanceConstantBuffers[constNum - 1]->GetGPUVirtualAddress()),
 				heapPointer,
 			});
 	}
@@ -765,7 +765,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateShaderBindingTab
 			{
 				(void*)(m_quadVertexBuffer->GetGPUVirtualAddress()),
 				(void*)(m_quadIndexBuffer->GetGPUVirtualAddress()),
-				(void*)(m_perInstanceConstantBuffers[constNum - 1]->GetGPUVirtualAddress()),
+				//(void*)(m_perInstanceConstantBuffers[constNum - 1]->GetGPUVirtualAddress()),
 				heapPointer,
 			});
 	}
