@@ -96,23 +96,25 @@ namespace SonarPropagation {
 					~SoundReflector();
 
 					void ProcessObject() override;
+					ObjectType GetType() const { return m_type; };
 
 				private:
 					Model* m_model;
 					ObjectType m_type; 
+					
 				};
 
 				Scene();
 				~Scene();
 
-				void AddObject(Object* object) {
+				void AddObject(SoundReflector* object) {
 					m_objects.push_back(object);
 					object->m_transform.SetParent(nullptr, nullptr);
 				}
 				
 				void GetInstanceInformation() const;
 
-				std::vector<Object*> m_objects;
+				std::vector<SoundReflector*> m_objects;
 
 			};
 

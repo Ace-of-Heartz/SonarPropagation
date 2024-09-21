@@ -86,10 +86,52 @@ namespace SonarPropagation
 
 					return &m_objects[m_objects.size()-1];
 				}
+
+				template<typename V>
+				Scene::Model* LoadPredefined(const std::vector<V> vertices)
+				{
+					UINT bufferSize = vertices.size() * sizeof(V);
+
+					BufferData bufferData;
+					{
+						ThrowIfFailed(
+							m_device->CreateCommittedResource(
+								&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+								D3D12_HEAP_FLAG_NONE,
+								&CD3DX12_RESOURCE_DESC::Buffer(bufferSize),
+								D3D12_RESOURCE_STATE_GENERIC_READ,
+								nullptr,
+								IID_PPV_ARGS(&(bufferData.vertexBuffer))
+							)
+						);
+
+						UINT8* pVertexDataBegin;
+						CD3DX12_RANGE readRange(0, 0);
+
+						ThrowIfFailed(bufferData.vertexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin)));
+						memcpy(pVertexDataBegin, vertices.data(), bufferSize);
+						bufferData.vertexBuffer->Unmap(0, nullptr);
+
+						bufferData.vertexBufferView.BufferLocation = bufferData.vertexBuffer->GetGPUVirtualAddress();
+						bufferData.vertexBufferView.StrideInBytes = sizeof(V);
+						bufferData.vertexBufferView.SizeInBytes = bufferSize;
+
+						//NAME_D3D12_OBJECT(model->m_bufferData.vertexBuffer);
+					}
+
+					auto model = Scene::Model(bufferData);
+
+					m_objects.push_back(model);
+
+					return &m_objects[m_objects.size() - 1];
+				}
+
+
 				std::vector<Scene::Model> m_objects;
 
 				ID3D12Device* m_device;
 			};
+
 		}
 	}
 

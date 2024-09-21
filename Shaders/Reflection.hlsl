@@ -18,5 +18,5 @@ void ReflectionClosestHit(inout ReflectionHitInfo hit, Attributes attrib)
 [shader("miss")]
 void ReflectionMiss(inout ReflectionHitInfo hit : SV_RayPayload)
 {
-    //hit.color = float4(0.0f,0.0f,1.0f,1.0f);
+    hit.color = float4(0.0f,0.0f,1.0f,1.0f);
 }

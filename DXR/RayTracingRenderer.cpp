@@ -1,6 +1,7 @@
 
 #include "pch.h"
 #include "RayTracingRenderer.h"
+#include <ResourceUploadBatch.h>
 
 
 
@@ -140,17 +141,17 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateDeviceDependentR
 		InitializeObjects();
 		CreateScene();
 
-		// Create a descriptor heap for the constant buffers.
-		{
-			D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
-			heapDesc.NumDescriptors = DX::c_frameCount;
-			heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-			// This flag indicates that this descriptor heap can be bound to the pipeline and that descriptors contained in it can be referenced by a root table.
-			heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-			ThrowIfFailed(d3dDevice->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&m_cbvHeap)));
+		//// Create a descriptor heap for the constant buffers.
+		//{
+		//	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
+		//	heapDesc.NumDescriptors = DX::c_frameCount;
+		//	heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+		//	// This flag indicates that this descriptor heap can be bound to the pipeline and that descriptors contained in it can be referenced by a root table.
+		//	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+		//	ThrowIfFailed(d3dDevice->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&m_cbvHeap)));
 
-			NAME_D3D12_OBJECT(m_cbvHeap);
-		}
+		//	NAME_D3D12_OBJECT(m_cbvHeap);
+		//}
 
 		{
 			D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
@@ -204,61 +205,31 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateScene() {
 
 void SonarPropagation::Graphics::DXR::RayTracingRenderer::InitializeObjects() {
 
-	//auto suzanneData = m_objectLibrary.LoadWavefront("./Assets/suzanne.obj");
+	auto cubeData = m_objectLibrary.LoadPredefined<VertexPositionNormalUV>(GetCubeVertices<VertexPositionNormalUV>(1, 1, 1), GetCubeIndices());
 
-	//auto cubeData = m_objectLibrary.LoadPredefined<VertexPositionNormalUV>(GetCubeVertices<VertexPositionNormalUV>(1,1,1), GetQuadIndices());
-		
-	//auto tetData = m_objectLibrary.LoadPredefined<VertexPositionColor>(GetTetrahedronVertices<VertexPositionColor>(), GetTetrahedronIndices());
+	{
+		XMFLOAT3 position = { 2.f, 0.f, 0.f };
+		XMFLOAT4 scale = { 1.f, 1.f, 1.f , 1.f };
+		XMFLOAT4 rotation = { 0.f, g_XMPi[0] / 4, 0.f, 1.f };
 
-	//{
-	//	XMFLOAT3 position = { 2.f, 0.f, 0.f };
-	//	XMFLOAT4 scale = { 1.f, 1.f, 1.f , 1.f };
-	//	XMFLOAT4 rotation = { 0.f, 0.f, 0.f, 1.f };
+		Scene::Transform transform = { position,rotation,scale };
+		transform.SetParent(nullptr, nullptr);
+		auto reflection = new Scene::SoundReflector(transform, cubeData, ObjectType::Object);
 
-	//	Scene::Transform transform = { position,rotation,scale };
-	//	transform.SetParent(nullptr, nullptr);
-	//	auto reflection = new Scene::SoundReflector(transform, tetData, ObjectType::Object);
+		m_scene.AddObject(reflection);
 
-	//	m_scene.AddObject(reflection);
+	}
+	{
+		XMFLOAT3 position = { -2.f, 0.f, 0.f };
+		XMFLOAT4 scale = { 2.f, 2.f, 2.f , 1.f };
+		XMFLOAT4 rotation = { 0.f, 0.f, 0.f, 1.f };
 
-	//}
-	//{
-	//	XMFLOAT3 position = { -2.f, 0.f, 0.f };
-	//	XMFLOAT4 scale = { 2.f, 2.f, 2.f , 1.f };
-	//	XMFLOAT4 rotation = { 0.f, 0.f, 0.f, 1.f };
+		Scene::Transform transform = { position,rotation,scale };
+		transform.SetParent(nullptr, nullptr);
+		auto reflection = new Scene::SoundReflector(transform, cubeData, ObjectType::Object);
 
-	//	Scene::Transform transform = { position,rotation,scale };
-	//	transform.SetParent(nullptr, nullptr);
-	//	auto reflection = new Scene::SoundReflector(transform, cubeData, ObjectType::Object);
-
-	//	m_scene.AddObject(reflection);
-	//}
-	//{
-	//	XMFLOAT3 position = { 0.f, 0.f, 5.f };
-	//	XMFLOAT4 scale = { 1.f, 1.f, 1.f , 1.f };
-	//	XMFLOAT4 rotation = { 0.f, g_XMHalfPi[0], 0.f, 1.f};
-
-	//	Scene::Transform transform = { position,rotation,scale };
-	//	transform.SetParent(nullptr, nullptr);
-	//	auto reflection = new Scene::SoundReflector(transform, cubeData, ObjectType::Object);
-
-	//	m_scene.AddObject(reflection);
-	//}
-	//{
-	//	XMFLOAT3 position = { 5.f, 0.f, 5.f };
-	//	XMFLOAT4 scale = { 1.f, 1.f, 1.f , 1.f };
-	//	XMFLOAT4 rotation = { 0.f, g_XMHalfPi[0], 0.f, 1.f };
-
-	//	Scene::Transform transform = { position,rotation,scale };
-	//	transform.SetParent(nullptr, nullptr);
-	//	auto reflection = new Scene::SoundReflector(transform, suzanneData, ObjectType::Object);
-
-	//	m_scene.AddObject(reflection);
-	//}
-
-	
-
-
+		m_scene.AddObject(reflection);
+	}
 }
 
 void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateWindowSizeDependentResources() {
@@ -398,7 +369,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateTopLevelAS(const
 		for (size_t i = 0; i < instances.size(); i++) {
 			m_topLevelASGenerator.AddInstance(
 				instances[i].first.Get(), instances[i].second, static_cast<UINT>(i),
-				static_cast<UINT>(i * 2));
+				static_cast<UINT>(0));
 		}
 
 		UINT64 scratchSize, resultSize, instanceDescsSize;
@@ -480,9 +451,11 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateRaytracingPipeli
 	m_missLibrary = CompileShader(L"Miss.hlsl");
 	m_hitLibrary = CompileShader(L"Hit.hlsl");
 
+
 	pipeline.AddLibrary(m_rayGenLibrary.Get(), { L"CameraRayGen" });
 	pipeline.AddLibrary(m_missLibrary.Get(), { L"MeshMiss" });
 	pipeline.AddLibrary(m_hitLibrary.Get(), { L"MeshClosestHit"});
+
 
 	m_rayGenSignature = CreateRayGenSignature();
 	m_missSignature = CreateMissSignature();
@@ -493,6 +466,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateRaytracingPipeli
 	pipeline.AddRootSignatureAssociation(m_rayGenSignature.Get(), { L"CameraRayGen" });
 	pipeline.AddRootSignatureAssociation(m_missSignature.Get(), { L"MeshMiss" });
 	pipeline.AddRootSignatureAssociation(m_hitSignature.Get(), { L"MeshHitGroup"});
+
 
 
 	pipeline.SetMaxPayloadSize(m_dxrConfig.m_maxPayloadSize); // RGB + distance
@@ -524,6 +498,91 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateRaytracingOutput
 		&nv_helpers_dx12::kDefaultHeapProps, D3D12_HEAP_FLAG_NONE, &resDesc,
 		D3D12_RESOURCE_STATE_COPY_SOURCE, nullptr,
 		IID_PPV_ARGS(&m_outputResource)));
+}
+
+void SonarPropagation::Graphics::DXR::RayTracingRenderer::UploadTextureData() {
+	ResourceUploadBatch resourceUpload(m_deviceResources->GetD3DDevice());
+
+	resourceUpload.Begin();
+	for (int i = 0; i < m_textures.size(); ++i) {
+		auto texture = m_textures[i];
+		auto textureData = m_texturesDatas[i];
+
+		resourceUpload.Upload(texture.Get(), 0, &textureData, 1);
+		resourceUpload.Transition(
+			texture.Get(),
+			D3D12_RESOURCE_STATE_COPY_DEST,
+			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+	}
+
+	auto uploadResourcesFinished = resourceUpload.End(m_deviceResources->GetCommandQueue());
+
+	uploadResourcesFinished.wait();
+}
+
+
+
+void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateTextureDescriptors() {
+	m_resourceDescriptors = std::make_unique<DescriptorHeap>(
+		m_deviceResources->GetD3DDevice(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, m_textures.size());
+	for( int i = 0; i < m_textures.size(); ++i) {
+		auto texture = m_textures[i];
+		auto srv = m_resourceDescriptors->GetCpuHandle(i);
+		m_deviceResources->GetD3DDevice()->CreateShaderResourceView(texture.Get(), nullptr, srv);
+	}
+
+}
+
+void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateTextureResources() {
+
+
+	m_textures.resize(m_scene.m_objects.size());
+	static const uint32_t s_blackPixel = 0x00000000;
+	static const uint32_t s_whitePixel = 0xFFFFFFFF;
+
+	size_t i = 0;
+	for (auto& object : m_scene.m_objects)
+	{
+		
+		D3D12_RESOURCE_DESC txtDesc = {};
+		txtDesc.MipLevels = txtDesc.DepthOrArraySize = 1;
+		txtDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		txtDesc.Width = 2048;
+		txtDesc.Height = 2048;
+		txtDesc.SampleDesc.Count = 1;
+		txtDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+
+		CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_DEFAULT);
+
+		
+		DX::ThrowIfFailed(
+			m_dxrDevice->CreateCommittedResource(
+				&heapProps,
+				D3D12_HEAP_FLAG_NONE,
+				&txtDesc,
+				D3D12_RESOURCE_STATE_COPY_DEST,
+				nullptr,
+				IID_PPV_ARGS(m_textures[i].ReleaseAndGetAddressOf())));
+
+		D3D12_SUBRESOURCE_DATA textureData = {};
+		textureData.RowPitch = txtDesc.Width * 4;
+		textureData.SlicePitch = txtDesc.Height * txtDesc.Width * 4;
+
+		if (object->GetType() == ObjectType::Object)
+		{
+			textureData.pData = &s_blackPixel;
+		}
+		else {
+			textureData.pData = &s_whitePixel;
+		}
+
+
+
+
+		++i;
+		
+	}
+
 }
 
 void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateShaderResourceHeap() {
@@ -581,17 +640,23 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateShaderBindingTab
 	m_sbtHelper.AddMissProgram(L"MeshMiss", {});
 
 	for (auto& model : m_objectLibrary.m_objects) {
-		m_sbtHelper.AddHitGroup(
-			L"MeshHitGroup",
-			{
-				(void*)(model.m_bufferData.vertexBuffer->GetGPUVirtualAddress()),
-				(void*)(model.m_bufferData.indexBuffer->GetGPUVirtualAddress()),
-			});
-		m_sbtHelper.AddHitGroup(
-			L"ShadowHitGroup",
-			{
+		if (model.m_bufferData.indexBuffer)
+		{
+			m_sbtHelper.AddHitGroup(
+				L"MeshHitGroup",
+				{
+					(void*)(model.m_bufferData.vertexBuffer->GetGPUVirtualAddress()),
+					(void*)(model.m_bufferData.indexBuffer->GetGPUVirtualAddress()),
+				});
+		}
+		else {
+			m_sbtHelper.AddHitGroup(
+				L"MeshHitGroup",
+				{
+					(void*)(model.m_bufferData.vertexBuffer->GetGPUVirtualAddress()),
+				});
+		}
 
-			});
 	}
 
 	
@@ -690,12 +755,12 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::PopulateCommandListWit
 	{
 		// Set the graphics root signature and descriptor heaps to be used by this frame.
 		m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
-		ID3D12DescriptorHeap* ppHeaps[] = { m_cbvHeap.Get() };
-		m_commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
+		//ID3D12DescriptorHeap* ppHeaps[] = { /*m_cbvHeap.Get()*/ };
+		//m_commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 
 		// Bind the current frame's constant buffer to the pipeline.
-		CD3DX12_GPU_DESCRIPTOR_HANDLE gpuHandle(m_cbvHeap->GetGPUDescriptorHandleForHeapStart(), m_deviceResources->GetCurrentFrameIndex(), m_cbvDescriptorSize);
-		m_commandList->SetGraphicsRootDescriptorTable(0, gpuHandle);
+		//CD3DX12_GPU_DESCRIPTOR_HANDLE gpuHandle(m_cbvHeap->GetGPUDescriptorHandleForHeapStart(), m_deviceResources->GetCurrentFrameIndex(), m_cbvDescriptorSize);
+		//m_commandList->SetGraphicsRootDescriptorTable(0, gpuHandle);
 
 		// Set the viewport and scissor rectangle.
 		D3D12_VIEWPORT viewport = m_deviceResources->GetScreenViewport();

@@ -10,6 +10,7 @@
 #include "Common/ImGuiManager.h"
 #include "DXR/RayTracingConfig.h"
 #include "Common/ObjectLibrary.h"
+#include "DescriptorHeap.h"
 
 
 using namespace Microsoft::WRL;
@@ -157,6 +158,12 @@ namespace SonarPropagation{
 				/// </summary>
 				void CreateRaytracingOutputBuffer();
 
+				void CreateTextureResources();
+
+				void CreateTextureDescriptors();
+
+				void UploadTextureData();
+
 				/// <summary>
 				/// Creates the shader resource heap.
 				/// </summary>
@@ -271,7 +278,11 @@ namespace SonarPropagation{
 				ComPtr<ID3D12RootSignature>							m_hitSignature;
 				ComPtr<ID3D12RootSignature>							m_missSignature;
 
-				// Instances: 
+				// Photon Mapping Resources: 
+				std::vector<ComPtr<ID3D12Resource>>					m_textures;
+				std::vector<D3D12_SUBRESOURCE_DATA>			        m_texturesDatas;
+
+				std::unique_ptr<DescriptorHeap> m_resourceDescriptors;
 
 				// Camera: 
 
