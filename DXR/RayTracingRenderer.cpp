@@ -141,18 +141,6 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateDeviceDependentR
 		InitializeObjects();
 		CreateScene();
 
-		//// Create a descriptor heap for the constant buffers.
-		//{
-		//	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
-		//	heapDesc.NumDescriptors = DX::c_frameCount;
-		//	heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-		//	// This flag indicates that this descriptor heap can be bound to the pipeline and that descriptors contained in it can be referenced by a root table.
-		//	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-		//	ThrowIfFailed(d3dDevice->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&m_cbvHeap)));
-
-		//	NAME_D3D12_OBJECT(m_cbvHeap);
-		//}
-
 		{
 			D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
 			heapDesc.NumDescriptors = 1;
@@ -182,12 +170,18 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateDeviceDependentR
 		CreateRaytracingOutputBuffer();
 
 		m_camera.CreateCameraBuffer(m_dxrDevice);
-
 		m_cameraController.AddCamera(&m_camera);
 
 		CreateShaderResourceHeap();
 
 		CreateShaderBindingTable();
+
+		CreateTextureResources(); 
+		if(m_textures.size() != m_textureDatas.size()) {
+			throw std::logic_error("Texture resources and texture data mismatch");
+		}
+		UploadTextureData();
+		CreateTextureDescriptors();
 
 		m_imguiManager.InitImGui(DX::c_frameCount, m_deviceResources->GetBackBufferFormat(), m_dxrDevice.Get(), m_imguiHeap.Get());
 
@@ -504,16 +498,17 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::UploadTextureData() {
 	ResourceUploadBatch resourceUpload(m_deviceResources->GetD3DDevice());
 
 	resourceUpload.Begin();
-	for (int i = 0; i < m_textures.size(); ++i) {
+	for (int i = 0; i < m_textures.size() && i < m_textureDatas.size(); ++i) {
 		auto texture = m_textures[i];
-		auto textureData = m_texturesDatas[i];
 
-		resourceUpload.Upload(texture.Get(), 0, &textureData, 1);
+		resourceUpload.Upload(m_textures[i].Get(), 0, &m_textureDatas[i], 1);
 		resourceUpload.Transition(
 			texture.Get(),
 			D3D12_RESOURCE_STATE_COPY_DEST,
 			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 	}
+
+
 
 	auto uploadResourcesFinished = resourceUpload.End(m_deviceResources->GetCommandQueue());
 
@@ -525,7 +520,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::UploadTextureData() {
 void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateTextureDescriptors() {
 	m_resourceDescriptors = std::make_unique<DescriptorHeap>(
 		m_deviceResources->GetD3DDevice(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, m_textures.size());
-	for( int i = 0; i < m_textures.size(); ++i) {
+	for( int i = 0; i < m_textures.size() && i < m_textureDatas.size(); ++i) {
 		auto texture = m_textures[i];
 		auto srv = m_resourceDescriptors->GetCpuHandle(i);
 		m_deviceResources->GetD3DDevice()->CreateShaderResourceView(texture.Get(), nullptr, srv);
@@ -537,6 +532,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateTextureResources
 
 
 	m_textures.resize(m_scene.m_objects.size());
+	m_textureDatas.resize(m_scene.m_objects.size());
 	static const uint32_t s_blackPixel = 0x00000000;
 	static const uint32_t s_whitePixel = 0xFFFFFFFF;
 
@@ -564,6 +560,11 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateTextureResources
 				nullptr,
 				IID_PPV_ARGS(m_textures[i].ReleaseAndGetAddressOf())));
 
+		//TODO: make this resource transition work!!!!!! 
+		//m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
+		//	m_textures[i].Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST));
+		
+
 		D3D12_SUBRESOURCE_DATA textureData = {};
 		textureData.RowPitch = txtDesc.Width * 4;
 		textureData.SlicePitch = txtDesc.Height * txtDesc.Width * 4;
@@ -576,7 +577,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateTextureResources
 			textureData.pData = &s_whitePixel;
 		}
 
-
+		m_textureDatas[i] = textureData;
 
 
 		++i;
@@ -755,12 +756,6 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::PopulateCommandListWit
 	{
 		// Set the graphics root signature and descriptor heaps to be used by this frame.
 		m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
-		//ID3D12DescriptorHeap* ppHeaps[] = { /*m_cbvHeap.Get()*/ };
-		//m_commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
-
-		// Bind the current frame's constant buffer to the pipeline.
-		//CD3DX12_GPU_DESCRIPTOR_HANDLE gpuHandle(m_cbvHeap->GetGPUDescriptorHandleForHeapStart(), m_deviceResources->GetCurrentFrameIndex(), m_cbvDescriptorSize);
-		//m_commandList->SetGraphicsRootDescriptorTable(0, gpuHandle);
 
 		// Set the viewport and scissor rectangle.
 		D3D12_VIEWPORT viewport = m_deviceResources->GetScreenViewport();
@@ -780,7 +775,9 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::PopulateCommandListWit
 
 		m_commandList->OMSetRenderTargets(1, &renderTargetView, false, &depthStencilView);
 
-		std::vector<ID3D12DescriptorHeap*> heaps = { m_srvUavHeap.Get() };
+		std::vector<ID3D12DescriptorHeap*> heaps = { m_srvUavHeap.Get(),m_resourceDescriptors->Heap()};
+
+
 		m_commandList->SetDescriptorHeaps(static_cast<UINT>(heaps.size()),
 			heaps.data());
 

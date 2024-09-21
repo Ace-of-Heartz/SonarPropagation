@@ -238,9 +238,7 @@ namespace SonarPropagation{
 				Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList4>	m_commandList;
 				Microsoft::WRL::ComPtr<ID3D12RootSignature>			m_rootSignature;
 				Microsoft::WRL::ComPtr<ID3D12PipelineState>			m_pipelineState;
-				Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>		m_cbvHeap;
 
-				UINT												m_cbvDescriptorSize;
 				D3D12_RECT											m_scissorRect;
 
 				Microsoft::WRL::ComPtr<ID3D12Resource>				m_constantBuffer;
@@ -280,7 +278,7 @@ namespace SonarPropagation{
 
 				// Photon Mapping Resources: 
 				std::vector<ComPtr<ID3D12Resource>>					m_textures;
-				std::vector<D3D12_SUBRESOURCE_DATA>			        m_texturesDatas;
+				std::vector<D3D12_SUBRESOURCE_DATA>			        m_textureDatas;
 
 				std::unique_ptr<DescriptorHeap> m_resourceDescriptors;
 
