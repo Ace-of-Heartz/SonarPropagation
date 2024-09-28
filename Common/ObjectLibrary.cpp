@@ -4,7 +4,7 @@
 #include "thirdparty/tiny_obj_loader.h"
 
 
-Scene::Model* SonarPropagation::Graphics::Utils::ObjectLibrary::LoadWavefront(const std::string& filename) {
+size_t SonarPropagation::Graphics::Utils::ObjectLibrary::LoadWavefront(const std::string& filename) {
 	tinyobj::ObjReaderConfig readerConfig;
 
 	tinyobj::ObjReader reader;
@@ -43,21 +43,21 @@ Scene::Model* SonarPropagation::Graphics::Utils::ObjectLibrary::LoadWavefront(co
 				tinyobj::index_t idx;
 
 				idx = shapes[s].mesh.indices[index_offset + v];
-				vertex.pos.x = attrib.vertices[3 * size_t(idx.vertex_index) + 0];
-				vertex.pos.y = attrib.vertices[3 * size_t(idx.vertex_index) + 1];
-				vertex.pos.z = attrib.vertices[3 * size_t(idx.vertex_index) + 2];
+				vertex.posU.x = attrib.vertices[3 * size_t(idx.vertex_index) + 0];
+				vertex.posU.y = attrib.vertices[3 * size_t(idx.vertex_index) + 1];
+				vertex.posU.z = attrib.vertices[3 * size_t(idx.vertex_index) + 2];
 
 				// Check if `normal_index` is zero or positive. negative = no normal data
 				if (idx.normal_index >= 0) {
-					vertex.normal.x = attrib.normals[3 * size_t(idx.normal_index) + 0];
-					vertex.normal.y = attrib.normals[3 * size_t(idx.normal_index) + 1];
-					vertex.normal.z = attrib.normals[3 * size_t(idx.normal_index) + 2];
+					vertex.normalV.x = attrib.normals[3 * size_t(idx.normal_index) + 0];
+					vertex.normalV.y = attrib.normals[3 * size_t(idx.normal_index) + 1];
+					vertex.normalV.z = attrib.normals[3 * size_t(idx.normal_index) + 2];
 				}
 
 				// Check if `texcoord_index` is zero or positive. negative = no texcoord data
 				if (idx.texcoord_index >= 0) {
-					vertex.uv.x = attrib.texcoords[2 * size_t(idx.texcoord_index) + 0];
-					vertex.uv.y = attrib.texcoords[2 * size_t(idx.texcoord_index) + 1];
+					vertex.posU.w = attrib.texcoords[2 * size_t(idx.texcoord_index) + 0];
+					vertex.normalV.w = attrib.texcoords[2 * size_t(idx.texcoord_index) + 1];
 				}
 
 				objVertices.push_back(vertex);

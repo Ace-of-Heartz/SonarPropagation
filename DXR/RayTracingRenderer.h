@@ -21,14 +21,7 @@ using namespace SonarPropagation::Graphics::Utils;
 namespace SonarPropagation{
 	namespace Graphics {
 		namespace DXR {
-			/// <summary>
-			/// Struct to hold the Acceleration Structure Buffers.
-			/// </summary>
-			struct AccelerationStructureBuffers {
-				ComPtr<ID3D12Resource> pScratch;
-				ComPtr<ID3D12Resource> pResult;
-				ComPtr<ID3D12Resource> pInstanceDesc; // Used only for top-level AS
-			};
+
 
 			/// <summary>
 			/// Main class for the RayTracingRenderer. Responsible for creating the RayTracing Pipeline.
@@ -160,11 +153,7 @@ namespace SonarPropagation{
 
 				void CreateSamplerResources();
 
-				void CreateTextureResources();
 
-				void CreateTextureDescriptors();
-
-				void UploadTextureData();
 
 				/// <summary>
 				/// Creates the shader resource heap.
@@ -176,6 +165,8 @@ namespace SonarPropagation{
 				/// </summary>
 				void CreateShaderBindingTable();
 
+				void CreateShaderBindingTableForPhotonMapping();
+
 				void InitializeObjects();
 				
 				void CreateScene();
@@ -185,7 +176,9 @@ namespace SonarPropagation{
 				/// <summary>
 				/// Populates the command list. Utilizes PIX for additional debugging.
 				/// </summary>
-				void PopulateCommandListWithPIX();
+				void PopulateCommandListForRendering();
+
+				void PhotonMappingPreprocess();
 
 				/// <summary>
 				/// Updates the transforms found in the instance constant buffers.
@@ -273,21 +266,24 @@ namespace SonarPropagation{
 				ComPtr<IDxcBlob>									m_rayGenLibrary;
 				ComPtr<IDxcBlob>									m_hitLibrary;
 				ComPtr<IDxcBlob>									m_missLibrary;
+				ComPtr<IDxcBlob>								m_sonarRayGenLibrary;
+				ComPtr<IDxcBlob>								m_sonarHitLibrary;
+				ComPtr<IDxcBlob>								m_sonarMissLibrary;
 
 				// Root Signatures for Shader:
 				ComPtr<ID3D12RootSignature>							m_rayGenSignature;
 				ComPtr<ID3D12RootSignature>							m_hitSignature;
 				ComPtr<ID3D12RootSignature>							m_missSignature;
 
+
 				// Photon Mapping Resources: 
 				std::vector<ComPtr<ID3D12Resource>>					m_textures;
 				std::vector<D3D12_SUBRESOURCE_DATA>			        m_textureDatas;
 
-				std::unique_ptr<DescriptorHeap> m_resourceDescriptors;
+				std::unique_ptr<DescriptorHeap>						 m_resourceDescriptors;
 
 				// Camera: 
 
-				SonarPropagation::Graphics::Utils::Camera			m_camera;
 				SonarPropagation::Graphics::Utils::CameraController m_cameraController;
 
 				uint32_t											m_aspectRatio;

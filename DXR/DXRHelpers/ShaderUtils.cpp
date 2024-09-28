@@ -14,9 +14,9 @@ IDxcBlob* SonarPropagation::Graphics::Common::CompileShader(LPCWSTR fileName) {
 	// Initialize the DXC compiler and compiler helper
 	if (!pCompiler)
 	{
-		ThrowIfFailed(DxcCreateInstance(CLSID_DxcCompiler, __uuidof(IDxcCompiler), (void**)&pCompiler));
-		ThrowIfFailed(DxcCreateInstance(CLSID_DxcLibrary, __uuidof(IDxcLibrary), (void**)&pLibrary));
-		ThrowIfFailed(pLibrary->CreateIncludeHandler(&dxcIncludeHandler));
+		DX::ThrowIfFailed(DxcCreateInstance(CLSID_DxcCompiler, __uuidof(IDxcCompiler), (void**)&pCompiler));
+		DX::ThrowIfFailed(DxcCreateInstance(CLSID_DxcLibrary, __uuidof(IDxcLibrary), (void**)&pLibrary));
+		DX::ThrowIfFailed(pLibrary->CreateIncludeHandler(&dxcIncludeHandler));
 	}
 
 	TCHAR pwd[MAX_PATH];
@@ -31,12 +31,12 @@ IDxcBlob* SonarPropagation::Graphics::Common::CompileShader(LPCWSTR fileName) {
 	IDxcOperationResult* pResult;
 	std::vector<LPCWSTR> args = { L"-Zi",L"-Qembed_debug", L"-Od" };
 
-	ThrowIfFailed(pCompiler->Compile(pShaderText, fileName, L"", L"lib_6_3", args.data(), args.size(), nullptr, 0,
+	DX::ThrowIfFailed(pCompiler->Compile(pShaderText, fileName, L"", L"lib_6_3", args.data(), args.size(), nullptr, 0,
 		dxcIncludeHandler, &pResult));
 
 	// Verify the result
 	HRESULT resultCode;
-	ThrowIfFailed(pResult->GetStatus(&resultCode));
+	DX::ThrowIfFailed(pResult->GetStatus(&resultCode));
 	if (FAILED(resultCode))
 	{
 		IDxcBlobEncoding* pError;
@@ -58,7 +58,7 @@ IDxcBlob* SonarPropagation::Graphics::Common::CompileShader(LPCWSTR fileName) {
 	}
 
 	IDxcBlob* pBlob;
-	ThrowIfFailed(pResult->GetResult(&pBlob));
+	DX::ThrowIfFailed(pResult->GetResult(&pBlob));
 	return pBlob;
 }
 
@@ -70,7 +70,7 @@ ID3D12DescriptorHeap* SonarPropagation::Graphics::Common::CreateDescriptorHeap(I
 		shaderVisible ? D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE : D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 
 	ID3D12DescriptorHeap* pHeap;
-	ThrowIfFailed(device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&pHeap)));
+	DX::ThrowIfFailed(device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&pHeap)));
 	return pHeap;
 }
 

@@ -25,9 +25,9 @@ namespace SonarPropagation
 	
 	struct VertexPositionNormalUV
 	{
-		DirectX::XMFLOAT3 pos;
-		DirectX::XMFLOAT3 normal;
-		DirectX::XMFLOAT2 uv;
+		DirectX::XMFLOAT4 posU;
+		DirectX::XMFLOAT4 normalV;
+
 	};
 
 	struct VertexPosition 

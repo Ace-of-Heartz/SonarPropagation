@@ -17,7 +17,17 @@ namespace SonarPropagation {
 				/// <summary>
 				/// Default constructor.
 				/// </summary>
-				Camera();
+				Camera(
+					XMVECTOR eye = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f),
+					XMVECTOR at = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f),
+					float yaw = 0.f,
+					float pitch = 0.f,
+					float fovAngleY = 75.0f,
+					float aspectRatio = 1.0,
+					float zNear = 0.1f,
+					float zFar = 10000.f,
+					float speed = 5.0f
+					);
 
 				/// <summary>
 				/// Default destructor.
@@ -111,8 +121,15 @@ namespace SonarPropagation {
 				inline float GetSpeed() const {
 					return m_speed;
 				}
-				
 
+				inline void ToggleSoundSource() {
+					m_isSoundSource = !m_isSoundSource;
+				}
+
+				inline bool IsSoundSource() {
+					return m_isSoundSource;
+				}
+				
 			private:
 
 				/// <summary>
@@ -145,6 +162,9 @@ namespace SonarPropagation {
 
 				bool m_isViewDirty = true;
 				bool m_isProjectionDirty = true;
+				
+				bool m_isSoundSource = false;
+				
 
 				XMVECTOR m_eye;
 				XMVECTOR m_at;

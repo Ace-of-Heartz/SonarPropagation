@@ -12,50 +12,44 @@ SonarPropagation::Graphics::Utils::Scene::Object::~Object() {}
 //--------------------------------------------------------------------------------------
 // Scene::SoundRecevier implementation
 
-SonarPropagation::Graphics::Utils::Scene::SoundRecevier::SoundRecevier(Transform transform, SonarCollection* sonarCollection) 
-	: Object(transform), m_sonarCollection(sonarCollection) {}
+SonarPropagation::Graphics::Utils::Scene::SoundRecevier::SoundRecevier(Transform transform) 
+	: Object(transform) {}
 
 SonarPropagation::Graphics::Utils::Scene::SoundRecevier::~SoundRecevier() {}
 
-void SonarPropagation::Graphics::Utils::Scene::SoundRecevier::ProcessObject() {
-	m_sonarCollection->AddSoundReceiver(m_transform.LocalToWorld());
-}
+
 
 
 //--------------------------------------------------------------------------------------
 // Scene::SoundSource implementation
 
-SonarPropagation::Graphics::Utils::Scene::SoundSource::SoundSource(Transform transform, SonarCollection* sonarCollection, XMMATRIX rayProject)
-	: Object(transform), m_sonarCollection(sonarCollection), m_rayProjection(rayProject) {}
+SonarPropagation::Graphics::Utils::Scene::SoundSource::SoundSource(Transform transform, XMMATRIX rayProject)
+	: Object(transform), m_rayProjection(rayProject) {}
 
 SonarPropagation::Graphics::Utils::Scene::SoundSource::~SoundSource() {}
 
-void SonarPropagation::Graphics::Utils::Scene::SoundSource::ProcessObject() {
-	m_sonarCollection->AddSoundSource(m_transform.LocalToWorld(), m_rayProjection);
-};
+
 
 
 //--------------------------------------------------------------------------------------
 // Scene::SoundReflector implementation
 SonarPropagation::Graphics::Utils::Scene::SoundReflector::SoundReflector(
 	Transform transform,
-	Model* model,
+	size_t modelIndex,
 	ObjectType type
-) : Object(transform), m_model(model), m_type(type) {}
+) : Object(transform), m_modelIndex(modelIndex), m_type(type) {}
 
 SonarPropagation::Graphics::Utils::Scene::SoundReflector::~SoundReflector()
 {
 }
 
-void SonarPropagation::Graphics::Utils::Scene::SoundReflector::ProcessObject() {
-	m_model->AddInstance(this);
-}
 
 //--------------------------------------------------------------------------------------
 // Scene implementation
 
-SonarPropagation::Graphics::Utils::Scene::Scene()
+SonarPropagation::Graphics::Utils::Scene::Scene(ComPtr<ID3D12Device> device)
 {
+	m_device = device;
 }
 
 SonarPropagation::Graphics::Utils::Scene::~Scene()
@@ -77,6 +71,7 @@ SonarPropagation::Graphics::Utils::Scene::Model::~Model() {
 	}
 	m_objects.clear();
 }
+
 
 void SonarPropagation::Graphics::Utils::Scene::Model::AddInstance(Object* object) {
 	m_objects.push_back(object);
@@ -194,16 +189,3 @@ void SonarPropagation::Graphics::Utils::Scene::Transform::DEBUGAssertValidPointe
 	assert(m_lastChild == nullptr || m_lastChild->m_parent == this);
 }
 
-void SonarPropagation::Graphics::Utils::Scene::GetInstanceInformation() const {
-	CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_UPLOAD);
-	
-	for (auto& object : m_objects) {
-		if (object )
-
-		if ( object->m_transform.isChanged) {
-			object->m_transform.isChanged = false;
-			
-			object->ProcessObject();
-		}
-	}
-}

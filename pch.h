@@ -38,6 +38,7 @@
 #include "DXR\Nvidia\DXRHelper.h"
 #include "DXR\Nvidia\DXSample.h"
 #include "DXR\Nvidia\DXSampleHelper.h"
+#include "DXR\AccelerationStructures.h"
 #include "DXR\RaytracingRenderer.h"
 
 using namespace DirectX;

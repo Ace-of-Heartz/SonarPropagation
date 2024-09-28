@@ -12,13 +12,12 @@ namespace SonarPropagation {
 				/// <summary>
 				/// Default constructor.
 				/// </summary>
-				CameraController();
-
+				CameraController(ComPtr<ID3D12Device> device);
 				/// <summary>
 				/// Constructor with a default camera.
 				/// </summary>
 				/// <param name="camera"></param>
-				CameraController(Camera *camera);
+				CameraController(ComPtr<ID3D12Device> device,Camera *camera);
 			
 				/// <summary>
 				/// Default destructor.
@@ -31,7 +30,9 @@ namespace SonarPropagation {
 				/// <param name="camera"></param>
 				inline void AddCamera(Camera *camera) 
 				{
-					m_camera = camera;
+					camera->CreateCameraBuffer(m_device);
+					m_cameras.push_back(camera);
+
 				}
 
 				/// <summary>
@@ -40,6 +41,16 @@ namespace SonarPropagation {
 				/// <param name="timer"></param>
 				void ProcessCameraUpdate(DX::StepTimer const& timer);
 				
+				void CycleToNextCamera(){
+					m_isBufferDirty = true;
+					m_cameraIndex = (m_cameraIndex + 1) % m_cameras.size();
+				}
+
+				void CycleToPreviousCamera(){
+					m_isBufferDirty = true;
+					m_cameraIndex = (m_cameraIndex - 1) % m_cameras.size();
+				}
+
 				/// <summary>
 				/// Handles key presses.
 				/// </summary>
@@ -69,11 +80,29 @@ namespace SonarPropagation {
 				/// </summary>
 				void RenderImGui();
 
+				Camera* GetCurrentCamera() const;
+
+				bool IsBufferDirty() const { return m_isBufferDirty; }
+
+				void SetBufferToClean() { m_isBufferDirty = false; }
+
+				std::vector<Camera*> GetSoundSources() const {
+					std::vector<Camera*> soundSources;
+					for (auto camera : m_cameras) {
+						if (camera->IsSoundSource()) {
+							soundSources.push_back(camera);
+						}
+					}
+					return soundSources;
+				} 
+
 			private:
+				ComPtr<ID3D12Device> m_device;
 
-				Camera* m_camera;
-
+				std::vector<Camera*> m_cameras;
 				size_t m_cameraIndex = 0;
+				bool m_isBufferDirty = true;
+
 
 				float m_forwardSpeed  = 0.0f;
 				float m_sidewaysSpeed = 0.0f;

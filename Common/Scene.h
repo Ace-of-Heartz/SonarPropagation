@@ -1,8 +1,10 @@
 #pragma once
 
-#include "Model.h"
 #include "BufferData.h"
 #include "ObjectType.h"
+#include "..\DXR\AccelerationStructures.h"
+#include "DirectXHelper.h"
+using namespace DX;
 
 namespace SonarPropagation {
 	namespace Graphics {
@@ -40,8 +42,6 @@ namespace SonarPropagation {
 					Object(Transform transform);
 					~Object();
 
-					virtual void ProcessObject() = 0;
-
 					Transform m_transform;
 				};
 
@@ -51,36 +51,39 @@ namespace SonarPropagation {
 					Model(BufferData bufferData);
 					~Model();
 
+					bool IsASInstanciated() const { 
+						return m_asBuffers.pInstanceDesc !=  nullptr 
+							&& m_asBuffers.pResult != nullptr 
+							&& m_asBuffers.pScratch != nullptr;
+						
+						; }
 					void AddInstance(Object* object);
 
 					BufferData m_bufferData;
 					std::vector<Object*> m_objects;
+					SonarPropagation::Graphics::DXR::AccelerationStructureBuffers m_asBuffers;
 
 				};
 
 				class SoundRecevier : public Object
 				{
 				public:
-					SoundRecevier(Transform transform, SonarCollection* sonarCollection);
+					SoundRecevier(Transform transform);
 					~SoundRecevier();
 
 
-					void ProcessObject() override;
 
 				private:
-					SonarCollection* m_sonarCollection;
 
 				};
 
 				class SoundSource : public Object
 				{
 				public:
-					SoundSource(Transform transform, SonarCollection* sonarCollection, XMMATRIX rayProject);
+					SoundSource(Transform transform, XMMATRIX rayProject);
 					~SoundSource();
 
-					void ProcessObject() override;
 				private:
-					SonarCollection* m_sonarCollection;
 					XMMATRIX m_rayProjection;
 
 				};
@@ -90,31 +93,69 @@ namespace SonarPropagation {
 				public:
 					SoundReflector(
 						Transform transform,
-						Model* model,
+						size_t modelIndex,
 						ObjectType type
 					);
 					~SoundReflector();
 
-					void ProcessObject() override;
+
 					ObjectType GetType() const { return m_type; };
+					size_t GetModelIndex() const { return m_modelIndex; };
+					ComPtr<ID3D12Resource> GetTexture() const { return m_texture; 
+					};
+					ComPtr<ID3D12Resource> m_texture;
 
 				private:
-					Model* m_model;
+					size_t m_modelIndex;
 					ObjectType m_type; 
 					
 				};
 
-				Scene();
+				Scene(ComPtr<ID3D12Device> device);
 				~Scene();
 
-				void AddObject(SoundReflector* object) {
+				void AddObject(SoundReflector object) {
+
+					D3D12_RESOURCE_DESC txtDesc = {};
+					txtDesc.MipLevels = txtDesc.DepthOrArraySize = 1;
+					txtDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+					txtDesc.Width = 1024;
+					txtDesc.Height = 1024;
+					txtDesc.SampleDesc.Count = 1;
+					txtDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+
+					CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_DEFAULT);
+
+
+					DX::ThrowIfFailed(
+						m_device->CreateCommittedResource(
+							&heapProps,
+							D3D12_HEAP_FLAG_NONE,
+							&txtDesc,
+							D3D12_RESOURCE_STATE_COPY_DEST,
+							nullptr,
+							IID_PPV_ARGS(object.m_texture.ReleaseAndGetAddressOf()))
+					);
+
 					m_objects.push_back(object);
-					object->m_transform.SetParent(nullptr, nullptr);
+
 				}
 				
-				void GetInstanceInformation() const;
+				void AddSoundSource(SoundSource source) {
+					m_SoundSources.push_back(source);
+				}
 
-				std::vector<SoundReflector*> m_objects;
+				void AddSoundRecevier(SoundRecevier recevier) {
+					m_SoundReceivers.push_back(recevier);
+				}
+
+
+				std::vector<SoundReflector> m_objects;
+				std::vector<SoundSource> m_SoundSources;
+				std::vector<SoundRecevier> m_SoundReceivers;
+
+				private: 
+					ComPtr<ID3D12Device> m_device;
 
 			};
 

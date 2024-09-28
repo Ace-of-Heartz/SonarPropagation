@@ -266,12 +266,12 @@
     <ClInclude Include="Common\DeviceResources.h" />
     <ClInclude Include="Common\DirectXHelper.h" />
     <ClInclude Include="Common\ImGuiManager.h" />
-    <ClInclude Include="Common\Model.h" />
     <ClInclude Include="Common\ObjectLibrary.h" />
     <ClInclude Include="Common\ObjectType.h" />
     <ClInclude Include="Common\Scene.h" />
     <ClInclude Include="Common\thirdparty\imgui_impl_uwp.h" />
     <ClInclude Include="Common\thirdparty\tiny_obj_loader.h" />
+    <ClInclude Include="DXR\AccelerationStructures.h" />
     <ClInclude Include="DXR\DXRHelpers\Common.h" />
     <ClInclude Include="DXR\DXRHelpers\MeshUtils.h" />
     <ClInclude Include="DXR\DXRHelpers\ShaderUtils.h" />
@@ -354,25 +354,22 @@
     <FxCompile Include="Shaders\Shadow.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </FxCompile>
-    <FxCompile Include="Shaders\SonarShaders\BoundaryHit.hlsl">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-    </FxCompile>
-    <FxCompile Include="Shaders\SonarShaders\BoundaryMiss.hlsl">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-    </FxCompile>
-    <FxCompile Include="Shaders\SonarShaders\ObjectHit.hlsl">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-    </FxCompile>
-    <FxCompile Include="Shaders\SonarShaders\ObjectMiss.hlsl">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-    </FxCompile>
     <FxCompile Include="Shaders\SonarShaders\RayMarch.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </FxCompile>
-    <FxCompile Include="Shaders\SonarShaders\SonarCommon.hlsl">
+    <FxCompile Include="Shaders\SonarShaders\SonarEq.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </FxCompile>
-    <FxCompile Include="Shaders\SonarShaders\SonarEq.hlsl">
+    <FxCompile Include="Shaders\SonarShaders\SonarRayGen.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="Shaders\SonarShaders\SonarHit.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="Shaders\SonarShaders\SonarMiss.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="Shaders\SonarShaders\SonarCommon.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Shaders\SonarShaders\SonarUtils.hlsl">

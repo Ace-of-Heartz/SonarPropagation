@@ -51,7 +51,7 @@ inline void ThrowIfFailed(HRESULT hr, const wchar_t* msg)
 
 inline void ThrowIfFalse(bool value)
 {
-	ThrowIfFailed(value ? S_OK : E_FAIL);
+	DX::ThrowIfFailed(value ? S_OK : E_FAIL);
 }
 
 inline void ThrowIfFalse(bool value, const wchar_t* msg)

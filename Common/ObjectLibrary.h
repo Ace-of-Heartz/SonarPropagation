@@ -19,36 +19,38 @@ namespace SonarPropagation
 				~ObjectLibrary() {};
 
 				
-				Scene::Model* LoadWavefront(const std::string& filename);
+				size_t LoadWavefront(const std::string& filename);
 				
 				template<typename V>
-				Scene::Model* LoadPredefined(const std::vector<V> vertices, const std::vector<UINT> indices)
+				size_t LoadPredefined(const std::vector<V> vertices, const std::vector<UINT> indices)
 				{
 					UINT bufferSize = vertices.size() * sizeof(V);
 
-					BufferData bufferData;
+					size_t modelIndex = m_objects.size();
+					m_objects.push_back(Scene::Model());
+
 					{
-						ThrowIfFailed(
+						DX::ThrowIfFailed(
 							m_device->CreateCommittedResource(
 								&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
 								D3D12_HEAP_FLAG_NONE,
 								&CD3DX12_RESOURCE_DESC::Buffer(bufferSize),
 								D3D12_RESOURCE_STATE_GENERIC_READ,
 								nullptr,
-								IID_PPV_ARGS(&(bufferData.vertexBuffer))
+								IID_PPV_ARGS(&(m_objects[modelIndex].m_bufferData.vertexBuffer))
 							)
 						);
 
 						UINT8* pVertexDataBegin;
 						CD3DX12_RANGE readRange(0, 0);
 
-						ThrowIfFailed(bufferData.vertexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin)));
+						DX::ThrowIfFailed(m_objects[modelIndex].m_bufferData.vertexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin)));
 						memcpy(pVertexDataBegin, vertices.data(), bufferSize);
-						bufferData.vertexBuffer->Unmap(0, nullptr);
+						m_objects[modelIndex].m_bufferData.vertexBuffer->Unmap(0, nullptr);
 
-						bufferData.vertexBufferView.BufferLocation = bufferData.vertexBuffer->GetGPUVirtualAddress();
-						bufferData.vertexBufferView.StrideInBytes = sizeof(V);
-						bufferData.vertexBufferView.SizeInBytes = bufferSize;
+						m_objects[modelIndex].m_bufferData.vertexBufferView.BufferLocation = m_objects[modelIndex].m_bufferData.vertexBuffer->GetGPUVirtualAddress();
+						m_objects[modelIndex].m_bufferData.vertexBufferView.StrideInBytes = sizeof(V);
+						m_objects[modelIndex].m_bufferData.vertexBufferView.SizeInBytes = bufferSize;
 
 						//NAME_D3D12_OBJECT(model->m_bufferData.vertexBuffer);
 					}
@@ -59,71 +61,67 @@ namespace SonarPropagation
 						const UINT indexBufferSize = static_cast<UINT>(indices.size()) * sizeof(UINT);
 
 						CD3DX12_RESOURCE_DESC bufferResourceDesc = CD3DX12_RESOURCE_DESC::Buffer(indexBufferSize);
-						ThrowIfFailed(m_device->CreateCommittedResource(
+						DX::ThrowIfFailed(m_device->CreateCommittedResource(
 							&heapProperties,
 							D3D12_HEAP_FLAG_NONE,
 							&bufferResourceDesc,
 							D3D12_RESOURCE_STATE_GENERIC_READ,
 							nullptr,
-							IID_PPV_ARGS(&bufferData.indexBuffer)
+							IID_PPV_ARGS(&(m_objects[modelIndex].m_bufferData.indexBuffer))
 						));
 
 						UINT8* pIndexDataBegin;
-						ThrowIfFailed(bufferData.indexBuffer->Map(0, &readRangeUp, reinterpret_cast<void**>(&pIndexDataBegin)));
+						DX::ThrowIfFailed(m_objects[modelIndex].m_bufferData.indexBuffer->Map(0, &readRangeUp, reinterpret_cast<void**>(&pIndexDataBegin)));
 						memcpy(pIndexDataBegin, indices.data(), indexBufferSize);
-						bufferData.indexBuffer->Unmap(0, nullptr);
+						m_objects[modelIndex].m_bufferData.indexBuffer->Unmap(0, nullptr);
 
-						bufferData.indexBufferView.BufferLocation = bufferData.indexBuffer->GetGPUVirtualAddress();
-						bufferData.indexBufferView.Format = DXGI_FORMAT_R32_UINT;
-						bufferData.indexBufferView.SizeInBytes = indexBufferSize;
+						m_objects[modelIndex].m_bufferData.indexBufferView.BufferLocation = m_objects[modelIndex].m_bufferData.indexBuffer->GetGPUVirtualAddress();
+						m_objects[modelIndex].m_bufferData.indexBufferView.Format = DXGI_FORMAT_R32_UINT;
+						m_objects[modelIndex].m_bufferData.indexBufferView.SizeInBytes = indexBufferSize;
 
 						//NAME_D3D12_OBJECT(model->m_bufferData.indexBuffer);
 					}
 
-					auto model = Scene::Model(bufferData);
 
-					m_objects.push_back(model);
 
-					return &m_objects[m_objects.size()-1];
+					return modelIndex;
 				}
 
 				template<typename V>
-				Scene::Model* LoadPredefined(const std::vector<V> vertices)
+				size_t LoadPredefined(const std::vector<V> vertices)
 				{
 					UINT bufferSize = vertices.size() * sizeof(V);
+					
+					size_t modelIndex = m_objects.size();
+					m_objects.push_back(Scene::Model());
 
-					BufferData bufferData;
 					{
-						ThrowIfFailed(
+						DX::ThrowIfFailed(
 							m_device->CreateCommittedResource(
 								&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
 								D3D12_HEAP_FLAG_NONE,
 								&CD3DX12_RESOURCE_DESC::Buffer(bufferSize),
 								D3D12_RESOURCE_STATE_GENERIC_READ,
 								nullptr,
-								IID_PPV_ARGS(&(bufferData.vertexBuffer))
+								IID_PPV_ARGS(&(m_objects[modelIndex].m_bufferData.vertexBuffer))
 							)
 						);
 
 						UINT8* pVertexDataBegin;
 						CD3DX12_RANGE readRange(0, 0);
 
-						ThrowIfFailed(bufferData.vertexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin)));
+						DX::ThrowIfFailed(m_objects[modelIndex].m_bufferData.vertexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin)));
 						memcpy(pVertexDataBegin, vertices.data(), bufferSize);
-						bufferData.vertexBuffer->Unmap(0, nullptr);
+						m_objects[modelIndex].m_bufferData.vertexBuffer->Unmap(0, nullptr);
 
-						bufferData.vertexBufferView.BufferLocation = bufferData.vertexBuffer->GetGPUVirtualAddress();
-						bufferData.vertexBufferView.StrideInBytes = sizeof(V);
-						bufferData.vertexBufferView.SizeInBytes = bufferSize;
+						m_objects[modelIndex].m_bufferData.vertexBufferView.BufferLocation = bufferData.vertexBuffer->GetGPUVirtualAddress();
+						m_objects[modelIndex].m_bufferData.vertexBufferView.StrideInBytes = sizeof(V);
+						m_objects[modelIndex].m_bufferData.vertexBufferView.SizeInBytes = bufferSize;
 
 						//NAME_D3D12_OBJECT(model->m_bufferData.vertexBuffer);
 					}
 
-					auto model = Scene::Model(bufferData);
-
-					m_objects.push_back(model);
-
-					return &m_objects[m_objects.size() - 1];
+					return modelIndex;
 				}
 
 

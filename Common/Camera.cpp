@@ -1,43 +1,36 @@
 #include "pch.h"
 #include "Camera.h"
 
-
-
-SonarPropagation::Graphics::Utils::Camera::Camera()
+SonarPropagation::Graphics::Utils::Camera::Camera(
+	XMVECTOR eye,
+	XMVECTOR at,
+	float yaw,
+	float pitch,
+	float fovAngleY,
+	float aspectRatio,
+	float zNear,
+	float zFar,
+	float speed
+) : m_eye(eye),
+	m_at(at),
+	m_up(XMVectorSet(0.0f,1.0f,0.0f,0.0f)),
+	m_worldUp(XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)),
+	m_forward(at - eye),
+	m_right(XMVector3Cross(m_forward, m_worldUp)),
+	m_distance(1.0f),
+	m_fovAngleY(fovAngleY),
+	m_aspectRatio(aspectRatio),
+	m_zNear(zNear),
+	m_zFar(zFar),
+	m_yaw(yaw),
+	m_pitch(pitch),
+	m_rotationQ(XMQuaternionRotationRollPitchYaw(m_pitch, m_yaw, 0.0f)),
+	m_speed(speed),
+	m_isProjectionDirty(true),
+	m_isViewDirty(true)
 {
-	m_eye = XMVectorSet(1.5f, 1.5f, 1.5f, 0.0f);
-	m_at = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
-
-	m_forward = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
-	m_right = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
-	m_up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-
-	m_worldUp = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-
-	m_yaw = 0.0f;
-	m_pitch = 0.0f;
-
-	m_rotationQ = XMQuaternionRotationRollPitchYaw(m_yaw, m_pitch, 0.0);
-
-
-	m_distance = 0.5f;
-
-	m_fovAngleY = 75.0f;
-	m_aspectRatio = 1.0;
-
-	m_zNear = 0.1f;
-	m_zFar = 10000.0f;
-
-
-	m_speed = 5.0f;
-
-	m_isProjectionDirty = true;
-	m_isViewDirty = true;
-
 	UpdateParameters();
-
 }
-
 
 SonarPropagation::Graphics::Utils::Camera::~Camera()
 {
@@ -87,7 +80,7 @@ void SonarPropagation::Graphics::Utils::Camera::UpdateCameraBuffer()
 	allMatrices = { m_viewMatrix,m_projectionMatrix, m_viewMatrixInv, m_projectionMatrixInv };
 
 	uint8_t* pData;
-	ThrowIfFailed(m_cameraBuffer->Map(0, nullptr, (void**)&pData));
+	DX::ThrowIfFailed(m_cameraBuffer->Map(0, nullptr, (void**)&pData));
 	memcpy(pData, allMatrices.data(), m_cameraBufferSize);
 	m_cameraBuffer->Unmap(0, nullptr);
 }
@@ -199,17 +192,22 @@ void SonarPropagation::Graphics::Utils::Camera::RenderCameraImGui() {
 		}
 		ImGui::Separator();
 
-		ImGui::SliderFloat("Speed", &m_speed, 0.1f, 20.0f);
+		ImGui::SliderFloat("Speed", &m_speed, 1.f, 500.0f);
 
 		ImGui::Separator();
 
+		//TODO: Refine this
 		if (ImGui::SliderFloat("FOV Y", &m_fovAngleY, 1.0f, 179.0f))
 		{
 			m_isProjectionDirty = true;
 		}
 
 		ImGui::Separator();
+		if (ImGui::Checkbox("Is sound source?",&m_isSoundSource)) {
+			
+		}
 
+		ImGui::Separator();
 		if (ImGui::Button("Reset Camera")) {
 			m_rotationQ = XMQuaternionIdentity();
 			UpdateParameters();

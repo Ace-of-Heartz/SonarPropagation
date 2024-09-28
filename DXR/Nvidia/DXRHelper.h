@@ -40,7 +40,7 @@ namespace nv_helpers_dx12
 		bufDesc.Width = size;
 
 		ID3D12Resource* pBuffer;
-		ThrowIfFailed(m_device->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &bufDesc,
+		DX::ThrowIfFailed(m_device->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &bufDesc,
 			initState, nullptr, IID_PPV_ARGS(&pBuffer)));
 		return pBuffer;
 	}

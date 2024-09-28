@@ -240,14 +240,14 @@
     <ClInclude Include="Common\BufferData.h">
       <Filter>DXR\AceRaytracing\Graphics\Common\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Common\Model.h">
-      <Filter>DXR\AceRaytracing\Graphics\Common\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Common\ObjectType.h">
       <Filter>DXR\AceRaytracing\Graphics\Common\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Common\thirdparty\tiny_obj_loader.h">
       <Filter>DXR\AceRaytracing\Graphics\Common\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DXR\AccelerationStructures.h">
+      <Filter>DXR\AceRaytracing\Graphics\DXR\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -269,25 +269,10 @@
     <FxCompile Include="Shaders\RayGen.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="Shaders\SonarShaders\SonarEq.hlsl">
-      <Filter>Shaders\SonarRayMarch</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\SonarShaders\SonarUtils.hlsl">
-      <Filter>Shaders\SonarRayMarch</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\SonarShaders\RayMarch.hlsl">
-      <Filter>Shaders\SonarRayMarch</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\SonarShaders\BoundaryHit.hlsl">
+    <FxCompile Include="Shaders\SonarShaders\SonarHit.hlsl">
       <Filter>Shaders\SonarRTX</Filter>
     </FxCompile>
-    <FxCompile Include="Shaders\SonarShaders\BoundaryMiss.hlsl">
-      <Filter>Shaders\SonarRTX</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\SonarShaders\ObjectHit.hlsl">
-      <Filter>Shaders\SonarRTX</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\SonarShaders\ObjectMiss.hlsl">
+    <FxCompile Include="Shaders\SonarShaders\SonarMiss.hlsl">
       <Filter>Shaders\SonarRTX</Filter>
     </FxCompile>
     <FxCompile Include="Shaders\SonarShaders\SonarCommon.hlsl">
@@ -298,6 +283,18 @@
     </FxCompile>
     <FxCompile Include="Shaders\Shadow.hlsl">
       <Filter>Shaders\DebugShaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\SonarShaders\RayMarch.hlsl">
+      <Filter>Shaders\SonarRayMarch</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\SonarShaders\SonarEq.hlsl">
+      <Filter>Shaders\SonarRayMarch</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\SonarShaders\SonarUtils.hlsl">
+      <Filter>Shaders\SonarRayMarch</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\SonarShaders\SonarRayGen.hlsl">
+      <Filter>Shaders\SonarRTX</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>
