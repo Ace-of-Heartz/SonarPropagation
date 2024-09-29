@@ -20,7 +20,6 @@ struct STriVertex
 {
     float4 vertex;
     float4 normal;
-    //float2 uv;
 };
 
 float2 GetUV(float3 bary, STriVertex a, STriVertex b, STriVertex c)

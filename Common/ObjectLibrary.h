@@ -79,7 +79,7 @@ namespace SonarPropagation
 						m_objects[modelIndex].m_bufferData.indexBufferView.Format = DXGI_FORMAT_R32_UINT;
 						m_objects[modelIndex].m_bufferData.indexBufferView.SizeInBytes = indexBufferSize;
 
-						//NAME_D3D12_OBJECT(model->m_bufferData.indexBuffer);
+						//NAME_D3D12_OBJECT(m_objects[modelIndex].m_bufferData.indexBuffer);
 					}
 
 

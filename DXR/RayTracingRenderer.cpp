@@ -35,6 +35,11 @@ SonarPropagation::Graphics::DXR::RayTracingRenderer::RayTracingRenderer(
 {
 	LoadState();
 
+	m_cameraController.AddCamera(new Camera());
+	m_cameraController.CycleToNextCamera();
+	m_cameraController.GetCurrentCamera()->ToggleSoundSource();
+	m_cameraController.CycleToPreviousCamera();
+
 	CreateDeviceDependentResources();
 	CreateWindowSizeDependentResources();
 }
@@ -193,7 +198,6 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateDeviceDependentR
 
 void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateScene() {
 	
-	m_cameraController.AddCamera(new Camera());
 
 }
 
@@ -468,8 +472,8 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateRaytracingPipeli
 	pipeline.AddLibrary(m_hitLibrary.Get(), { L"MeshClosestHit"});
 
 	pipeline.AddLibrary(m_sonarRayGenLibrary.Get(), { L"SonarRayGen" });
-	pipeline.AddLibrary(m_hitLibrary.Get(), { L"BoundaryClosestHit", L"ObjectClosestHit"});
-	pipeline.AddLibrary(m_missLibrary.Get(), { L"BoundaryMiss", L"ObjectMiss" });
+	pipeline.AddLibrary(m_sonarHitLibrary.Get(), { L"BoundaryClosestHit", L"ObjectClosestHit"});
+	pipeline.AddLibrary(m_sonarMissLibrary.Get(), { L"BoundaryMiss", L"ObjectMiss" });
 
 	m_rayGenSignature = CreateRayGenSignature();
 	m_missSignature = CreateMissSignature();
@@ -575,6 +579,9 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateShaderResourceHe
 	cameraCbvDesc.BufferLocation = m_cameraController.GetCurrentCamera()->GetCameraBuffer()->GetGPUVirtualAddress();
 	cameraCbvDesc.SizeInBytes = m_cameraController.GetCurrentCamera()->GetCameraBufferSize();
 	m_dxrDevice->CreateConstantBufferView(&cameraCbvDesc, srvHandle);
+
+	srvHandle.ptr += m_dxrDevice.Get()->GetDescriptorHandleIncrementSize(
+		D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
 	D3D12_CONSTANT_BUFFER_VIEW_DESC soundSourceCbvDesc = {};
 	soundSourceCbvDesc.BufferLocation = soundSources[0]->GetCameraBuffer()->GetGPUVirtualAddress();

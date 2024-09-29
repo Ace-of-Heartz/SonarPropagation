@@ -2,7 +2,7 @@
 
 //-------------------------------------------------------
 // Mackenzie Formulas:
-float MackenzieFormula(EnvData data)
+float mackenzie_formula(env_data data)
 {
     float t2 = pow(data.temperature,2);
     
@@ -16,12 +16,12 @@ float MackenzieFormula(EnvData data)
             7.139 * pow(10,-13) * data.temperature * data.depth;
 }
 
-float MFPartialOfR(EnvData data)
+float mf_partial_of_r(env_data data)
 {
     return 0.0;
 }
 
-float MFPartialOfZ(EnvData data)
+float mf_partial_of_z(env_data data)
 {
     return 0.016 +
             3.350 * pow(10, -7) * data.depth - 
@@ -32,7 +32,7 @@ float MFPartialOfZ(EnvData data)
 
 //-------------------------------------------------------
 // Compact Mackenzie Formulas:
-float CompactMackenzieFormula(EnvData data)
+float compact_mackenzie_formula(env_data data)
 {
     float t2 = data.temperature * data.temperature;
     
@@ -43,12 +43,12 @@ float CompactMackenzieFormula(EnvData data)
             0.016 * data.depth;
 }
 
-float CMFPartialOfR(EnvData data)
+float cmf_partial_of_r(env_data data)
 {
     return 0.0;
 }
 
-float CMFPartialOfZ(EnvData data)
+float cmf_partial_of_z(env_data data)
 {
     return 0.016;
 }
@@ -58,27 +58,35 @@ float CMFPartialOfZ(EnvData data)
 // Coppens Formulas:
 //-------------------------------------------------------
 
-RayData InitRay(float r, float z, float theta)
+ray_data init_ray(float r, float z, float theta)
 {
-    EnvData envData = { 2.0, 34.7, z };
+    env_data envData = { 2.0, 34.7, z };
     
-    float c = MackenzieFormula(envData);
+    float c = mackenzie_formula(envData);
     
     float xi = cos(theta) / c;
     float zeta = sin(theta) / c;
     
-    RayData ray = { r, z, xi, zeta };
+    ray_data ray;
+    ray.r = r;
+    ray.z = z;
+    ray.xi = xi;
+    ray.zeta = zeta;
     return ray;
 }
 
 // Differential Equation used for computing the path of a ray
-RayData SonarDiffEq(RayData ray)
+ray_data sonar_diff_eq(ray_data ray)
 {
-    EnvData envData = { 2.0, 34.7, ray.z };
+    env_data envData;
+    envData.depth = ray.z;
+    envData.temperature = 34.7;
+	envData.salinity = 2.0;
+
     
-    float c = MackenzieFormula(envData);
-    float c_r = MFPartialOfR(envData);
-    float c_z = MFPartialOfZ(envData);
+    float c = mackenzie_formula(envData);
+    float c_r = mf_partial_of_r(envData);
+    float c_z = mf_partial_of_z(envData);
     
     float x = -1.0 / pow(c, 2);
     
@@ -87,12 +95,16 @@ RayData SonarDiffEq(RayData ray)
     float newXi = x * c_r;
     float newZeta = x * c_z;
     
-    RayData newRay = { newR, newZ, newXi, newZeta };
-    
+    ray_data newRay;
+    newRay.r = newR;
+    newRay.z = newZ;
+    newRay.xi = newXi;
+    newRay.zeta = newZeta;
+
     return newRay;
 }
 
-RayData CartesianToCylinder(RayMarchInput coord)
+ray_data input_to_data(ray_march_input coord)
 {
     float3 p = coord.rayOrigin + coord.rayDirection * coord.distance;
     
@@ -101,14 +113,23 @@ RayData CartesianToCylinder(RayMarchInput coord)
     
     float theta = atan2(p.y, p.x);
 
-    return InitRay(r, z, theta);
+    return init_ray(r, z, theta);
 }
 
-float3 CylinderToCartesian(RayData coord)
+ray_march_output data_to_output(ray_data coord, float rayDirectionZ,float distance)
 {
-    return float3(
+    float3 ro = (
         cos(coord.r),
         sin(coord.r),
         coord.z
     );
+	float3 rd = normalize(float3(coord.xi, coord.zeta, rayDirectionZ));
+
+    ray_march_output res;
+	res.rayOrigin = ro;
+    res.rayDirection = rd;
+	res.distance = distance;
+
+	return res;
+
 }

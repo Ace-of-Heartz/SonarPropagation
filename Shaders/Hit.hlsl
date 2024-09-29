@@ -1,18 +1,9 @@
 #include "Common.hlsl"
 
-
-// VertexBuffer struct
-//struct STriVertex
-//{
-//    float4 vertex;
-//    float4 normal;
-//    //float2 uv;
-//}; 
-
 StructuredBuffer<STriVertex> BTriVertex : register(t0); // Vertex buffer
 StructuredBuffer<int> indices : register(t1); //Index buffer
 
-Texture2D<float4> photonMap : register(t2); // Output texture
+Texture2D photonMap : register(t2); // Output texture
 SamplerState samLinear : register(s0); // Sampler state
 
 [shader("closesthit")]
@@ -27,6 +18,7 @@ void MeshClosestHit(inout HitInfo payload, Attributes attrib)
 
     float2 uv = GetUV(barycentrics, a, b, c);
 
+    //payload.colorAndDistance = float4(hitColor, RayTCurrent());
     payload.colorAndDistance = float4(uv,0.0, RayTCurrent());
 }
  

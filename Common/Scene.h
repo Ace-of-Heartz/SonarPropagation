@@ -117,11 +117,13 @@ namespace SonarPropagation {
 				void AddObject(SoundReflector object) {
 
 					D3D12_RESOURCE_DESC txtDesc = {};
+					txtDesc.DepthOrArraySize = 1;
 					txtDesc.MipLevels = txtDesc.DepthOrArraySize = 1;
 					txtDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 					txtDesc.Width = 1024;
 					txtDesc.Height = 1024;
 					txtDesc.SampleDesc.Count = 1;
+					txtDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 					txtDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 
 					CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_DEFAULT);
@@ -132,7 +134,7 @@ namespace SonarPropagation {
 							&heapProps,
 							D3D12_HEAP_FLAG_NONE,
 							&txtDesc,
-							D3D12_RESOURCE_STATE_COPY_DEST,
+							D3D12_RESOURCE_STATE_COPY_SOURCE,
 							nullptr,
 							IID_PPV_ARGS(object.m_texture.ReleaseAndGetAddressOf()))
 					);
