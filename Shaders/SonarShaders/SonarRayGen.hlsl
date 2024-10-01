@@ -20,8 +20,6 @@ void SonarRayGen()
 {
 	// Initialize the ray payload
     SoundHitInfo payload;
-    payload.distance = 0.0;
-    payload.isBoundaryHit = false;
 	payload.isObjectHit = false;
 
     // Get the location within the dispatched 2D grid of work items
@@ -42,8 +40,8 @@ void SonarRayGen()
 	ray_march_output outputRay = RayMarch(inputRay);
 
     RayDesc ray;
-    ray.Origin = outputRay.rayOrigin;
-    ray.Direction = outputRay.rayDirection;
+    ray.Origin = outputRay.rayOrigin.xyz;
+    ray.Direction = outputRay.rayDirection.xyz;
     
     
     ray.TMin = 0;
@@ -96,6 +94,7 @@ void SonarRayGen()
     // shaders and the raygen
     payload);
 
-    gOutput[launchIndex] = float4(0.0,0.0,0.0, 1.f);
+    if (payload.isObjectHit)
+        gOutput[payload.uv] = float4(1.0,1.0,0.0, 1.f);
 }
 

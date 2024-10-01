@@ -38,7 +38,7 @@ void CameraRayGen() {
     
     
     ray.TMin = 0;
-    ray.TMax = 1000000;
+    ray.TMax = 10000000;
       
     // Trace the ray
     TraceRay(

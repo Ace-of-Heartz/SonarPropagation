@@ -203,43 +203,39 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateScene() {
 
 void SonarPropagation::Graphics::DXR::RayTracingRenderer::InitializeObjects() {
 
-	size_t cubeData = m_objectLibrary.LoadPredefined<VertexPositionNormalUV>(GetCubeVertices<VertexPositionNormalUV>(1, 1, 1), GetCubeIndices());
+	//size_t cubeData = m_objectLibrary.LoadPredefined<VertexPositionNormalUV>(GetCubeVertices<VertexPositionNormalUV>(1, 1, 1), GetCubeIndices());
 
-	//size_t boundaryData = m_objectLibrary.LoadPredefined<VertexPositionNormalUV>(GetQuadVertices<VertexPositionNormalUV>(1., 1.), GetQuadIndices());
-
-	//{
-	//	XMFLOAT3 position = { 0.f, -50.f, 0.f };
-	//	XMFLOAT4 scale = { 100.f, 1.f, 100.f , 1.f };
-	//	XMFLOAT4 rotation = {0.f, 0.f, 0.f, 1.f};
-
-	//	Scene::Transform transform = { position,rotation,scale };
-	//	transform.SetParent(nullptr, nullptr);
-	//	m_scene.AddObject(Scene::SoundReflector(transform, boundaryData, ObjectType::Object));
-
-	//}
-
-	//{
-	//	XMFLOAT3 position = { 0.f, 50.f, 0.f };
-	//	XMFLOAT4 scale = { 100.f, 1.f, 100.f , 1.f };
-	//	XMFLOAT4 rotation = { 0.f, 0.f, 0.f, 1.f };
-
-	//	Scene::Transform transform = { position,rotation,scale };
-	//	transform.SetParent(nullptr, nullptr);
-	//	m_scene.AddObject(Scene::SoundReflector(transform, boundaryData, ObjectType::Object));
-
-	//}
-
+	size_t quadData = m_objectLibrary.LoadPredefined<VertexPositionNormalUV>(GetQuadVertices<VertexPositionNormalUV>(1, 1), GetQuadIndices());
+	
 	{
 		XMFLOAT3 position = { 0.f, 0.f, 0.f };
-		XMFLOAT4 scale = { 1000.f, 1000.f, 1000.f , 1.f };
+		XMFLOAT4 scale = { 1000000.f, 1.f, 1000000.f , 1.f };
 		XMFLOAT4 rotation = { 0.f, 0.f, 0.f, 1.f };
 
 		Scene::Transform transform = { position,rotation,scale };
 		transform.SetParent(nullptr, nullptr);
-		m_scene.AddObject(Scene::SoundReflector(transform, cubeData, ObjectType::Object));
-
+		m_scene.AddObject(Scene::SoundReflector(transform, quadData, ObjectType::Boundary));
 	}
 
+	{
+		XMFLOAT3 position = { 0.f, 50000.f, 0.f };
+		XMFLOAT4 scale = { 1000000.f, 1.f, 1000000.f , 1.f };
+		XMFLOAT4 rotation = { 0.f, 0.f, 0.f, 1.f };
+
+		Scene::Transform transform = { position,rotation,scale };
+		transform.SetParent(nullptr, nullptr);
+		m_scene.AddObject(Scene::SoundReflector(transform, quadData, ObjectType::Boundary));
+	}
+
+
+	{
+		XMFLOAT3 position = { 0.f,-7500.f,0.f };
+		XMFLOAT4 scale = { 1.f, 1000000.f, 1000000.f , 1.f };
+		XMFLOAT4 rotation = { g_XMHalfPi[0],g_XMHalfPi[0],0.f, 1.f };
+		Scene::Transform transform = { position,rotation,scale };
+		transform.SetParent(nullptr, nullptr);
+		m_scene.AddObject(Scene::SoundReflector(transform, quadData, ObjectType::Object));
+	}
 }
 
 void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateWindowSizeDependentResources() {
@@ -452,6 +448,30 @@ ComPtr<ID3D12RootSignature> SonarPropagation::Graphics::DXR::RayTracingRenderer:
 	return rsc.Generate(m_dxrDevice.Get(), true);
 }
 
+ComPtr<ID3D12RootSignature> SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateSonarRayGenSignature() {
+	nv_helpers_dx12::RootSignatureGenerator rsc;
+	rsc.AddHeapRangesParameter({
+		 {0 /*t0*/, 1, 0,
+		  D3D12_DESCRIPTOR_RANGE_TYPE_SRV /*Top-level acceleration structure*/,
+		  1},
+		 {0 /*b0*/, 1 /*1 descriptor*/, 0, D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 2} // Camera Buffer
+	
+		});
+
+	return rsc.Generate(m_dxrDevice.Get(), true);
+}
+
+ComPtr<ID3D12RootSignature> SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateSonarHitSignature() {
+	nv_helpers_dx12::RootSignatureGenerator rsc;
+	rsc.AddRootParameter(D3D12_ROOT_PARAMETER_TYPE_SRV, 0);
+	rsc.AddRootParameter(D3D12_ROOT_PARAMETER_TYPE_SRV, 1);
+	//rsc.AddRootParameter(D3D12_ROOT_PARAMETER_TYPE_UAV, 0);
+	//rsc.AddHeapRangesParameter({ {0 /*s0*/, 1 /*1 descriptor*/, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 0} // Sampler});
+	rsc.AddHeapRangesParameter({ {2 /*t0*/, 1, 0,D3D12_DESCRIPTOR_RANGE_TYPE_SRV /*Top-level acceleration structure*/,1} });
+
+	return rsc.Generate(m_dxrDevice.Get(), true);
+}
+
 /// <summary>
 /// Create the raytracing pipeline from HLSL shaders.
 /// Initializes the libraries, shaders, hit groups, root signatures, etc.
@@ -479,13 +499,19 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateRaytracingPipeli
 	m_missSignature = CreateMissSignature();
 	m_hitSignature = CreateHitSignature();
 
+	m_sonarRayGenSignature = CreateSonarRayGenSignature();
+	m_sonarHitSignature = CreateSonarHitSignature();
+
 	pipeline.AddHitGroup(L"MeshHitGroup", L"MeshClosestHit");
 	pipeline.AddHitGroup(L"ObjectHitGroup", L"ObjectClosestHit");
 	pipeline.AddHitGroup(L"BoundaryHitGroup", L"BoundaryClosestHit");
 
-	pipeline.AddRootSignatureAssociation(m_rayGenSignature.Get(), { L"CameraRayGen", L"SonarRayGen"});
-	pipeline.AddRootSignatureAssociation(m_missSignature.Get(), { L"MeshMiss", L"BoundaryMiss", L"ObjectMiss"});
-	pipeline.AddRootSignatureAssociation(m_hitSignature.Get(), { L"MeshHitGroup", L"BoundaryHitGroup", L"ObjectHitGroup"});
+	pipeline.AddRootSignatureAssociation(m_rayGenSignature.Get(), { L"CameraRayGen"});
+	pipeline.AddRootSignatureAssociation(m_missSignature.Get(), { L"MeshMiss"});
+	pipeline.AddRootSignatureAssociation(m_hitSignature.Get(), { L"MeshHitGroup" });
+
+	pipeline.AddRootSignatureAssociation(m_sonarRayGenSignature.Get(), {L"SonarRayGen"});
+	pipeline.AddRootSignatureAssociation(m_sonarHitSignature.Get(), { L"BoundaryHitGroup", L"ObjectHitGroup" });
 
 	pipeline.SetMaxPayloadSize(m_dxrConfig.m_maxPayloadSize); // RGB + distance
 
@@ -497,7 +523,8 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateRaytracingPipeli
 	m_rtStateObject = pipeline.Generate();
 
 	DX::ThrowIfFailed(
-		m_rtStateObject->QueryInterface(IID_PPV_ARGS(&m_rtStateObjectProps)));
+		m_rtStateObject->QueryInterface(IID_PPV_ARGS(&m_rtStateObjectProps))
+	);
 }
 
 void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateRaytracingOutputBuffer() {

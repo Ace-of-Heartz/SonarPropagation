@@ -1,7 +1,5 @@
 struct SoundHitInfo
 {
-    bool isBoundaryHit;
+    float2 uv;
     bool isObjectHit;
-    float distance;
-    
 };

@@ -126,6 +126,10 @@ namespace SonarPropagation{
 				/// <returns></returns>
 				ComPtr<ID3D12RootSignature> CreateMissSignature();
 
+				ComPtr<ID3D12RootSignature> CreateSonarRayGenSignature();
+
+				ComPtr<ID3D12RootSignature> CreateSonarHitSignature();
+
 				/// <summary>
 				/// Creates the necessary resources and interfaces for raytracing.
 				/// At the moment it only creates the DXR compatible device.
@@ -274,7 +278,8 @@ namespace SonarPropagation{
 				ComPtr<ID3D12RootSignature>							m_rayGenSignature;
 				ComPtr<ID3D12RootSignature>							m_hitSignature;
 				ComPtr<ID3D12RootSignature>							m_missSignature;
-
+				ComPtr<ID3D12RootSignature>							m_sonarRayGenSignature;
+				ComPtr<ID3D12RootSignature>							m_sonarHitSignature;
 
 				// Photon Mapping Resources: 
 				std::vector<ComPtr<ID3D12Resource>>					m_textures;

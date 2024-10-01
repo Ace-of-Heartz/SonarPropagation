@@ -106,24 +106,25 @@ ray_data sonar_diff_eq(ray_data ray)
 
 ray_data input_to_data(ray_march_input coord)
 {
-    float3 p = coord.rayOrigin + coord.rayDirection * coord.distance;
+    float3 p = (coord.rayOrigin).xyz;
     
-    float r = sqrt(pow(p.x, 2) + pow(p.y, 2));
-    float z = p.z;
+    float r = sqrt(pow(p.x, 2) + pow(p.z, 2));
+    float z = p.y;
     
-    float theta = atan2(p.y, p.x);
+    float theta = atan(p.z / p.y);
 
     return init_ray(r, z, theta);
 }
 
 ray_march_output data_to_output(ray_data coord, float rayDirectionZ,float distance)
 {
-    float3 ro = (
-        cos(coord.r),
+    float4 ro = float4(
         sin(coord.r),
-        coord.z
+        coord.z,
+        cos(coord.r),
+        1.0
     );
-	float3 rd = normalize(float3(coord.xi, coord.zeta, rayDirectionZ));
+	float4 rd = normalize(float4(coord.xi, coord.zeta, rayDirectionZ,0.0));
 
     ray_march_output res;
 	res.rayOrigin = ro;

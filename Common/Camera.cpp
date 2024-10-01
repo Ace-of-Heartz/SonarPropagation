@@ -192,7 +192,7 @@ void SonarPropagation::Graphics::Utils::Camera::RenderCameraImGui() {
 		}
 		ImGui::Separator();
 
-		ImGui::SliderFloat("Speed", &m_speed, 1.f, 500.0f);
+		ImGui::SliderFloat("Speed", &m_speed, 1.f, 5000.0f);
 
 		ImGui::Separator();
 

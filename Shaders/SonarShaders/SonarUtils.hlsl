@@ -7,8 +7,8 @@ struct env_data
 
 struct ray_march_input
 {
-    float3 rayOrigin;
-    float3 rayDirection;
+    float4 rayOrigin;
+    float4 rayDirection;
     float distance;
 };
 
