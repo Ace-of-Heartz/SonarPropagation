@@ -22,10 +22,8 @@ void ObjectClosestHit(inout SoundHitInfo hit,Attributes attrib)
     //TODO: UV mapping
 	float2 uv = GetUV(barycentrics, a, b, c);
 
-
     hit.isObjectHit = true;
     hit.uv = uv;
-
 }
 
 [shader("closesthit")]
@@ -45,8 +43,8 @@ void BoundaryClosestHit(inout SoundHitInfo hit, Attributes attrib)
 	float3 nextRayDirection = reflect(rayDirection, normal);
 
     ray_march_input inputRay; 
-    inputRay.rayDirection = nextRayDirection;
-    inputRay.rayOrigin = WorldRayOrigin();
+    inputRay.rayDirection = float4(nextRayDirection,0.);
+    inputRay.rayOrigin = float4(WorldRayOrigin(), 0.);
     inputRay.distance = 0.0;
     
     ray_march_output outputRay = RayMarch(inputRay);

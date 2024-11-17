@@ -3,9 +3,6 @@
 StructuredBuffer<STriVertex> BTriVertex : register(t0); // Vertex buffer
 StructuredBuffer<int> indices : register(t1); //Index buffer
 
-Texture2D photonMap : register(t2); // Output texture
-SamplerState samLinear : register(s0); // Sampler state
-
 [shader("closesthit")]
 void MeshClosestHit(inout HitInfo payload, Attributes attrib)
 {
