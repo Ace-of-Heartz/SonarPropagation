@@ -36,9 +36,6 @@ SonarPropagation::Graphics::DXR::RayTracingRenderer::RayTracingRenderer(
 	LoadState();
 
 	m_cameraController.AddCamera(new Camera());
-	m_cameraController.CycleToNextCamera();
-	m_cameraController.GetCurrentCamera()->ToggleSoundSource();
-	m_cameraController.CycleToPreviousCamera();
 
 	CreateDeviceDependentResources();
 	CreateWindowSizeDependentResources();
@@ -178,12 +175,6 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateDeviceDependentR
 
 		CreateShaderResourceHeap();
 
-		if (m_textures.size() != m_textureDatas.size()) {
-			throw std::logic_error("Texture resources and texture data mismatch");
-		}
-
-		CreateSamplerResources();
-
 		CreateShaderBindingTable();
 
 		m_imguiManager.InitImGui(DX::c_frameCount, m_deviceResources->GetBackBufferFormat(), m_dxrDevice.Get(), m_imguiHeap.Get());
@@ -204,9 +195,8 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateScene() {
 void SonarPropagation::Graphics::DXR::RayTracingRenderer::InitializeObjects() {
 
 	//size_t cubeData = m_objectLibrary.LoadPredefined<VertexPositionNormalUV>(GetCubeVertices<VertexPositionNormalUV>(1, 1, 1), GetCubeIndices());
-
 	size_t quadData = m_objectLibrary.LoadPredefined<VertexPositionNormalUV>(GetQuadVertices<VertexPositionNormalUV>(1, 1), GetQuadIndices());
-	
+
 	{
 		XMFLOAT3 position = { 0.f, 0.f, 0.f };
 		XMFLOAT4 scale = { 1000000.f, 1.f, 1000000.f , 1.f };
@@ -217,25 +207,25 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::InitializeObjects() {
 		m_scene.AddObject(Scene::SoundReflector(transform, quadData, ObjectType::Boundary));
 	}
 
-	{
-		XMFLOAT3 position = { 0.f, 50000.f, 0.f };
-		XMFLOAT4 scale = { 1000000.f, 1.f, 1000000.f , 1.f };
-		XMFLOAT4 rotation = { 0.f, 0.f, 0.f, 1.f };
+	//{
+	//	XMFLOAT3 position = { 0.f, 50000.f, 0.f };
+	//	XMFLOAT4 scale = { 1000000.f, 1.f, 1000000.f , 1.f };
+	//	XMFLOAT4 rotation = { 0.f, 0.f, 0.f, 1.f };
 
-		Scene::Transform transform = { position,rotation,scale };
-		transform.SetParent(nullptr, nullptr);
-		m_scene.AddObject(Scene::SoundReflector(transform, quadData, ObjectType::Boundary));
-	}
+	//	Scene::Transform transform = { position,rotation,scale };
+	//	transform.SetParent(nullptr, nullptr);
+	//	m_scene.AddObject(Scene::SoundReflector(transform, quadData, ObjectType::Boundary));
+	//}
 
 
-	{
-		XMFLOAT3 position = { 0.f,-7500.f,0.f };
-		XMFLOAT4 scale = { 1.f, 1000000.f, 1000000.f , 1.f };
-		XMFLOAT4 rotation = { g_XMHalfPi[0],g_XMHalfPi[0],0.f, 1.f };
-		Scene::Transform transform = { position,rotation,scale };
-		transform.SetParent(nullptr, nullptr);
-		m_scene.AddObject(Scene::SoundReflector(transform, quadData, ObjectType::Object));
-	}
+	//{
+	//	XMFLOAT3 position = { 0.f,-7500.f,0.f };
+	//	XMFLOAT4 scale = { 1.f, 1000000.f, 1000000.f , 1.f };
+	//	XMFLOAT4 rotation = { g_XMHalfPi[0],g_XMHalfPi[0],0.f, 1.f };
+	//	Scene::Transform transform = { position,rotation,scale };
+	//	transform.SetParent(nullptr, nullptr);
+	//	m_scene.AddObject(Scene::SoundReflector(transform, quadData, ObjectType::Object));
+	//}
 }
 
 void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateWindowSizeDependentResources() {
@@ -311,8 +301,6 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateAccelerationStru
 	DX::ThrowIfFailed(
 		m_commandList->Reset(m_deviceResources->GetCommandAllocator(), m_pipelineState.Get())
 	);
-
-
 }
 
 /// <summary>
@@ -432,10 +420,6 @@ ComPtr<ID3D12RootSignature> SonarPropagation::Graphics::DXR::RayTracingRenderer:
 
 	rsc.AddRootParameter(D3D12_ROOT_PARAMETER_TYPE_SRV, 0);
 	rsc.AddRootParameter(D3D12_ROOT_PARAMETER_TYPE_SRV, 1);
-	rsc.AddRootParameter(D3D12_ROOT_PARAMETER_TYPE_SRV, 2);
-	rsc.AddHeapRangesParameter(
-		{ {0 /*s0*/, 1 /*1 descriptor*/, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 0} // Sampler
-		});
 	return rsc.Generate(m_dxrDevice.Get(), true);
 }
 
@@ -448,70 +432,31 @@ ComPtr<ID3D12RootSignature> SonarPropagation::Graphics::DXR::RayTracingRenderer:
 	return rsc.Generate(m_dxrDevice.Get(), true);
 }
 
-ComPtr<ID3D12RootSignature> SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateSonarRayGenSignature() {
-	nv_helpers_dx12::RootSignatureGenerator rsc;
-	rsc.AddHeapRangesParameter({
-		 {0 /*t0*/, 1, 0,
-		  D3D12_DESCRIPTOR_RANGE_TYPE_SRV /*Top-level acceleration structure*/,
-		  1},
-		 {0 /*b0*/, 1 /*1 descriptor*/, 0, D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 2} // Camera Buffer
-	
-		});
-
-	return rsc.Generate(m_dxrDevice.Get(), true);
-}
-
-ComPtr<ID3D12RootSignature> SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateSonarHitSignature() {
-	nv_helpers_dx12::RootSignatureGenerator rsc;
-	rsc.AddRootParameter(D3D12_ROOT_PARAMETER_TYPE_SRV, 0);
-	rsc.AddRootParameter(D3D12_ROOT_PARAMETER_TYPE_SRV, 1);
-	//rsc.AddRootParameter(D3D12_ROOT_PARAMETER_TYPE_UAV, 0);
-	//rsc.AddHeapRangesParameter({ {0 /*s0*/, 1 /*1 descriptor*/, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 0} // Sampler});
-	rsc.AddHeapRangesParameter({ {2 /*t0*/, 1, 0,D3D12_DESCRIPTOR_RANGE_TYPE_SRV /*Top-level acceleration structure*/,1} });
-
-	return rsc.Generate(m_dxrDevice.Get(), true);
-}
-
 /// <summary>
 /// Create the raytracing pipeline from HLSL shaders.
 /// Initializes the libraries, shaders, hit groups, root signatures, etc.
 /// </summary>
 void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateRaytracingPipeline()
-{
+{	
 	nv_helpers_dx12::RayTracingPipelineGenerator pipeline(m_dxrDevice.Get());
 
 	m_rayGenLibrary = CompileShader(L"RayGen.hlsl");
 	m_missLibrary = CompileShader(L"Miss.hlsl");
 	m_hitLibrary = CompileShader(L"Hit.hlsl");
-	m_sonarRayGenLibrary = CompileShader(L"SonarShaders/SonarRayGen.hlsl");
-	m_sonarMissLibrary = CompileShader(L"SonarShaders/SonarMiss.hlsl");
-	m_sonarHitLibrary = CompileShader(L"SonarShaders/SonarHit.hlsl");
 
 	pipeline.AddLibrary(m_rayGenLibrary.Get(), { L"CameraRayGen" });
 	pipeline.AddLibrary(m_missLibrary.Get(), { L"MeshMiss" });
 	pipeline.AddLibrary(m_hitLibrary.Get(), { L"MeshClosestHit"});
 
-	pipeline.AddLibrary(m_sonarRayGenLibrary.Get(), { L"SonarRayGen" });
-	pipeline.AddLibrary(m_sonarHitLibrary.Get(), { L"BoundaryClosestHit", L"ObjectClosestHit"});
-	pipeline.AddLibrary(m_sonarMissLibrary.Get(), { L"BoundaryMiss", L"ObjectMiss" });
-
 	m_rayGenSignature = CreateRayGenSignature();
 	m_missSignature = CreateMissSignature();
 	m_hitSignature = CreateHitSignature();
 
-	m_sonarRayGenSignature = CreateSonarRayGenSignature();
-	m_sonarHitSignature = CreateSonarHitSignature();
-
 	pipeline.AddHitGroup(L"MeshHitGroup", L"MeshClosestHit");
-	pipeline.AddHitGroup(L"ObjectHitGroup", L"ObjectClosestHit");
-	pipeline.AddHitGroup(L"BoundaryHitGroup", L"BoundaryClosestHit");
 
 	pipeline.AddRootSignatureAssociation(m_rayGenSignature.Get(), { L"CameraRayGen"});
 	pipeline.AddRootSignatureAssociation(m_missSignature.Get(), { L"MeshMiss"});
 	pipeline.AddRootSignatureAssociation(m_hitSignature.Get(), { L"MeshHitGroup" });
-
-	pipeline.AddRootSignatureAssociation(m_sonarRayGenSignature.Get(), {L"SonarRayGen"});
-	pipeline.AddRootSignatureAssociation(m_sonarHitSignature.Get(), { L"BoundaryHitGroup", L"ObjectHitGroup" });
 
 	pipeline.SetMaxPayloadSize(m_dxrConfig.m_maxPayloadSize); // RGB + distance
 
@@ -545,38 +490,12 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateRaytracingOutput
 		IID_PPV_ARGS(&m_outputResource)));
 }
 
-void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateSamplerResources() {
-
-	// Create sampler heap
-	m_samplerHeap = CreateDescriptorHeap(
-		m_dxrDevice.Get(), 1, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, true);
-
-	NAME_D3D12_OBJECT(m_samplerHeap);
-
-	D3D12_CPU_DESCRIPTOR_HANDLE samplerHandle =
-		m_samplerHeap->GetCPUDescriptorHandleForHeapStart();
-
-	// Create a sampler on the heap
-	D3D12_SAMPLER_DESC samplerDesc = {};
-	samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
-	samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	samplerDesc.MinLOD = 0;
-	samplerDesc.MaxLOD = 1;
-
-	m_deviceResources->GetD3DDevice()->CreateSampler(&samplerDesc, m_samplerHeap->GetCPUDescriptorHandleForHeapStart());
-}
-
 
 
 void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateShaderResourceHeap() {
 
-	std::vector<Camera*> soundSources = m_cameraController.GetSoundSources(); //size of 1
-	// For now, we assume that there is only one sound source
-
 	m_srvUavHeap = CreateDescriptorHeap(
-		m_dxrDevice.Get(), 4, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, true);
+		m_dxrDevice.Get(), 3, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, true);
 
 	NAME_D3D12_OBJECT(m_srvUavHeap);
 
@@ -606,15 +525,6 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateShaderResourceHe
 	cameraCbvDesc.BufferLocation = m_cameraController.GetCurrentCamera()->GetCameraBuffer()->GetGPUVirtualAddress();
 	cameraCbvDesc.SizeInBytes = m_cameraController.GetCurrentCamera()->GetCameraBufferSize();
 	m_dxrDevice->CreateConstantBufferView(&cameraCbvDesc, srvHandle);
-
-	srvHandle.ptr += m_dxrDevice.Get()->GetDescriptorHandleIncrementSize(
-		D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-
-	D3D12_CONSTANT_BUFFER_VIEW_DESC soundSourceCbvDesc = {};
-	soundSourceCbvDesc.BufferLocation = soundSources[0]->GetCameraBuffer()->GetGPUVirtualAddress();
-	soundSourceCbvDesc.SizeInBytes = soundSources[0]->GetCameraBufferSize();
-	m_dxrDevice->CreateConstantBufferView(&soundSourceCbvDesc, srvHandle);
-
 }
 
 
@@ -628,11 +538,8 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateShaderBindingTab
 
 	D3D12_GPU_DESCRIPTOR_HANDLE srvUavHeapHandle =
 		m_srvUavHeap->GetGPUDescriptorHandleForHeapStart();
-	D3D12_GPU_DESCRIPTOR_HANDLE samplerHeapHandle =
-		m_samplerHeap->GetGPUDescriptorHandleForHeapStart();
 
 	auto srvHeapPointer = reinterpret_cast<UINT64*>(srvUavHeapHandle.ptr);
-	auto samplerHeapPointer = reinterpret_cast<UINT64*>(samplerHeapHandle.ptr);
 
 	m_sbtHelper.AddRayGenerationProgram(L"CameraRayGen", { srvHeapPointer });
 	m_sbtHelper.AddMissProgram(L"MeshMiss", {});
@@ -647,8 +554,6 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateShaderBindingTab
 				{
 					(void*)(model.m_bufferData.vertexBuffer->GetGPUVirtualAddress()),
 					(void*)(model.m_bufferData.indexBuffer->GetGPUVirtualAddress()),
-					(void*)(object.m_texture->GetGPUVirtualAddress()),
-					(void*)(samplerHeapPointer)
 				});
 		}
 		else {
@@ -656,8 +561,6 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateShaderBindingTab
 				L"MeshHitGroup",
 				{
 					(void*)(model.m_bufferData.vertexBuffer->GetGPUVirtualAddress()),
-					(void*)(object.m_texture->GetGPUVirtualAddress()),
-					(void*)(samplerHeapPointer)
 				});
 		}
 
@@ -666,81 +569,6 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateShaderBindingTab
 	
 	// Shadow hit group is added after each addition of the original hitgroup, 
 	// so that all geometry can be hit!
-	uint32_t sbtSize = m_sbtHelper.ComputeSBTSize();
-
-	m_sbtStorage = nv_helpers_dx12::CreateBuffer(
-		m_dxrDevice.Get(), sbtSize, D3D12_RESOURCE_FLAG_NONE,
-		D3D12_RESOURCE_STATE_GENERIC_READ, nv_helpers_dx12::kUploadHeapProps);
-	if (!m_sbtStorage) {
-		throw std::logic_error("Could not allocate the shader binding table");
-	}
-
-	m_sbtHelper.Generate(m_sbtStorage.Get(), m_rtStateObjectProps.Get());
-}
-
-void SonarPropagation::Graphics::DXR::RayTracingRenderer::CreateShaderBindingTableForPhotonMapping() {
-
-	m_sbtHelper.Reset();
-
-	D3D12_GPU_DESCRIPTOR_HANDLE srvUavHeapHandle =
-		m_srvUavHeap->GetGPUDescriptorHandleForHeapStart();
-	D3D12_GPU_DESCRIPTOR_HANDLE samplerHeapHandle =
-		m_samplerHeap->GetGPUDescriptorHandleForHeapStart();
-
-	auto srvHeapPointer = reinterpret_cast<UINT64*>(srvUavHeapHandle.ptr);
-	auto samplerHeapPointer = reinterpret_cast<UINT64*>(samplerHeapHandle.ptr);
-
-	m_sbtHelper.AddRayGenerationProgram(L"SonarRayGen", { srvHeapPointer });
-
-	m_sbtHelper.AddMissProgram(L"ObjectMiss", {});
-	m_sbtHelper.AddMissProgram(L"BoundaryMiss", {});
-
-	for (auto& object : m_scene.m_objects) {
-		auto model = m_objectLibrary.m_objects[object.GetModelIndex()];
-		
-		if (model.m_bufferData.indexBuffer)
-		{
-			if (object.GetType() == ObjectType::Boundary)
-			m_sbtHelper.AddHitGroup(
-				L"BoundaryHitGroup",
-				{
-					(void*)(model.m_bufferData.vertexBuffer->GetGPUVirtualAddress()),
-					(void*)(model.m_bufferData.indexBuffer->GetGPUVirtualAddress()),
-					(void*)(object.m_texture->GetGPUVirtualAddress()),
-					(void*)(samplerHeapPointer)
-				});
-
-			else
-				m_sbtHelper.AddHitGroup(
-				L"ObjectHitGroup",
-				{
-					(void*)(model.m_bufferData.vertexBuffer->GetGPUVirtualAddress()),
-					(void*)(model.m_bufferData.indexBuffer->GetGPUVirtualAddress()),
-					(void*)(object.m_texture->GetGPUVirtualAddress()),
-					(void*)(samplerHeapPointer)
-				});
-		}
-		else {
-			if (object.GetType() == ObjectType::Boundary)
-			m_sbtHelper.AddHitGroup(
-				L"BoundaryHitGroup",
-				{
-					(void*)(model.m_bufferData.vertexBuffer->GetGPUVirtualAddress()),
-					(void*)(object.m_texture->GetGPUVirtualAddress()),
-					(void*)(samplerHeapPointer)
-				});
-			else 
-				m_sbtHelper.AddHitGroup(
-				L"ObjectHitGroup",
-				{
-					(void*)(model.m_bufferData.vertexBuffer->GetGPUVirtualAddress()),
-					(void*)(object.m_texture->GetGPUVirtualAddress()),
-					(void*)(samplerHeapPointer)
-				});
-		}
-
-	}
-
 	uint32_t sbtSize = m_sbtHelper.ComputeSBTSize();
 
 	m_sbtStorage = nv_helpers_dx12::CreateBuffer(
@@ -862,7 +690,7 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::PopulateCommandListFor
 
 		m_commandList->OMSetRenderTargets(1, &renderTargetView, false, &depthStencilView);
 
-		std::vector<ID3D12DescriptorHeap*> heaps = { m_srvUavHeap.Get(), m_samplerHeap.Get()};
+		std::vector<ID3D12DescriptorHeap*> heaps = { m_srvUavHeap.Get() };
 
 
 		m_commandList->SetDescriptorHeaps(static_cast<UINT>(heaps.size()),
@@ -938,51 +766,6 @@ void SonarPropagation::Graphics::DXR::RayTracingRenderer::PopulateCommandListFor
 
 }
 
-void SonarPropagation::Graphics::DXR::RayTracingRenderer::PhotonMappingPreprocess() {
-	CreateShaderBindingTableForPhotonMapping();
-
-	DX::ThrowIfFailed(m_deviceResources->GetCommandAllocator()->Reset());
-
-	DX::ThrowIfFailed(m_commandList->Reset(m_deviceResources->GetCommandAllocator(), m_pipelineState.Get()));
-
-	PIXBeginEvent(m_commandList.Get(), 0, L"Photon map");
-	{
-		m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
-
-		std::vector<ID3D12DescriptorHeap*> heaps = {};
-		m_commandList->SetDescriptorHeaps(static_cast<UINT>(heaps.size()), heaps.data());
-
-		D3D12_DISPATCH_RAYS_DESC desc = {};
-
-		uint32_t rayGenerationSectionSizeInBytes = m_sbtHelper.GetRayGenSectionSize();
-		desc.RayGenerationShaderRecord.StartAddress = m_sbtStorage->GetGPUVirtualAddress();
-		desc.RayGenerationShaderRecord.SizeInBytes = rayGenerationSectionSizeInBytes;
-
-		uint32_t missSectionSizeInBytes = m_sbtHelper.GetMissSectionSize();
-		desc.MissShaderTable.StartAddress = m_sbtStorage->GetGPUVirtualAddress() + rayGenerationSectionSizeInBytes;
-		desc.MissShaderTable.SizeInBytes = missSectionSizeInBytes;
-		desc.MissShaderTable.StrideInBytes = m_sbtHelper.GetMissEntrySize();
-
-		uint32_t hitGroupsSectionSize = m_sbtHelper.GetHitGroupSectionSize();
-		desc.HitGroupTable.StartAddress = m_sbtStorage->GetGPUVirtualAddress() + rayGenerationSectionSizeInBytes + missSectionSizeInBytes;
-		desc.HitGroupTable.SizeInBytes = hitGroupsSectionSize;
-		desc.HitGroupTable.StrideInBytes = m_sbtHelper.GetHitGroupEntrySize();
-
-		// Dimensions of the image to render, identical to a kernel launch dimension
-		desc.Width = m_deviceResources->GetScreenViewport().Width;
-		desc.Height = m_deviceResources->GetScreenViewport().Height;
-		desc.Depth = 1;
-
-		// Bind the raytracing pipeline
-		m_commandList->SetPipelineState1(m_rtStateObject.Get());
-		// Dispatch the rays and write to the raytracing output
-		m_commandList->DispatchRays(&desc);		
-	}
-	PIXEndEvent(m_commandList.Get());
-	DX::ThrowIfFailed(m_commandList->Close());
-
-	CreateShaderBindingTable();
-}
 
 void SonarPropagation::Graphics::DXR::RayTracingRenderer::RenderImGui() {
 	m_imguiManager.BeginImGui(m_commandList.Get());

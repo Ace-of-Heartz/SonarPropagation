@@ -126,10 +126,6 @@ namespace SonarPropagation{
 				/// <returns></returns>
 				ComPtr<ID3D12RootSignature> CreateMissSignature();
 
-				ComPtr<ID3D12RootSignature> CreateSonarRayGenSignature();
-
-				ComPtr<ID3D12RootSignature> CreateSonarHitSignature();
-
 				/// <summary>
 				/// Creates the necessary resources and interfaces for raytracing.
 				/// At the moment it only creates the DXR compatible device.
@@ -155,7 +151,6 @@ namespace SonarPropagation{
 				/// </summary>
 				void CreateRaytracingOutputBuffer();
 
-				void CreateSamplerResources();
 
 
 
@@ -169,8 +164,6 @@ namespace SonarPropagation{
 				/// </summary>
 				void CreateShaderBindingTable();
 
-				void CreateShaderBindingTableForPhotonMapping();
-
 				void InitializeObjects();
 				
 				void CreateScene();
@@ -182,7 +175,6 @@ namespace SonarPropagation{
 				/// </summary>
 				void PopulateCommandListForRendering();
 
-				void PhotonMappingPreprocess();
 
 				/// <summary>
 				/// Updates the transforms found in the instance constant buffers.
@@ -252,7 +244,6 @@ namespace SonarPropagation{
 
 				ComPtr<ID3D12Resource>								m_outputResource;
 
-				ComPtr<ID3D12DescriptorHeap>						m_samplerHeap;
 				ComPtr<ID3D12DescriptorHeap>						m_srvUavHeap;
 				nv_helpers_dx12::ShaderBindingTableGenerator		m_sbtHelper;
 				ComPtr<ID3D12Resource>								m_sbtStorage;
@@ -270,22 +261,11 @@ namespace SonarPropagation{
 				ComPtr<IDxcBlob>									m_rayGenLibrary;
 				ComPtr<IDxcBlob>									m_hitLibrary;
 				ComPtr<IDxcBlob>									m_missLibrary;
-				ComPtr<IDxcBlob>								m_sonarRayGenLibrary;
-				ComPtr<IDxcBlob>								m_sonarHitLibrary;
-				ComPtr<IDxcBlob>								m_sonarMissLibrary;
 
 				// Root Signatures for Shader:
 				ComPtr<ID3D12RootSignature>							m_rayGenSignature;
 				ComPtr<ID3D12RootSignature>							m_hitSignature;
 				ComPtr<ID3D12RootSignature>							m_missSignature;
-				ComPtr<ID3D12RootSignature>							m_sonarRayGenSignature;
-				ComPtr<ID3D12RootSignature>							m_sonarHitSignature;
-
-				// Photon Mapping Resources: 
-				std::vector<ComPtr<ID3D12Resource>>					m_textures;
-				std::vector<D3D12_SUBRESOURCE_DATA>			        m_textureDatas;
-
-				std::unique_ptr<DescriptorHeap>						 m_resourceDescriptors;
 
 				// Camera: 
 
