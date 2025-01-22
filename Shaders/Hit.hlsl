@@ -15,7 +15,6 @@ void MeshClosestHit(inout HitInfo payload, Attributes attrib)
 
     float2 uv = GetUV(barycentrics, a, b, c);
 
-    //payload.colorAndDistance = float4(hitColor, RayTCurrent());
     payload.colorAndDistance = float4(uv,0.0, RayTCurrent());
 }
  

@@ -136,7 +136,6 @@ void SonarPropagation::Graphics::Utils::Camera::RenderCameraImGui() {
 	{
 		ImGui::BeginChild("Camera Info", ImVec2(400, 400));
 
-
 		std::vector<float> camEyeFloat = { XMVectorGetX(m_eye) , XMVectorGetY(m_eye), XMVectorGetZ(m_eye) };
 		std::vector<float> camTargetFloat = { XMVectorGetX(m_at) , XMVectorGetY(m_at), XMVectorGetZ(m_at) };
 		std::vector<float> camForwardFloat = { XMVectorGetX(m_forward) , XMVectorGetY(m_forward), XMVectorGetZ(m_forward) };
